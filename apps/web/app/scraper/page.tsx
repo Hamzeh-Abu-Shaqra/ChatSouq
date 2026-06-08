@@ -34,7 +34,7 @@ const COLUMNS: Record<string, string[]> = {
   restaurants: ["name", "cuisine", "rating", "delivery_time"],
   listings: ["title", "price", "location", "category"],
   companies: ["name", "industry", "location"],
-  people: ["name", "title", "subcategory", "organization", "specialty", "phone"],
+  people: ["name", "title", "subcategory", "specialty", "organization", "phone"],
 };
 
 function timeAgo(date: string | null): string {

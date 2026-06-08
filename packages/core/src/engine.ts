@@ -1,0 +1,187 @@
+import { getProvider, getEmbedder, type AIProvider, type Embedder } from "@chatsouq/ai";
+import { parseConstraints, applyProfile, enrichWithLLM } from "./intent";
+import { getCategories, retrieve } from "./retrieve";
+import { rankCandidates, type ScoredCandidate } from "./rank";
+import { explainItems } from "./explain";
+import type {
+  Candidate,
+  Constraints,
+  RecommendInput,
+  RecommendationResponse,
+  ResultItem,
+} from "./types";
+
+interface Deps {
+  provider?: AIProvider;
+  embedder?: Embedder;
+}
+
+function buildSummary(
+  constraints: Constraints,
+  count: number,
+  relaxedCategory: boolean,
+  relaxedBudget: boolean
+): string {
+  if (count === 0) {
+    return `I couldn't find a match for "${constraints.rawQuery}" in the current catalogue.`;
+  }
+  const parts: string[] = [];
+  parts.push(`Here ${count === 1 ? "is the best option" : `are the top ${count} options`} I found`);
+  if (constraints.budgetMax !== null && !relaxedBudget) {
+    parts.push(`within ${constraints.budgetMax} JOD`);
+  }
+  if (relaxedBudget) parts.push("(I widened the budget to show real options)");
+  if (relaxedCategory) parts.push("(I broadened the category for better matches)");
+  return `${parts.join(" ")}.`;
+}
+
+function toResultItem(c: ScoredCandidate, isBest: boolean): ResultItem {
+  return {
+    listing: {
+      id: c.id,
+      name: c.name,
+      brand: c.brand,
+      price: c.price,
+      currency: c.currency,
+      category: c.category,
+      imageUrl: c.imageUrl,
+      sourceUrl: c.sourceUrl,
+      vendor: {
+        id: c.vendorId,
+        name: c.vendorName,
+        location: c.vendorLocation,
+        websiteUrl: c.vendorWebsite,
+      },
+    },
+    score: Number(c.score.toFixed(4)),
+    isBest,
+    why: "",
+    pros: [],
+    cons: [],
+  };
+}
+
+/**
+ * The reasoning recommendation engine.
+ *   query -> deterministic constraints -> (optional LLM enrichment) -> retrieval
+ *   (SQL hard-filter + vector + trigram) -> weighted ranking -> exactly one best
+ *   + ranked alternatives -> fact-grounded explanations.
+ * All numeric values come from the database; the LLM never produces numbers.
+ */
+export async function recommend(
+  input: RecommendInput,
+  deps: Deps = {}
+): Promise<RecommendationResponse> {
+  const started = Date.now();
+  const provider = deps.provider ?? getProvider();
+  const embedder = deps.embedder ?? getEmbedder();
+  const limit = Math.max(1, Math.min(input.limit ?? 4, 8));
+
+  const categories = await getCategories();
+  let constraints = parseConstraints(input.query, categories);
+  constraints = applyProfile(constraints, input.profile);
+  constraints = await enrichWithLLM(constraints, provider, categories);
+
+  const embedText = [input.query, ...constraints.categories, ...constraints.keywords]
+    .filter(Boolean)
+    .join(" ");
+  const [queryVec] = await embedder.embed([embedText]);
+  if (!queryVec) throw new Error("Failed to embed the query.");
+
+  const requestedCat = constraints.categories.length > 0;
+  const requestedBudget = constraints.budgetMax !== null || constraints.budgetMin !== null;
+  const hasKeywords = constraints.keywords.length > 0;
+
+  // Plan sequence: try strictest (category + budget + keywords) first, relax progressively.
+  const fullPlan = { c: true, b: true, k: true };
+  const plans = [
+    { c: true,  b: true,  k: hasKeywords },  // keyword-filtered when keywords exist
+    { c: true,  b: true,  k: false },        // category + budget, no keyword filter
+    { c: false, b: true,  k: false },        // budget only
+    { c: true,  b: false, k: false },        // category only
+    { c: false, b: false, k: false },        // no filter
+  ];
+
+  let candidates: Candidate[] = [];
+  let chosen = fullPlan;
+  for (const p of plans) {
+    const got = await retrieve(constraints, queryVec, input.query, {
+      useCategoryFilter: p.c,
+      useBudgetFilter: p.b,
+      useKeywordFilter: p.k,
+    });
+    if (got.length >= limit) {
+      candidates = got;
+      chosen = p;
+      break;
+    }
+    if (got.length > candidates.length) {
+      candidates = got;
+      chosen = p;
+    }
+  }
+
+  const relaxedCategory = requestedCat && !chosen.c;
+  const relaxedBudget = requestedBudget && !chosen.b;
+  const _ = chosen; // suppress unused variable warning
+
+  const allRanked = rankCandidates(candidates, constraints).slice(0, limit * 2);
+
+  // When keywords exist, the best pick must match at least one keyword in name or searchText.
+  // This prevents off-category items (e.g. vinyl record for headphones) from winning.
+  if (constraints.keywords.length > 0 && allRanked.length > 1) {
+    const hasKeywordHit = (c: (typeof allRanked)[0]) => {
+      const hay = (c.searchText || c.name).toLowerCase();
+      return constraints.keywords.some((k) => hay.includes(k));
+    };
+    if (!hasKeywordHit(allRanked[0]!)) {
+      const firstHit = allRanked.findIndex(hasKeywordHit);
+      if (firstHit > 0) {
+        const [best] = allRanked.splice(firstHit, 1);
+        allRanked.unshift(best!);
+      }
+    }
+  }
+
+  const bestCategory = allRanked[0]?.category ?? null;
+  // When category was relaxed, only keep alternatives that are genuinely relevant:
+  // must have at least one keyword hit OR share the best result's category.
+  const ranked = allRanked
+    .filter((c, i) => {
+      if (i === 0) return true; // always keep the top pick
+      if (c.score < 0.06) return false;
+      if (relaxedCategory && c.keywordHits === 0 && c.category !== bestCategory) return false;
+      return true;
+    })
+    .slice(0, limit);
+
+  const explanations = await explainItems(provider, input.query, ranked, constraints);
+
+  const items = ranked.map((c, i) => {
+    const item = toResultItem(c, i === 0);
+    const ex = explanations.get(c.id);
+    if (ex) {
+      item.why = ex.why;
+      item.pros = ex.pros;
+      item.cons = ex.cons;
+    }
+    return item;
+  });
+
+  return {
+    kind: "products",
+    query: input.query,
+    constraints,
+    summary: buildSummary(constraints, items.length, relaxedCategory, relaxedBudget),
+    best: items[0] ?? null,
+    alternatives: items.slice(1),
+    meta: {
+      provider: provider.name,
+      embedder: embedder.name,
+      candidateCount: candidates.length,
+      tookMs: Date.now() - started,
+      relaxedBudget,
+      relaxedCategory,
+    },
+  };
+}

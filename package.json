@@ -1,0 +1,24 @@
+{
+  "name": "chatsouq",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ChatSouq — the AI Operating System for Jordan",
+  "packageManager": "pnpm@11.5.2",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "data:convert": "python3 data/scripts/convert_xlsx.py",
+    "db:push": "pnpm --filter @chatsouq/db push",
+    "db:studio": "pnpm --filter @chatsouq/db studio",
+    "db:seed": "pnpm --filter @chatsouq/db seed"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0",
+    "typescript": "^5.6.3"
+  }
+}

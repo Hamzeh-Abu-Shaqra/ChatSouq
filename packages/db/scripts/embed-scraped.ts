@@ -106,7 +106,7 @@ async function embedPlaces() {
     for (let j = 0; j < batch.length; j++) {
       await sql.unsafe(
         `UPDATE jordan_places SET search_text = $1, embedding = $2::vector WHERE id = $3`,
-        [texts[j], vecLiteral(vecs[j]!), batch[j]!.id]
+        [texts[j]!, vecLiteral(vecs[j]!), batch[j]!.id]
       );
     }
     process.stdout.write(`    ${Math.min(i + BATCH, rows.length)} / ${rows.length}\r`);
@@ -150,7 +150,7 @@ async function embedRestaurants() {
     for (let j = 0; j < batch.length; j++) {
       await sql.unsafe(
         `UPDATE jordan_restaurants SET search_text = $1, embedding = $2::vector WHERE id = $3`,
-        [texts[j], vecLiteral(vecs[j]!), batch[j]!.id]
+        [texts[j]!, vecLiteral(vecs[j]!), batch[j]!.id]
       );
     }
     process.stdout.write(`    ${Math.min(i + BATCH, rows.length)} / ${rows.length}\r`);
@@ -200,7 +200,7 @@ async function embedListings() {
     for (let j = 0; j < batch.length; j++) {
       await sql.unsafe(
         `UPDATE jordan_listings SET search_text = $1, embedding = $2::vector WHERE id = $3`,
-        [texts[j], vecLiteral(vecs[j]!), batch[j]!.id]
+        [texts[j]!, vecLiteral(vecs[j]!), batch[j]!.id]
       );
     }
     process.stdout.write(`    ${Math.min(i + BATCH, rows.length)} / ${rows.length}\r`);
@@ -252,7 +252,7 @@ async function embedPeople() {
     for (let j = 0; j < batch.length; j++) {
       await sql.unsafe(
         `UPDATE jordan_people SET search_text = COALESCE(search_text, $1), embedding = $2::vector WHERE id = $3`,
-        [texts[j], vecLiteral(vecs[j]!), batch[j]!.id]
+        [texts[j]!, vecLiteral(vecs[j]!), batch[j]!.id]
       );
     }
     process.stdout.write(`    ${Math.min(i + BATCH, rows.length)} / ${rows.length}\r`);

@@ -87,11 +87,9 @@ export async function assist(input: RecommendInput, deps: Deps = {}): Promise<As
   // Strong place signal → go places (threshold lowered to 2 when clearly stronger than product)
   if (pSig >= 2 && pSig > prodSig) return recommendPlaces(effectiveInput, deps);
 
-  // General query (rental, tourism, news, Jordan info, etc.)
-  // Guard: product questions like "what is the best phone?" or "ما هو أفضل موبايل" have
-  // prodSig > 0 and must NOT be sent to the general engine even though they contain
-  // question words that match GENERAL_INFO patterns.
-  if (isGeneralQuery(effectiveInput.query) && prodSig === 0) {
+  // General queries (today digest, news, rental, tourism, etc.) win over weak product signals.
+  // Only a genuinely product-specific signal (prodSig ≥ 3, e.g. "buy NEUHAUS chocolate") overrides.
+  if (isGeneralQuery(effectiveInput.query) && prodSig < 3) {
     return generalAnswer(effectiveInput, { provider: deps.provider });
   }
 

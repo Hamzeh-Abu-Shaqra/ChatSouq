@@ -502,7 +502,7 @@ function TurnView({ turn, onFeedback }: { turn: Turn; onFeedback: (rating: 1 | -
         </div>
         <div className="min-w-0 flex-1">
           {turn.status === "loading" && (
-            <div className="space-y-4">
+            <div className="rounded-xl bg-[#faf8f4] px-4 py-4 space-y-4">
               <div className="flex items-center gap-1.5 pt-1.5">
                 <span className="typing-dot h-1.5 w-1.5 rounded-full bg-souq-500" />
                 <span className="typing-dot h-1.5 w-1.5 rounded-full bg-souq-500" />
@@ -518,7 +518,9 @@ function TurnView({ turn, onFeedback }: { turn: Turn; onFeedback: (rating: 1 | -
           )}
           {turn.status === "done" && turn.response && (
             <>
-              <ResponseView res={turn.response} />
+              <div className="rounded-xl bg-[#faf8f4] px-4 py-4">
+                <ResponseView res={turn.response} />
+              </div>
               <FeedbackRow
                 feedback={turn.feedback}
                 onThumbUp={() => onFeedback(1)}
@@ -596,11 +598,11 @@ function SourceLine({ res }: { res: AssistResponse }) {
 
 function ResponseView({ res }: { res: AssistResponse }) {
   const isRtl = /[؀-ۿ]/.test(res.summary);
-  const summaryEl = (
+  const summaryEl = res.summary ? (
     <p dir={isRtl ? "rtl" : "ltr"} className="text-[14px] leading-relaxed text-ink-700">
       {res.summary}
     </p>
-  );
+  ) : null;
 
   /* General answers */
   if (res.kind === "general") {
@@ -633,7 +635,7 @@ function ResponseView({ res }: { res: AssistResponse }) {
             {nbCards.length > 1 && (
               <>
                 <SectionLabel className="mt-6">Also worth considering</SectionLabel>
-                <div className="grid gap-3 sm:grid-cols-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 divide-x divide-ink-100">
                   {nbCards.slice(1).map((nb, i) => (
                     <NeighborhoodAltCard key={nb.name} item={nb} rank={i + 2} />
                   ))}
@@ -704,7 +706,7 @@ function ResponseView({ res }: { res: AssistResponse }) {
         {res.alternatives.length > 0 && (
           <>
             <SectionLabel className="mt-6">Other options</SectionLabel>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 divide-x divide-ink-100">
               {res.alternatives.map((a, i) => (
                 <PlaceAltCard key={a.place.id} item={a} rank={i + 2} />
               ))}
@@ -725,7 +727,7 @@ function ResponseView({ res }: { res: AssistResponse }) {
       {res.alternatives.length > 0 && (
         <>
           <SectionLabel className="mt-6">Also worth considering</SectionLabel>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 divide-x divide-ink-100">
             {res.alternatives.map((a, i) => (
               <AltCard key={a.listing.id} item={a} rank={i + 2} />
             ))}
@@ -741,9 +743,10 @@ function ResponseView({ res }: { res: AssistResponse }) {
 
 function SectionLabel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <p className={`text-[10px] font-black uppercase tracking-[0.22em] text-ink-400 ${className}`}>
-      {children}
-    </p>
+    <div className={`flex items-center gap-3 mb-3 ${className}`}>
+      <p className="text-[9px] font-black uppercase tracking-[0.25em] text-ink-400 shrink-0 leading-none">{children}</p>
+      <div className="flex-1 h-px bg-ink-200" />
+    </div>
   );
 }
 

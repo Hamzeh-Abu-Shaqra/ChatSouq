@@ -65,8 +65,13 @@ export default function ScraperDashboard() {
   const fetchStats = async () => {
     try {
       const res = await fetch(`/api/scraper-stats?t=${Date.now()}`, { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
-      setStats(json);
+      if (json && json.tables) {
+        setStats(json);
+      }
+    } catch (e) {
+      console.error("fetchStats error:", e);
     } finally {
       setLoadingStats(false);
     }

@@ -1,0 +1,9 @@
+{
+  "build": {
+    "builder": "NIXPACKS"
+  },
+  "deploy": {
+    "startCommand": "playwright install chromium && python main.py",
+    "restartPolicyType": "ON_FAILURE"
+  }
+}

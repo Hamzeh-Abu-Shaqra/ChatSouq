@@ -210,6 +210,58 @@ async function embedListings() {
   await buildIndexes("jordan_listings");
 }
 
+// ── jordan_people (professionals / notable people) ────────────────────────────
+
+async function embedPeople() {
+  if (!(await tableExists("jordan_people"))) {
+    console.log("  jordan_people table not found — skipping.");
+    return;
+  }
+  await addColumnsIfMissing("jordan_people");
+
+  const rows = await sql`
+    SELECT id, name, name_ar, title, subcategory, specialty, organization, address
+    FROM jordan_people
+    WHERE embedding IS NULL
+    ORDER BY id
+  ` as {
+    id: number;
+    name: string | null;
+    name_ar: string | null;
+    title: string | null;
+    subcategory: string | null;
+    specialty: string | null;
+    organization: string | null;
+    address: string | null;
+  }[];
+
+  if (rows.length === 0) {
+    console.log("  jordan_people: all rows already embedded.");
+    return;
+  }
+  console.log(`  Embedding ${rows.length} jordan_people rows...`);
+
+  for (let i = 0; i < rows.length; i += BATCH) {
+    const batch = rows.slice(i, i + BATCH);
+    const texts = batch.map((r) =>
+      [r.name, r.name_ar, r.title, r.subcategory, r.specialty, r.organization, r.address, "amman jordan professional"]
+        .filter(Boolean).join(" ").replace(/\s+/g, " ").trim()
+    );
+    // Also update search_text if not already set
+    const vecs = await embedder.embed(texts);
+    for (let j = 0; j < batch.length; j++) {
+      await sql.unsafe(
+        `UPDATE jordan_people SET search_text = COALESCE(search_text, $1), embedding = $2::vector WHERE id = $3`,
+        [texts[j], vecLiteral(vecs[j]!), batch[j]!.id]
+      );
+    }
+    process.stdout.write(`    ${Math.min(i + BATCH, rows.length)} / ${rows.length}\r`);
+  }
+  process.stdout.write("\n");
+
+  await buildIndexes("jordan_people");
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -223,6 +275,9 @@ async function main() {
 
   console.log("\njordan_listings (OpenSooq):");
   await embedListings();
+
+  console.log("\njordan_people (Professionals):");
+  await embedPeople();
 
   console.log("\n✓ Done. Scraped tables are now embedded and indexed.");
   await sql.end();

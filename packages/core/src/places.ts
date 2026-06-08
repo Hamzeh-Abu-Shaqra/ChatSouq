@@ -38,12 +38,14 @@ const GOVERNORATES: Record<string, string> = {
  * are matched case-insensitively against the real categories in the DB.
  */
 const PLACE_HINTS: Record<string, string[]> = {
+  // ── Food & Drink ────────────────────────────────────────────────────────────
   restaurant: ["Restaurant"],
   restaurants: ["Restaurant"],
   eat: ["Restaurant", "Fast Food"],
   food: ["Restaurant", "Fast Food"],
   dinner: ["Restaurant"],
   lunch: ["Restaurant"],
+  breakfast: ["Cafe", "Restaurant"],
   cafe: ["Cafe", "Coffee Shop"],
   coffee: ["Cafe", "Coffee Shop"],
   cafes: ["Cafe", "Coffee Shop"],
@@ -52,6 +54,7 @@ const PLACE_HINTS: Record<string, string[]> = {
   sweets: ["Sweets", "Pastry"],
   bar: ["Bar"],
   pub: ["Bar"],
+  // ── Health ─────────────────────────────────────────────────────────────────
   gym: ["Gym"],
   fitness: ["Gym", "Sports Center"],
   workout: ["Gym"],
@@ -64,23 +67,56 @@ const PLACE_HINTS: Record<string, string[]> = {
   hospital: ["Hospital"],
   clinic: ["Clinic", "Medical Center"],
   doctor: ["Doctor", "Clinic"],
+  doctors: ["Doctor", "Clinic"],
   dentist: ["Dentist"],
-  hotel: ["Hotel", "Guest House", "Hostel"],
-  hostel: ["Hostel"],
-  stay: ["Hotel", "Guest House"],
+  dentists: ["Dentist"],
+  medical: ["Hospital", "Clinic", "Medical Center"],
+  health: ["Hospital", "Clinic", "Pharmacy"],
+  // ── Shopping ───────────────────────────────────────────────────────────────
   supermarket: ["Supermarket"],
   grocery: ["Supermarket", "Convenience Store"],
   market: ["Market", "Supermarket"],
   mall: ["Shopping Mall"],
+  shop: ["Shop", "Store"],
+  store: ["Shop", "Store"],
+  shopping: ["Shopping Mall", "Store"],
+  // ── Services ───────────────────────────────────────────────────────────────
   bank: ["Bank"],
   atm: ["Bank"],
+  lawyer: ["Lawyer", "Law Firm"],
+  lawyers: ["Lawyer", "Law Firm"],
+  legal: ["Lawyer", "Law Firm"],
+  accountant: ["Accountant"],
+  engineer: ["Engineer"],
+  architect: ["Architect"],
+  pharmacist: ["Pharmacist"],
+  gas: ["Gas Station"],
+  fuel: ["Gas Station"],
+  // ── Education ──────────────────────────────────────────────────────────────
+  school: ["School"],
+  schools: ["School"],
+  university: ["University", "College"],
+  universities: ["University", "College"],
+  college: ["University", "College"],
+  education: ["School", "University", "College"],
+  // ── Hospitality ────────────────────────────────────────────────────────────
+  hotel: ["Hotel", "Guest House", "Hostel"],
+  hotels: ["Hotel", "Guest House"],
+  hostel: ["Hostel"],
+  stay: ["Hotel", "Guest House"],
+  accommodation: ["Hotel", "Guest House", "Hostel"],
+  // ── Religion ───────────────────────────────────────────────────────────────
+  mosque: ["Mosque"],
+  mosques: ["Mosque"],
+  masjid: ["Mosque"],
+  prayer: ["Mosque"],
+  church: ["Church"],
+  // ── Tourism / Attractions ──────────────────────────────────────────────────
   museum: ["Museum"],
   park: ["Park"],
   attraction: ["Attraction", "Viewpoint"],
-  school: ["School"],
-  university: ["University", "College"],
-  gas: ["Gas Station"],
-  fuel: ["Gas Station"],
+  landmark: ["Attraction", "Museum"],
+  // ── Other ─────────────────────────────────────────────────────────────────
   bookstore: ["Bookstore"],
   florist: ["Florist"],
   optician: ["Optician"],
@@ -278,6 +314,10 @@ async function searchPlaces(
 //   jordan_places     → id + 2_000_000
 //   jordan_restaurants → id + 3_000_000
 
+// Keywords that trigger a jordan_people (professionals) lookup.
+const PEOPLE_RE =
+  /\b(doctor|doctors|physician|physicians|dentist|dentists|lawyer|lawyers|attorney|legal|accountant|accountants|architect|architects|engineer|engineers|pharmacist|pharmacists|specialist|specialists|consultant|consultants|professional|professionals)\b/i;
+
 async function fetchScrapedCandidates(
   intent: PlaceIntent,
   queryVec: number[],
@@ -293,6 +333,8 @@ async function fetchScrapedCandidates(
     /\b(eat|food|restaurant|cafe|coffee|lunch|dinner|breakfast|delivery)\b/i.test(
       intent.rawQuery
     );
+  const wantPeople = PEOPLE_RE.test(intent.rawQuery) ||
+    intent.categories.some((c) => /doctor|dentist|lawyer|accountant|architect|engineer|pharmacist/i.test(c));
   const wantPlace = !wantRestaurant || intent.categories.length === 0;
 
   // ── jordan_places (Google Maps) ──────────────────────────────────────────
@@ -389,6 +431,60 @@ async function fetchScrapedCandidates(
       }
     } catch {
       /* embedding column not yet created — silently skip */
+    }
+  }
+
+  // ── jordan_people (Professionals — doctors, lawyers, dentists, etc.) ──────
+  if (wantPeople) {
+    try {
+      const rows = (await db.execute(sql`
+        SELECT
+          p.id + 4000000   AS id,
+          p.name,
+          p.name_ar        AS "nameAr",
+          p.title,
+          p.subcategory,
+          p.specialty,
+          p.organization,
+          p.address,
+          p.phone,
+          p.website,
+          p.search_text    AS "searchText",
+          (1 - (p.embedding <=> ${vecLit}::vector))                          AS "vecSim",
+          similarity(coalesce(p.search_text, ''), ${queryText})              AS "txtSim"
+        FROM jordan_people p
+        WHERE p.embedding IS NOT NULL
+        ORDER BY "vecSim" + 2.0 * "txtSim" DESC
+        LIMIT ${limit}
+      `)) as unknown as Record<string, unknown>[];
+
+      for (const r of rows) {
+        // Use the professional role as category (e.g. "Doctor", "Lawyer")
+        const prof = String(r.subcategory ?? r.title ?? "Professional");
+        // Show organization as "opening hours" field — surfaces on place cards
+        const org = r.organization ? String(r.organization) : null;
+        all.push({
+          id: Number(r.id),
+          name: String(r.name ?? ""),
+          nameAr: (r.nameAr as string) ?? null,
+          category: prof,
+          subcategory: (r.specialty as string) ?? null,
+          governorate: "Amman",
+          city: "Amman",
+          address: (r.address as string) ?? null,
+          phone: (r.phone as string) ?? null,
+          website: (r.website as string) ?? null,
+          openingHours: org,
+          lat: null,
+          lng: null,
+          sourceUrl: null,
+          searchText: (r.searchText as string) ?? null,
+          vecSim: Number(r.vecSim ?? 0),
+          txtSim: Number(r.txtSim ?? 0),
+        });
+      }
+    } catch {
+      /* jordan_people embedding not yet created — silently skip */
     }
   }
 

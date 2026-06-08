@@ -34,23 +34,28 @@ interface Turn {
 }
 
 const EXAMPLES = [
-  { label: "Best areas to rent in Amman for 1,500 JOD/month", tag: "Rentals"   },
-  { label: "Best coffee shop in Jabal Amman",                  tag: "Places"    },
   { label: "What's happening in Jordan today?",                tag: "News"      },
+  { label: "Best coffee shop in Jabal Amman",                  tag: "Food"      },
+  { label: "Find a dentist or doctor in Amman",                tag: "Health"    },
   { label: "Wireless headphones under 60 JOD",                 tag: "Shopping"  },
-  { label: "Top tech companies in Amman",                      tag: "Companies" },
-  { label: "Best things to do in Petra",                       tag: "Tourism"   },
-  { label: "A pharmacy near Abdoun",                           tag: "Places"    },
-  { label: "Luxury perfume as a wedding gift, around 80 JOD",  tag: "Shopping"  },
+  { label: "Hotels in Aqaba or Amman under 80 JOD",           tag: "Hotels"    },
+  { label: "Best universities and schools in Jordan",          tag: "Education" },
+  { label: "Find a lawyer or accountant in Amman",             tag: "Services"  },
+  { label: "Best areas to rent in Amman for 1,500 JOD/month", tag: "Rentals"   },
 ];
 
 // Tags whose colors live in Tailwind config
 const TAG_STYLES_CLASS: Record<string, string> = {
-  Rentals:  "bg-blue-50 text-blue-700",
-  Places:   "bg-amber-50 text-amber-700",
-  Shopping: "bg-souq-50 text-souq-700",
-  Tourism:  "bg-purple-50 text-purple-700",
-  Info:     "bg-sand-100 text-ink-600",
+  Rentals:   "bg-blue-50 text-blue-700",
+  Places:    "bg-amber-50 text-amber-700",
+  Food:      "bg-amber-50 text-amber-700",
+  Shopping:  "bg-souq-50 text-souq-700",
+  Tourism:   "bg-purple-50 text-purple-700",
+  Health:    "bg-green-50 text-green-700",
+  Hotels:    "bg-teal-50 text-teal-700",
+  Education: "bg-indigo-50 text-indigo-700",
+  Services:  "bg-orange-50 text-orange-700",
+  Info:      "bg-sand-100 text-ink-600",
 };
 
 // Tags needing inline styles (colors not in config)
@@ -369,8 +374,8 @@ const DATA_SOURCE_PILLS = [
   { emoji: "🍽", label: "Talabat" },
   { emoji: "🏠", label: "OpenSooq" },
   { emoji: "📰", label: "Roya News" },
+  { emoji: "👩‍⚕️", label: "Professionals" },
   { emoji: "🌐", label: "Live Web" },
-  { emoji: "🛍", label: "Products" },
 ];
 
 function Hero({ onPick }: { onPick: (q: string) => void }) {
@@ -391,7 +396,7 @@ function Hero({ onPick }: { onPick: (q: string) => void }) {
       </p>
 
       <p className="mt-5 max-w-sm text-[15px] text-ink-500 leading-relaxed">
-        Rentals · Restaurants · Products · Tourism · Services
+        Restaurants · Health · Hotels · Shopping · Education · Professionals
         <br />
         Real Jordan data. Direct, accurate answers.
       </p>

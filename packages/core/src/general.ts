@@ -111,24 +111,47 @@ function resolveBudget(query: string, history: ConvMessage[]): number | null {
 }
 
 function detectCity(query: string): string {
-  if (/\b(irbid)\b/i.test(query) || /إربد/.test(query)) return "Irbid";
-  if (/\b(zarqa)\b/i.test(query) || /الزرقاء/.test(query)) return "Zarqa";
-  if (/\b(aqaba)\b/i.test(query) || /العقبة/.test(query)) return "Aqaba";
-  if (/\b(salt)\b/i.test(query) || /السلط/.test(query)) return "Salt";
+  // Check all 12 governorates + common city aliases
+  if (/\b(irbid|arbid)\b/i.test(query)      || /إربد/.test(query))           return "Irbid";
+  if (/\b(zarqa|zerqa)\b/i.test(query)       || /الزرقاء|زرقاء/.test(query)) return "Zarqa";
+  if (/\b(aqaba|aquaba|akaba)\b/i.test(query)|| /العقبة|عقبة/.test(query))   return "Aqaba";
+  if (/\b(salt|al.salt)\b/i.test(query)      || /السلط|سلط/.test(query))     return "Salt";
+  if (/\b(madaba)\b/i.test(query)            || /مادبا|ماداب/.test(query))   return "Madaba";
+  if (/\b(karak|kerak)\b/i.test(query)       || /الكرك|كرك/.test(query))     return "Karak";
+  if (/\b(jerash|jarash|gerasa)\b/i.test(query)|| /جرش/.test(query))         return "Jerash";
+  if (/\b(ajloun|ajlun)\b/i.test(query)      || /عجلون/.test(query))         return "Ajloun";
+  if (/\b(mafraq)\b/i.test(query)            || /المفرق|مفرق/.test(query))   return "Mafraq";
+  if (/\b(tafilah|tafila)\b/i.test(query)    || /الطفيلة|طفيلة/.test(query))return "Tafilah";
+  if (/\b(maan|ma.?an)\b/i.test(query)       || /معان/.test(query))          return "Ma'an";
+  if (/\b(petra|wadi\s*musa)\b/i.test(query) || /البتراء|وادي موسى/.test(query)) return "Petra";
+  if (/\b(balqa)\b/i.test(query)             || /البلقاء/.test(query))       return "Salt";
+  if (/\b(russeifa|russaifa)\b/i.test(query) || /رصيفة/.test(query))        return "Zarqa";
+  if (/\b(wadi\s*rum)\b/i.test(query)        || /وادي رم/.test(query))       return "Aqaba";
   return "Amman";
 }
 
 const CITY_AR: Record<string, string> = {
-  Amman: "عمان",
-  Irbid: "إربد",
-  Zarqa: "الزرقاء",
-  Aqaba: "العقبة",
-  Salt: "السلط",
+  Amman:   "عمان",
+  Irbid:   "إربد",
+  Zarqa:   "الزرقاء",
+  Aqaba:   "العقبة",
+  Salt:    "السلط",
+  Madaba:  "مادبا",
+  Karak:   "الكرك",
+  Jerash:  "جرش",
+  Ajloun:  "عجلون",
+  Mafraq:  "المفرق",
+  Tafilah: "الطفيلة",
+  "Ma'an": "معان",
+  Petra:   "البتراء",
 };
 
 // ── Jordan neighborhood reference data (used as grounding context for Claude) ─
+// Covers all major cities. Claude is instructed to use these exact numbers.
 
-const AMMAN_NEIGHBORHOODS: NeighborhoodCard[] = [
+const JORDAN_NEIGHBORHOODS: Record<string, NeighborhoodCard[]> = {
+
+Amman: [
   // ─ Luxury / Upscale ──────────────────────────────────────────────────────────
   {
     name: "Dabouq", nameAr: "دابوق", city: "Amman", governorate: "Amman",

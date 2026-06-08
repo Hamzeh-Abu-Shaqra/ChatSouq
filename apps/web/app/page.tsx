@@ -594,15 +594,25 @@ function SourceLine({ res }: { res: AssistResponse }) {
   return <p className="mt-2 text-[10px] text-ink-300 font-medium">{text}</p>;
 }
 
+// ── ChatText — renders **bold** markdown inline ───────────────────────────────
+
+function ChatText({ text, rtl }: { text: string; rtl?: boolean }) {
+  const parts = text.split(/\*\*(.+?)\*\*/g);
+  return (
+    <p dir={rtl ? "rtl" : "ltr"} className="text-[15px] leading-[1.75] text-ink-800">
+      {parts.map((part, i) =>
+        i % 2 === 1
+          ? <strong key={i} className="font-semibold text-ink-900">{part}</strong>
+          : part
+      )}
+    </p>
+  );
+}
+
 // ── ResponseView — dispatch by response kind ──────────────────────────────────
 
 function ResponseView({ res }: { res: AssistResponse }) {
   const isRtl = /[؀-ۿ]/.test(res.summary);
-  const summaryEl = res.summary ? (
-    <p dir={isRtl ? "rtl" : "ltr"} className="text-[14px] leading-relaxed text-ink-700">
-      {res.summary}
-    </p>
-  ) : null;
 
   /* General answers */
   if (res.kind === "general") {
@@ -617,7 +627,7 @@ function ResponseView({ res }: { res: AssistResponse }) {
     if (isToday) {
       return (
         <div className="space-y-4">
-          {summaryEl}
+          <ChatText text={res.summary} rtl={isRtl} />
           <NewspaperFront cards={infoCards} />
           <SourceLine res={res} />
         </div>
@@ -626,21 +636,17 @@ function ResponseView({ res }: { res: AssistResponse }) {
 
     return (
       <div className="space-y-4">
-        {summaryEl}
+        <ChatText text={res.summary} rtl={isRtl} />
 
         {isRental && nbCards.length > 0 && (
           <div className="space-y-3">
-            <SectionLabel>{nbCards.length} area{nbCards.length > 1 ? "s" : ""} matching your budget</SectionLabel>
             <NeighborhoodBestCard item={nbCards[0]!} />
             {nbCards.length > 1 && (
-              <>
-                <SectionLabel className="mt-6">Also worth considering</SectionLabel>
-                <div className="grid grid-cols-2 sm:grid-cols-3 divide-x divide-ink-100">
-                  {nbCards.slice(1).map((nb, i) => (
-                    <NeighborhoodAltCard key={nb.name} item={nb} rank={i + 2} />
-                  ))}
-                </div>
-              </>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {nbCards.slice(1).map((nb, i) => (
+                  <NeighborhoodAltCard key={nb.name} item={nb} rank={i + 2} />
+                ))}
+              </div>
             )}
           </div>
         )}
@@ -657,13 +663,10 @@ function ResponseView({ res }: { res: AssistResponse }) {
         )}
 
         {isCompanies && infoCards.length > 0 && (
-          <div className="space-y-2">
-            <SectionLabel>Jordan businesses</SectionLabel>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {infoCards.map((card, i) => (
-                <CompanyInfoCard key={i} item={card} index={i} />
-              ))}
-            </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {infoCards.map((card, i) => (
+              <CompanyInfoCard key={i} item={card} index={i} />
+            ))}
           </div>
         )}
 
@@ -683,56 +686,42 @@ function ResponseView({ res }: { res: AssistResponse }) {
   /* No result */
   if (!res.best) {
     return (
-      <div className="space-y-1">
-        {summaryEl}
+      <div className="space-y-2">
+        <ChatText text={res.summary} rtl={isRtl} />
         <SourceLine res={res} />
       </div>
     );
   }
 
-  /* Places */
+  /* Places — chat text → best card → alternatives */
   if (res.kind === "places") {
-    const bestLabel =
-      /^(doctor|dentist|physician|lawyer|attorney|accountant|architect|engineer|pharmacist|specialist)/i.test(res.best.place.category) ? "Top professional"
-      : /^(hotel|hostel|guest.house)/i.test(res.best.place.category) ? "Top hotel"
-      : /^(restaurant|cafe|coffee|food)/i.test(res.best.place.category) ? "Top pick"
-      : "Best match";
-
     return (
       <div className="space-y-4">
-        {summaryEl}
-        <SectionLabel>{bestLabel}</SectionLabel>
+        <ChatText text={res.summary} rtl={isRtl} />
         <PlaceBestCard item={res.best} />
         {res.alternatives.length > 0 && (
-          <>
-            <SectionLabel className="mt-6">Other options</SectionLabel>
-            <div className="grid grid-cols-2 sm:grid-cols-3 divide-x divide-ink-100">
-              {res.alternatives.map((a, i) => (
-                <PlaceAltCard key={a.place.id} item={a} rank={i + 2} />
-              ))}
-            </div>
-          </>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {res.alternatives.map((a, i) => (
+              <PlaceAltCard key={a.place.id} item={a} rank={i + 2} />
+            ))}
+          </div>
         )}
         <SourceLine res={res} />
       </div>
     );
   }
 
-  /* Products */
+  /* Products — chat text → best card → alternatives */
   return (
     <div className="space-y-4">
-      {summaryEl}
-      <SectionLabel>Best match</SectionLabel>
+      <ChatText text={res.summary} rtl={isRtl} />
       <BestCard item={res.best} />
       {res.alternatives.length > 0 && (
-        <>
-          <SectionLabel className="mt-6">Also worth considering</SectionLabel>
-          <div className="grid grid-cols-2 sm:grid-cols-3 divide-x divide-ink-100">
-            {res.alternatives.map((a, i) => (
-              <AltCard key={a.listing.id} item={a} rank={i + 2} />
-            ))}
-          </div>
-        </>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {res.alternatives.map((a, i) => (
+            <AltCard key={a.listing.id} item={a} rank={i + 2} />
+          ))}
+        </div>
       )}
       <SourceLine res={res} />
     </div>

@@ -17,23 +17,8 @@ interface Deps {
   embedder?: Embedder;
 }
 
-function buildSummary(
-  constraints: Constraints,
-  count: number,
-  relaxedCategory: boolean,
-  relaxedBudget: boolean
-): string {
-  if (count === 0) {
-    return `I couldn't find a match for "${constraints.rawQuery}" in the current catalogue.`;
-  }
-  const parts: string[] = [];
-  parts.push(`Here ${count === 1 ? "is the best option" : `are the top ${count} options`} I found`);
-  if (constraints.budgetMax !== null && !relaxedBudget) {
-    parts.push(`within ${constraints.budgetMax} JOD`);
-  }
-  if (relaxedBudget) parts.push("(I widened the budget to show real options)");
-  if (relaxedCategory) parts.push("(I broadened the category for better matches)");
-  return `${parts.join(" ")}.`;
+function noResultSummary(constraints: Constraints): string {
+  return `I couldn't find a match for "${constraints.rawQuery}" in the current catalogue.`;
 }
 
 function toResultItem(c: ScoredCandidate, isBest: boolean): ResultItem {
@@ -182,7 +167,7 @@ export async function recommend(
     })
     .slice(0, limit);
 
-  const explanations = await explainItems(provider, input.query, ranked, constraints);
+  const { summary: chatSummary, explanations } = await explainItems(provider, input.query, ranked, constraints);
 
   const items = ranked.map((c, i) => {
     const item = toResultItem(c, i === 0);
@@ -195,11 +180,15 @@ export async function recommend(
     return item;
   });
 
+  const finalSummary = items.length === 0
+    ? noResultSummary(constraints)
+    : chatSummary;
+
   return {
     kind: "products",
     query: input.query,
     constraints,
-    summary: buildSummary(constraints, items.length, relaxedCategory, relaxedBudget),
+    summary: finalSummary,
     best: items[0] ?? null,
     alternatives: items.slice(1),
     meta: {

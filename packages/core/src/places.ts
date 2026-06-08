@@ -929,21 +929,23 @@ function placeCons(c: ScoredPlace, lang: "en" | "ar"): string[] {
   return cons.slice(0, 2);
 }
 
-function buildSummary(intent: PlaceIntent, count: number, relaxedGov: boolean, lang: "en" | "ar"): string {
-  if (lang === "ar") {
-    if (count === 0) return `لم أتمكن من العثور على مكان مطابق لـ "${intent.rawQuery}" في الأردن.`;
-    const what = intent.categories.length ? intent.categories[0]! : "مكان";
-    const where = intent.governorate && !relaxedGov ? ` في ${intent.governorate}` : "";
-    const lead = count === 1 ? `إليك أفضل ${what}` : `إليك أفضل ${count} خيارات ${what}`;
-    const tail = relaxedGov ? " (وسّعت نطاق البحث لأعرض خيارات حقيقية)" : "";
-    return `${lead}${where} وجدتها.${tail}`;
+function buildPlaceCodeSummary(ranked: PlaceCandidate[], intent: PlaceIntent, lang: "en" | "ar"): string {
+  if (ranked.length === 0) {
+    return lang === "ar"
+      ? `لم أتمكن من العثور على مكان مطابق لـ "${intent.rawQuery}" في الأردن.`
+      : `I couldn't find a matching place for "${intent.rawQuery}" in Jordan yet.`;
   }
-  if (count === 0) return `I couldn't find a matching place for "${intent.rawQuery}" in Jordan yet.`;
-  const what = intent.categories.length ? intent.categories[0]!.toLowerCase() : "place";
-  const where = intent.governorate && !relaxedGov ? ` in ${intent.governorate}` : "";
-  const lead = count === 1 ? `Here is the best ${what}` : `Here are the top ${count} ${what} options`;
-  const tail = relaxedGov ? " (I widened the area to show real options)" : "";
-  return `${lead}${where} I found.${tail}`;
+  const best = ranked[0]!;
+  const where = [best.city, best.governorate].filter(Boolean)[0];
+  const altCount = ranked.length - 1;
+  if (lang === "ar") {
+    const loc = where ? ` في ${where}` : "";
+    const alts = altCount > 0 ? ` وعندي ${altCount} خيار${altCount === 1 ? "" : " إضافي"} كذلك.` : ".";
+    return `أفضل خيار هو **${best.name}**${loc}.${alts}`;
+  }
+  const loc = where ? ` in ${where}` : "";
+  const alts = altCount > 0 ? ` I've also found ${altCount} other option${altCount > 1 ? "s" : ""} worth considering.` : "";
+  return `**${best.name}**${loc} is the top match for your search.${alts}`;
 }
 
 interface Deps {
@@ -1019,6 +1021,7 @@ export async function recommendPlaces(
 
   // Build code-based why/pros/cons as fallback, then enrich with Claude + web search if available.
   const whyMap = new Map<number, string>(ranked.map((c, i) => [c.id, placeWhy(c, i === 0, queryLang)]));
+  let llmSummary: string | null = null;
   if (!provider.isMock && ranked.length > 0) {
     try {
       // Fire web search in parallel with building the place list — no added latency
@@ -1046,29 +1049,37 @@ export async function recommendPlaces(
         role: i === 0 ? "best" : "alternative",
       }));
       const langInstruction = queryLang === "ar"
-        ? "IMPORTANT: Write all 'why' values in Arabic only."
-        : "Write all 'why' values in English.";
+        ? "IMPORTANT: Write both the 'summary' and all 'why' values in Arabic only."
+        : "Write both the 'summary' and all 'why' values in English.";
       const placeRes = await provider.complete({
         system:
-          "You write one specific sentence (max 28 words) explaining why each place fits the user's " +
-          "request, in the context of searching in Jordan. Mention the category and location. " +
+          "You are ChatSouq, Amman's local guide. " +
+          "Write a direct, conversational 2–3 sentence reply that actually answers the user's request. " +
+          "Mention the top pick and key alternatives by **bolding** their names. " +
+          "Be specific — say what makes the top pick stand out (location, atmosphere, specialty, rating). " +
+          "Then write a 1-sentence 'why' per place (max 20 words) focusing on fit, not just location. " +
           `Use ONLY the provided facts — no invented details. ${langInstruction}` +
           (webContext ? `\n${webContext}` : "") +
-          '\nReturn JSON: an array of {"id": number, "why": string}.',
+          '\nReturn JSON: {"summary": "string", "items": [{"id": number, "why": "string"}]}',
         messages: [{
           role: "user",
           content: `User asked for: "${input.query}"\nPlaces: ${JSON.stringify(placeItems)}`,
         }],
         json: true,
-        temperature: 0.3,
-        maxTokens: 600,
+        temperature: 0.4,
+        maxTokens: 800,
       });
-      const parsed = JSON.parse(placeRes.text) as { id: number; why: string }[];
-      for (const p of parsed) {
-        if (typeof p.why === "string" && p.why.trim()) whyMap.set(p.id, p.why.trim());
+      const parsed = JSON.parse(placeRes.text) as { summary?: string; items?: { id: number; why: string }[] };
+      if (typeof parsed.summary === "string" && parsed.summary.trim()) {
+        llmSummary = parsed.summary.trim();
+      }
+      if (Array.isArray(parsed.items)) {
+        for (const p of parsed.items) {
+          if (typeof p.why === "string" && p.why.trim()) whyMap.set(p.id, p.why.trim());
+        }
       }
     } catch {
-      // keep code-generated whys
+      // keep code-generated whys and fallback summary
     }
   }
 
@@ -1085,7 +1096,7 @@ export async function recommendPlaces(
     kind: "places",
     query: input.query,
     intent,
-    summary: buildSummary(intent, items.length, relaxedGovernorate, queryLang),
+    summary: llmSummary ?? buildPlaceCodeSummary(ranked, intent, queryLang),
     best: items[0] ?? null,
     alternatives: items.slice(1),
     meta: {

@@ -67,6 +67,17 @@ export async function assist(input: RecommendInput, deps: Deps = {}): Promise<As
   const prodSig = productSignal(effectiveInput.query, productCategories);
   const pSig    = placeSignal(effectiveInput.query, placeCategories);
 
+  // Events / "what's on today" queries: route directly to generalAnswer regardless
+  // of prodSig noise. Arabic queries like "إيش في عمان اليوم؟ فعاليات" have 2+
+  // keywords → prodSig=1, which would normally block the general route. These are
+  // never product searches, so we check first before any product routing.
+  const isEventOrTodayQuery =
+    /اليوم|فعاليات|ماذا يحدث|ايش في|ايش صاير|وجهة|أين أذهب/i.test(effectiveInput.query) ||
+    /\b(today|tonight|this\s+week|events?|activities|what.?s\s+(in|happening|going\s+on)|things\s+to\s+do)\b/i.test(effectiveInput.query);
+  if (isEventOrTodayQuery && isGeneralQuery(effectiveInput.query)) {
+    return generalAnswer(effectiveInput, { provider: deps.provider });
+  }
+
   // Strong product signal → go product, BUT only when product signal is strictly
   // stronger than place signal. This prevents "best coffee in Jabal Amman" (which
   // scores prodSig=3 via food category but pSig=4+ via PLACE_HINTS + governorate)

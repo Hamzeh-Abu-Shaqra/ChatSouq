@@ -370,8 +370,11 @@ function matchPlaceCategories(q: string, dbCategories: string[]): string[] {
     const pat = placeHintPattern(term);
     if (pat.test(lower) || pat.test(normalized)) {
       for (const c of cats) {
-        const real = byLower.get(c.toLowerCase());
-        if (real) matched.add(real);
+        // Prefer the canonical DB name if it exists; otherwise use the hint name
+        // directly so that category scoring and the hard guard still work even
+        // when the DB has no rows for that category yet.
+        const real = byLower.get(c.toLowerCase()) ?? c;
+        matched.add(real);
       }
     }
   }
@@ -831,7 +834,21 @@ function rankPlaces(candidates: PlaceCandidate[], intent: PlaceIntent): ScoredPl
   });
   scored.sort((a, b) => b.score - a.score || b.vecSim - a.vecSim);
 
-  // Hard guard: the #1 pick must have at least one piece of actionable data.
+  // Hard guard 1: when the user asked for a specific category (e.g. "Hotel"),
+  // the #1 pick MUST match that category — a post office or pharmacy should
+  // never beat a hotel just because it has better completeness/rating scores.
+  if (intent.categories.length > 0 && scored.length > 1) {
+    const topCat = scored[0]!.category.toLowerCase();
+    if (!wantedCats.has(topCat)) {
+      const firstCatMatch = scored.findIndex((c) => wantedCats.has(c.category.toLowerCase()));
+      if (firstCatMatch > 0) {
+        const [catMatch] = scored.splice(firstCatMatch, 1);
+        scored.unshift(catMatch!);
+      }
+    }
+  }
+
+  // Hard guard 2: the #1 pick must have at least one piece of actionable data.
   // An OSM stub with only coordinates but no phone / address / website should
   // never win when alternatives with real contact info exist.
   if (scored.length > 1 && !hasActionableData(scored[0]!)) {

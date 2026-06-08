@@ -61,15 +61,18 @@ export default function ScraperDashboard() {
   const [page, setPage] = useState(1);
   const [loadingStats, setLoadingStats] = useState(true);
   const [loadingData, setLoadingData] = useState(false);
+  const [category, setCategory] = useState("");
+  const [search, setSearch] = useState("");
+  const [categories, setCategories] = useState<string[]>([]);
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchStats = async () => {
     try {
       const res = await fetch(`/api/scraper-stats?t=${Date.now()}`, { cache: "no-store" });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
-      if (json && json.tables) {
-        setStats(json);
-      }
+      if (json && json.tables) setStats(json);
     } catch (e) {
       console.error("fetchStats error:", e);
     } finally {
@@ -77,20 +80,21 @@ export default function ScraperDashboard() {
     }
   };
 
-  const fetchData = async (tab: string, p: number) => {
+  const fetchData = async (tab: string, p: number, cat: string = category, q: string = search) => {
     setLoadingData(true);
     try {
-      const res = await fetch(`/api/scraper-data?table=${tab}&page=${p}&t=${Date.now()}`, { cache: "no-store" });
+      const params = new URLSearchParams({ table: tab, page: String(p), t: String(Date.now()) });
+      if (cat) params.set("category", cat);
+      if (q) params.set("search", q);
+      const res = await fetch(`/api/scraper-data?${params}`, { cache: "no-store" });
       const json = await res.json();
       setData(json.data ?? []);
       setTotal(json.total ?? 0);
+      if (json.categories?.length) setCategories(json.categories);
     } finally {
       setLoadingData(false);
     }
   };
-
-  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
-  const [refreshing, setRefreshing] = useState(false);
 
   const refresh = async () => {
     setRefreshing(true);
@@ -111,7 +115,10 @@ export default function ScraperDashboard() {
 
   useEffect(() => {
     setPage(1);
-    fetchData(activeTab, 1);
+    setCategory("");
+    setSearch("");
+    setCategories([]);
+    fetchData(activeTab, 1, "", "");
   }, [activeTab]);
 
   useEffect(() => {
@@ -171,7 +178,7 @@ export default function ScraperDashboard() {
 
       <div className="max-w-7xl mx-auto px-8 py-6">
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 flex-wrap">
+        <div className="flex gap-2 mb-4 flex-wrap">
           {TABS.map((tab) => (
             <button
               key={tab.key}
@@ -185,6 +192,51 @@ export default function ScraperDashboard() {
               {tab.icon} {tab.label}
             </button>
           ))}
+        </div>
+
+        {/* Search & Filter */}
+        <div className="flex gap-3 mb-4 flex-wrap">
+          <input
+            type="text"
+            placeholder="Search by name..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+              fetchData(activeTab, 1, category, e.target.value);
+            }}
+            className="bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-500 w-64"
+          />
+          {categories.length > 0 && (
+            <select
+              value={category}
+              onChange={(e) => {
+                setCategory(e.target.value);
+                setPage(1);
+                fetchData(activeTab, 1, e.target.value, search);
+              }}
+              className="bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-zinc-500"
+            >
+              <option value="">All categories</option>
+              {categories.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          )}
+          {(search || category) && (
+            <button
+              onClick={() => {
+                setSearch("");
+                setCategory("");
+                setPage(1);
+                fetchData(activeTab, 1, "", "");
+              }}
+              className="px-3 py-2 bg-zinc-800 rounded-lg text-sm text-zinc-400 hover:bg-zinc-700"
+            >
+              ✕ Clear
+            </button>
+          )}
+          <span className="text-zinc-500 text-sm self-center">{total.toLocaleString()} results</span>
         </div>
 
         {/* Data Table */}

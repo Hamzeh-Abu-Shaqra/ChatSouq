@@ -16,32 +16,43 @@ async function safeCount(query: Promise<any[]>) {
 
 export async function GET() {
   try {
-    const [news, places, restaurants, listings, companies, people] = await Promise.all([
-      safeCount(sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_news`),
-      safeCount(sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_places`),
-      safeCount(sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_restaurants`),
-      safeCount(sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_listings`),
-      safeCount(sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_companies`),
-      safeCount(sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_people`),
-    ]);
+    const [news, food, foodTalabat, health, shopping, services, education, hospitality, religion, people, listings] =
+      await Promise.all([
+        safeCount(sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_news`),
+        safeCount(sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_places WHERE category = 'food'`),
+        safeCount(sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_restaurants`),
+        safeCount(sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_places WHERE category = 'health'`),
+        safeCount(sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_places WHERE category = 'shopping'`),
+        safeCount(sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_places WHERE category = 'services'`),
+        safeCount(sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_places WHERE category = 'education'`),
+        safeCount(sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_places WHERE category = 'hospitality'`),
+        safeCount(sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_places WHERE category = 'religion'`),
+        safeCount(sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_people`),
+        safeCount(sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_listings`),
+      ]);
 
-    const n = news;
-    const p = places;
-    const r = restaurants;
-    const l = listings;
-    const c = companies;
-    const pe = people;
+    const foodCount = Number(food.count) + Number(foodTalabat.count);
+    const foodScraped = food.last_scraped > foodTalabat.last_scraped ? food.last_scraped : foodTalabat.last_scraped;
+
+    const total =
+      Number(news.count) + foodCount + Number(health.count) +
+      Number(shopping.count) + Number(services.count) + Number(education.count) +
+      Number(hospitality.count) + Number(religion.count) + Number(people.count) + Number(listings.count);
 
     return NextResponse.json({
       tables: [
-        { name: "News", source: "Roya News", icon: "📰", count: Number(n.count), last_scraped: n.last_scraped },
-        { name: "Places", source: "Google Maps", icon: "🗺️", count: Number(p.count), last_scraped: p.last_scraped },
-        { name: "Restaurants", source: "Talabat", icon: "🍔", count: Number(r.count), last_scraped: r.last_scraped },
-        { name: "Listings", source: "OpenSooq", icon: "🛒", count: Number(l.count), last_scraped: l.last_scraped },
-        { name: "Companies", source: "LinkedIn", icon: "💼", count: Number(c.count), last_scraped: c.last_scraped },
-        { name: "People", source: "Google Maps / Web", icon: "👤", count: Number(pe.count), last_scraped: pe.last_scraped },
+        { name: "News",        icon: "📰", count: Number(news.count),       last_scraped: news.last_scraped },
+        { name: "Food & Drink",icon: "🍽️", count: foodCount,               last_scraped: foodScraped },
+        { name: "Health",      icon: "🏥", count: Number(health.count),     last_scraped: health.last_scraped },
+        { name: "Shopping",    icon: "🛍️", count: Number(shopping.count),  last_scraped: shopping.last_scraped },
+        { name: "Services",    icon: "🔧", count: Number(services.count),   last_scraped: services.last_scraped },
+        { name: "Education",   icon: "🎓", count: Number(education.count),  last_scraped: education.last_scraped },
+        { name: "Hotels",      icon: "🏨", count: Number(hospitality.count),last_scraped: hospitality.last_scraped },
+        { name: "Mosques",     icon: "🕌", count: Number(religion.count),   last_scraped: religion.last_scraped },
+        { name: "People",      icon: "👤", count: Number(people.count),     last_scraped: people.last_scraped },
+        { name: "Listings",    icon: "🛒", count: Number(listings.count),   last_scraped: listings.last_scraped },
       ],
-      total: Number(n.count) + Number(p.count) + Number(r.count) + Number(l.count) + Number(c.count) + Number(pe.count),
+      total,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

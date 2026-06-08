@@ -9,56 +9,108 @@ load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
 API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 BASE_URL = "https://maps.googleapis.com/maps/api/place"
 
-# Text search queries — each query returns businesses matching that exact term
-# Using text search ensures correct category assignment
+# Maps specific subcategory → broad display category
+CATEGORY_MAP = {
+    "restaurant":        "food",
+    "cafe":              "food",
+    "bakery":            "food",
+    "fast_food":         "food",
+    "juice_bar":         "food",
+    "gym":               "health",
+    "clinic":            "health",
+    "hospital":          "health",
+    "pharmacy":          "health",
+    "dentist":           "health",
+    "spa":               "health",
+    "veterinary_care":   "health",
+    "physiotherapy":     "health",
+    "optical":           "health",
+    "supermarket":       "shopping",
+    "electronics_store": "shopping",
+    "clothing_store":    "shopping",
+    "jewelry_store":     "shopping",
+    "furniture_store":   "shopping",
+    "pet_store":         "shopping",
+    "book_store":        "shopping",
+    "florist":           "shopping",
+    "shopping_mall":     "shopping",
+    "salon":             "services",
+    "barbershop":        "services",
+    "laundry":           "services",
+    "car_repair":        "services",
+    "gas_station":       "services",
+    "bank":              "services",
+    "atm":               "services",
+    "school":            "education",
+    "university":        "education",
+    "hotel":             "hospitality",
+    "mosque":            "religion",
+    "church":            "religion",
+}
+
+# Text search queries: (subcategory, arabic/english query)
+# subcategory is the specific type; category is derived from CATEGORY_MAP
 SEARCH_QUERIES = [
-    ("restaurant", "مطعم عمان"),
-    ("restaurant", "restaurant Amman Jordan"),
-    ("cafe", "مقهى عمان"),
-    ("cafe", "cafe Amman Jordan"),
-    ("gym", "نادي رياضي عمان"),
-    ("gym", "gym fitness Amman Jordan"),
-    ("clinic", "عيادة عمان"),
-    ("clinic", "clinic Amman Jordan"),
-    ("hospital", "مستشفى عمان"),
-    ("hospital", "hospital Amman Jordan"),
-    ("pharmacy", "صيدلية عمان"),
-    ("pharmacy", "pharmacy Amman Jordan"),
-    ("salon", "صالون عمان"),
-    ("salon", "salon beauty Amman Jordan"),
-    ("school", "مدرسة عمان"),
-    ("school", "school Amman Jordan"),
-    ("university", "جامعة عمان"),
-    ("supermarket", "سوبرماركت عمان"),
-    ("supermarket", "supermarket Amman Jordan"),
-    ("bakery", "مخبز عمان"),
-    ("bakery", "bakery Amman Jordan"),
-    ("hotel", "فندق عمان"),
-    ("hotel", "hotel Amman Jordan"),
-    ("bank", "بنك عمان"),
-    ("bank", "bank Amman Jordan"),
-    ("dentist", "طبيب أسنان عمان"),
-    ("dentist", "dentist Amman Jordan"),
+    # Food & Drink
+    ("restaurant",        "مطعم عمان"),
+    ("restaurant",        "restaurant Amman Jordan"),
+    ("cafe",              "مقهى عمان"),
+    ("cafe",              "cafe coffee shop Amman Jordan"),
+    ("bakery",            "مخبز عمان"),
+    ("bakery",            "bakery Amman Jordan"),
+    ("juice_bar",         "عصير طازج عمان"),
+    ("fast_food",         "وجبات سريعة عمان"),
+    # Health & Wellness
+    ("clinic",            "عيادة عمان"),
+    ("clinic",            "clinic Amman Jordan"),
+    ("hospital",          "مستشفى عمان"),
+    ("hospital",          "hospital Amman Jordan"),
+    ("pharmacy",          "صيدلية عمان"),
+    ("pharmacy",          "pharmacy Amman Jordan"),
+    ("dentist",           "طبيب أسنان عمان"),
+    ("dentist",           "dental clinic Amman Jordan"),
+    ("gym",               "نادي رياضي عمان"),
+    ("gym",               "gym fitness Amman Jordan"),
+    ("spa",               "سبا عمان"),
+    ("spa",               "spa massage Amman Jordan"),
+    ("veterinary_care",   "عيادة بيطرية عمان"),
+    ("physiotherapy",     "علاج طبيعي عمان"),
+    ("optical",           "بصريات عمان"),
+    # Shopping
+    ("supermarket",       "سوبرماركت عمان"),
+    ("supermarket",       "supermarket Amman Jordan"),
+    ("shopping_mall",     "مول تسوق عمان"),
+    ("shopping_mall",     "mall Amman Jordan"),
+    ("clothing_store",    "محل ملابس عمان"),
+    ("clothing_store",    "clothing store Amman Jordan"),
     ("electronics_store", "محل الكترونيات عمان"),
     ("electronics_store", "electronics store Amman"),
-    ("clothing_store", "محل ملابس عمان"),
-    ("clothing_store", "clothing store Amman Jordan"),
-    ("car_repair", "ميكانيكي عمان"),
-    ("car_repair", "car repair garage Amman"),
-    ("spa", "سبا عمان"),
-    ("spa", "spa massage Amman Jordan"),
-    ("jewelry_store", "محل مجوهرات عمان"),
-    ("furniture_store", "محل أثاث عمان"),
-    ("gas_station", "محطة وقود عمان"),
-    ("gas_station", "petrol station Amman Jordan"),
-    ("mosque", "مسجد عمان"),
-    ("shopping_mall", "مول عمان"),
-    ("shopping_mall", "mall Amman Jordan"),
-    ("veterinary_care", "طبيب بيطري عمان"),
-    ("pet_store", "محل حيوانات عمان"),
-    ("laundry", "مغسلة عمان"),
-    ("florist", "محل ورد عمان"),
-    ("book_store", "مكتبة عمان"),
+    ("jewelry_store",     "محل مجوهرات عمان"),
+    ("furniture_store",   "محل أثاث عمان"),
+    ("book_store",        "مكتبة عمان"),
+    ("pet_store",         "محل حيوانات عمان"),
+    ("florist",           "محل ورد عمان"),
+    # Services
+    ("salon",             "صالون تجميل عمان"),
+    ("salon",             "beauty salon Amman Jordan"),
+    ("barbershop",        "حلاق عمان"),
+    ("laundry",           "مغسلة عمان"),
+    ("car_repair",        "ميكانيكي عمان"),
+    ("car_repair",        "car repair garage Amman"),
+    ("gas_station",       "محطة وقود عمان"),
+    ("gas_station",       "petrol station Amman Jordan"),
+    ("bank",              "بنك عمان"),
+    ("bank",              "bank Amman Jordan"),
+    # Education
+    ("school",            "مدرسة عمان"),
+    ("school",            "school Amman Jordan"),
+    ("university",        "جامعة عمان"),
+    ("university",        "university Amman Jordan"),
+    # Hospitality
+    ("hotel",             "فندق عمان"),
+    ("hotel",             "hotel Amman Jordan"),
+    # Religion
+    ("mosque",            "مسجد عمان"),
 ]
 
 # Amman bounding box for validation
@@ -79,6 +131,7 @@ def setup_table():
             place_id TEXT UNIQUE,
             name TEXT,
             category TEXT,
+            subcategory TEXT,
             address TEXT,
             phone TEXT,
             website TEXT,
@@ -91,10 +144,36 @@ def setup_table():
             scraped_at TIMESTAMP DEFAULT NOW()
         )
     """)
-    # Add embedding column if the table existed before this change
-    cur.execute("ALTER TABLE jordan_places ADD COLUMN IF NOT EXISTS search_text TEXT")
-    cur.execute("ALTER TABLE jordan_places ADD COLUMN IF NOT EXISTS embedding vector(384)")
-    # HNSW index for vector search
+    # Add columns if they didn't exist before
+    for stmt in [
+        "ALTER TABLE jordan_places ADD COLUMN IF NOT EXISTS subcategory TEXT",
+        "ALTER TABLE jordan_places ADD COLUMN IF NOT EXISTS search_text TEXT",
+        "ALTER TABLE jordan_places ADD COLUMN IF NOT EXISTS embedding vector(384)",
+    ]:
+        cur.execute(stmt)
+
+    # ── MIGRATION: populate subcategory from old category values,
+    #    then remap category → broad group ──────────────────────────
+    cur.execute("UPDATE jordan_places SET subcategory = category WHERE subcategory IS NULL")
+    cur.execute("""
+        UPDATE jordan_places SET category = CASE
+            WHEN subcategory IN ('restaurant','cafe','bakery','fast_food','juice_bar') THEN 'food'
+            WHEN subcategory IN ('clinic','hospital','pharmacy','dentist','gym','spa',
+                                 'veterinary_care','physiotherapy','optical')        THEN 'health'
+            WHEN subcategory IN ('supermarket','electronics_store','clothing_store',
+                                 'jewelry_store','furniture_store','pet_store',
+                                 'book_store','florist','shopping_mall')             THEN 'shopping'
+            WHEN subcategory IN ('salon','barbershop','laundry','car_repair',
+                                 'gas_station','bank','atm')                         THEN 'services'
+            WHEN subcategory IN ('school','university')                              THEN 'education'
+            WHEN subcategory IN ('hotel')                                            THEN 'hospitality'
+            WHEN subcategory IN ('mosque','church')                                  THEN 'religion'
+            ELSE category
+        END
+        WHERE category NOT IN ('food','health','shopping','services','education','hospitality','religion')
+    """)
+
+    # Indexes
     cur.execute("""
         CREATE INDEX IF NOT EXISTS jordan_places_vec_idx
         ON jordan_places USING hnsw (embedding vector_cosine_ops)
@@ -115,10 +194,11 @@ def is_in_amman(lat, lng):
     return AMMAN_LAT_MIN <= lat <= AMMAN_LAT_MAX and AMMAN_LNG_MIN <= lng <= AMMAN_LNG_MAX
 
 
-def text_search(query, category):
+def text_search(query, subcategory):
     """Use Google Places Text Search for accurate results."""
     places = []
     seen_ids = set()
+    broad_category = CATEGORY_MAP.get(subcategory, subcategory)
     url = f"{BASE_URL}/textsearch/json"
     params = {
         "query": query,
@@ -142,7 +222,6 @@ def text_search(query, category):
                 lat = place.get("geometry", {}).get("location", {}).get("lat")
                 lng = place.get("geometry", {}).get("location", {}).get("lng")
 
-                # Strict Amman-only filter
                 if not is_in_amman(lat, lng):
                     continue
 
@@ -150,7 +229,8 @@ def text_search(query, category):
                 places.append({
                     "place_id": pid,
                     "name": place.get("name"),
-                    "category": category,  # Use our defined category, not Google's
+                    "category": broad_category,   # broad group (food, health, etc.)
+                    "subcategory": subcategory,    # specific type (cafe, clinic, etc.)
                     "address": place.get("formatted_address"),
                     "rating": place.get("rating"),
                     "reviews_count": place.get("user_ratings_total"),
@@ -201,16 +281,19 @@ def save_places(places):
         try:
             cur.execute("""
                 INSERT INTO jordan_places
-                    (place_id, name, category, address, rating, reviews_count, lat, lng, search_text, embedding)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s::vector)
+                    (place_id, name, category, subcategory, address, rating, reviews_count, lat, lng, search_text, embedding)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::vector)
                 ON CONFLICT (place_id) DO UPDATE SET
+                    category      = EXCLUDED.category,
+                    subcategory   = EXCLUDED.subcategory,
                     rating        = EXCLUDED.rating,
                     reviews_count = EXCLUDED.reviews_count,
                     search_text   = EXCLUDED.search_text,
                     embedding     = EXCLUDED.embedding
             """, (
                 place["place_id"], place["name"], place["category"],
-                place["address"], place["rating"], place["reviews_count"],
+                place.get("subcategory"), place["address"],
+                place["rating"], place["reviews_count"],
                 place["lat"], place["lng"],
                 place.get("search_text"), place.get("embedding")
             ))
@@ -227,11 +310,16 @@ def run():
     print("Setting up jordan_places table...")
     setup_table()
     total = 0
-    for category, query in SEARCH_QUERIES:
-        print(f"Searching: '{query}'...")
-        places = text_search(query, category)
+    seen_queries = set()
+    for subcategory, query in SEARCH_QUERIES:
+        if query in seen_queries:
+            continue
+        seen_queries.add(query)
+        broad = CATEGORY_MAP.get(subcategory, subcategory)
+        print(f"Searching: '{query}' [{broad} › {subcategory}]...")
+        places = text_search(query, subcategory)
         saved = save_places(places)
-        print(f"  → Found {len(places)}, saved {saved} {category}s")
+        print(f"  → Found {len(places)}, saved {saved}")
         total += saved
         time.sleep(1)
     print(f"Google Maps done. Total saved: {total}")

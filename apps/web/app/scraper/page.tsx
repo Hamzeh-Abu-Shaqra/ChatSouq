@@ -20,21 +20,29 @@ interface DataRow {
 }
 
 const TABS = [
-  { key: "news", label: "News", icon: "📰", source: "Roya News" },
-  { key: "places", label: "Places", icon: "🗺️", source: "Google Maps" },
-  { key: "restaurants", label: "Restaurants", icon: "🍔", source: "Talabat" },
-  { key: "listings", label: "Listings", icon: "🛒", source: "OpenSooq" },
-  { key: "companies", label: "Companies", icon: "💼", source: "LinkedIn" },
-  { key: "people", label: "People", icon: "👤", source: "Google Maps / Web" },
+  { key: "news",        label: "News",        icon: "📰" },
+  { key: "food",        label: "Food & Drink", icon: "🍽️" },
+  { key: "health",      label: "Health",       icon: "🏥" },
+  { key: "shopping",    label: "Shopping",     icon: "🛍️" },
+  { key: "services",    label: "Services",     icon: "🔧" },
+  { key: "education",   label: "Education",    icon: "🎓" },
+  { key: "hospitality", label: "Hotels",       icon: "🏨" },
+  { key: "religion",    label: "Mosques",      icon: "🕌" },
+  { key: "people",      label: "People",       icon: "👤" },
+  { key: "listings",    label: "Listings",     icon: "🛒" },
 ];
 
 const COLUMNS: Record<string, string[]> = {
-  news: ["title", "source", "scraped_at"],
-  places: ["name", "category", "address", "rating", "phone"],
-  restaurants: ["name", "cuisine", "rating", "delivery_time", "area", "min_order"],
-  listings: ["title", "price", "location", "category"],
-  companies: ["name", "industry", "location"],
-  people: ["name", "title", "subcategory", "specialty", "organization", "phone"],
+  news:        ["title", "source", "scraped_at"],
+  food:        ["name", "subcategory", "rating", "address", "delivery_time", "source"],
+  health:      ["name", "subcategory", "address", "rating", "phone"],
+  shopping:    ["name", "subcategory", "address", "rating"],
+  services:    ["name", "subcategory", "address", "phone"],
+  education:   ["name", "subcategory", "address"],
+  hospitality: ["name", "address", "rating"],
+  religion:    ["name", "address"],
+  people:      ["name", "title", "subcategory", "specialty", "organization", "phone"],
+  listings:    ["title", "price", "location", "category"],
 };
 
 function timeAgo(date: string | null): string {
@@ -167,7 +175,7 @@ export default function ScraperDashboard() {
       {/* Stats Bar */}
       {stats && (
         <div className="border-b border-zinc-800 px-8 py-4">
-          <div className="max-w-7xl mx-auto grid grid-cols-6 gap-4">
+          <div className="max-w-7xl mx-auto grid grid-cols-5 lg:grid-cols-10 gap-3">
             {stats.tables.map((t) => (
               <div key={t.name} className="text-center">
                 <p className="text-lg font-bold">{t.count.toLocaleString()}</p>

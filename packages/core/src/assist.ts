@@ -49,7 +49,10 @@ export async function assist(input: RecommendInput, deps: Deps = {}): Promise<As
   if (pSig >= 3 && pSig > prodSig) return recommendPlaces(input, deps);
 
   // General query (rental, tourism, news, Jordan info, etc.)
-  if (isGeneralQuery(input.query)) {
+  // Guard: product questions like "what is the best phone?" or "ما هو أفضل موبايل" have
+  // prodSig > 0 and must NOT be sent to the general engine even though they contain
+  // question words that match GENERAL_INFO patterns.
+  if (isGeneralQuery(input.query) && prodSig === 0) {
     return generalAnswer(input, { provider: deps.provider });
   }
 

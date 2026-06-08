@@ -11,9 +11,10 @@ import type {
   ResultPlace,
 } from "./types";
 
-// Jordan's 12 governorates + common aliases. Detecting one scopes a place query
-// to a region (and keeps us strictly on the Jordan knowledge graph).
+// Jordan's 12 governorates + common aliases + Arabic names.
+// Detecting one scopes a place query to a region.
 const GOVERNORATES: Record<string, string> = {
+  // English
   amman: "Amman",
   irbid: "Irbid",
   zarqa: "Zarqa",
@@ -30,6 +31,25 @@ const GOVERNORATES: Record<string, string> = {
   jerash: "Jerash",
   ajloun: "Ajloun",
   ajlun: "Ajloun",
+  // Arabic
+  "عمان":    "Amman",
+  "إربد":    "Irbid",
+  "اربد":    "Irbid",
+  "الزرقاء": "Zarqa",
+  "زرقاء":   "Zarqa",
+  "العقبة":  "Aqaba",
+  "عقبة":    "Aqaba",
+  "المفرق":  "Mafraq",
+  "مفرق":    "Mafraq",
+  "البلقاء": "Balqa",
+  "السلط":   "Balqa",
+  "مادبا":   "Madaba",
+  "الكرك":   "Karak",
+  "كرك":     "Karak",
+  "الطفيلة": "Tafilah",
+  "معان":    "Ma'an",
+  "جرش":     "Jerash",
+  "عجلون":   "Ajloun",
 };
 
 /**
@@ -149,6 +169,101 @@ const PLACE_HINTS: Record<string, string[]> = {
   optician: ["Optician"],
   vet: ["Veterinary"],
   veterinary: ["Veterinary"],
+
+  // ── Arabic terms ─────────────────────────────────────────────────────────────
+  // Food & drink
+  "مطعم":          ["Restaurant"],
+  "مطاعم":         ["Restaurant"],
+  "مطبخ":          ["Restaurant"],
+  "كافيه":         ["Cafe", "Coffee Shop"],
+  "كافيهات":       ["Cafe", "Coffee Shop"],
+  "مقهى":          ["Cafe", "Coffee Shop"],
+  "مقاهي":         ["Cafe", "Coffee Shop"],
+  "قهوة":          ["Cafe", "Coffee Shop"],
+  "فطور":          ["Cafe", "Restaurant"],
+  "غداء":          ["Restaurant"],
+  "عشاء":          ["Restaurant"],
+  "أكل":           ["Restaurant", "Fast Food"],
+  "اكل":           ["Restaurant", "Fast Food"],
+  "وجبة سريعة":    ["Fast Food"],
+  "فاست فود":      ["Fast Food"],
+  "بيتزا":         ["Restaurant", "Fast Food"],
+  "برغر":          ["Fast Food", "Restaurant"],
+  "شاورما":        ["Fast Food", "Restaurant"],
+  "فلافل":         ["Fast Food", "Restaurant"],
+  "بوفيه":         ["Restaurant"],
+  "حلويات":        ["Dessert", "Pastry"],
+  "كيك":           ["Bakery", "Dessert"],
+  "بيكري":         ["Bakery"],
+  "مخبز":          ["Bakery"],
+  // Health & wellness
+  "صيدلية":        ["Pharmacy"],
+  "صيدليات":       ["Pharmacy"],
+  "مستشفى":        ["Hospital"],
+  "مستشفيات":      ["Hospital"],
+  "عيادة":         ["Clinic", "Medical Center"],
+  "عيادات":        ["Clinic", "Medical Center"],
+  "دكتور":         ["Doctor", "Clinic"],
+  "دكتورة":        ["Doctor", "Clinic"],
+  "طبيب":          ["Doctor", "Clinic"],
+  "أطباء":         ["Doctor", "Clinic"],
+  "طبيب أسنان":    ["Dentist"],
+  "طبيب اسنان":    ["Dentist"],
+  "أسنان":         ["Dentist"],
+  "اسنان":         ["Dentist"],
+  "جيم":           ["Gym"],
+  "نادي رياضي":    ["Gym", "Sports Center"],
+  "صالة رياضية":   ["Gym"],
+  "سبا":           ["Spa"],
+  "مساج":          ["Spa"],
+  "صالون":         ["Salon"],
+  "كوافير":        ["Salon"],
+  "حلاق":          ["Salon"],
+  "حلاقة":         ["Salon"],
+  // Shopping & services
+  "سوبرماركت":     ["Supermarket"],
+  "بقالة":         ["Supermarket", "Convenience Store"],
+  "سوق":           ["Market", "Supermarket"],
+  "مول":           ["Shopping Mall"],
+  "مول تجاري":     ["Shopping Mall"],
+  "محل":           ["Shop", "Store"],
+  "محلات":         ["Shop", "Store"],
+  "بنك":           ["Bank"],
+  "بنوك":          ["Bank"],
+  "صراف":          ["Bank"],
+  "محامي":         ["Lawyer", "Law Firm"],
+  "محامين":        ["Lawyer", "Law Firm"],
+  "محاسب":         ["Accountant"],
+  "محطة وقود":     ["Gas Station"],
+  "بنزين":         ["Gas Station"],
+  // Education
+  "مدرسة":         ["School"],
+  "مدارس":         ["School"],
+  "جامعة":         ["University", "College"],
+  "جامعات":        ["University", "College"],
+  "كلية":          ["University", "College"],
+  // Hospitality
+  "فندق":          ["Hotel", "Guest House", "Hostel"],
+  "فنادق":         ["Hotel", "Guest House"],
+  "نزل":           ["Hostel"],
+  "شقة فندقية":    ["Hotel", "Guest House"],
+  // Religion
+  "مسجد":          ["Mosque"],
+  "مساجد":         ["Mosque"],
+  "جامع":          ["Mosque"],
+  "كنيسة":         ["Church"],
+  "كنائس":         ["Church"],
+  // Attractions & tourism
+  "متحف":          ["Museum"],
+  "متاحف":         ["Museum"],
+  "حديقة":         ["Park"],
+  "حدائق":         ["Park"],
+  "معالم":         ["Attraction", "Museum"],
+  "سياحة":         ["Attraction", "Viewpoint"],
+  // Other
+  "مكتبة":         ["Bookstore"],
+  "بيطري":         ["Veterinary"],
+  "نظارات":        ["Optician"],
 };
 
 let categoryCache: { at: number; values: string[] } | null = null;
@@ -167,42 +282,90 @@ export async function getPlaceCategories(): Promise<string[]> {
 }
 
 const STOPWORDS = new Set([
+  // English
   "a","an","the","in","on","near","nearby","close","best","good","top","find","show",
   "me","my","want","need","looking","for","to","of","is","are","where","place","places",
   "spot","spots","around","at","go","visit","get","some","any","with","and","or","jordan",
+  // Arabic function words & filler
+  "في","من","إلى","الى","على","عند","قرب","بجانب","حول","بالقرب",
+  "أين","اين","وين","فين","كيف","ماذا","ما","هل",
+  "أفضل","افضل","أحسن","احسن","أقرب","اقرب",
+  "ابحث","أبحث","اريد","أريد","محتاج","ابغى","أبغى","حابب","حابة",
+  "الأردن","الاردن","عمان",
+  "مكان","أماكن","محل","اقترح","وصي","دلني","دورلي","شوفلي",
+  "طيب","جيد","جيدة","حلو","حلوة","زين","كويس","مرتاح","ممتاز",
+  "قريب","بالجانب","وسط","منطقة","ناحية",
 ]);
+
+/** True when the string contains at least one Arabic character */
+function containsArabicChar(s: string): boolean {
+  return /[؀-ۿ]/.test(s);
+}
 
 function extractKeywords(q: string): string[] {
   return q
     .toLowerCase()
     .replace(/[^\p{L}\p{N}\s]/gu, " ")
     .split(/\s+/)
-    .filter((w) => w.length > 2 && !STOPWORDS.has(w) && !/^\d+$/.test(w));
+    .filter((w) => {
+      if (w.length < 2) return false;
+      if (STOPWORDS.has(w)) return false;
+      if (/^\d+$/.test(w)) return false;
+      // Arabic tokens: keep anything ≥ 2 chars that's not a stopword
+      if (containsArabicChar(w)) return w.length >= 2;
+      return w.length > 2;
+    });
+}
+
+function placeHintPattern(term: string): RegExp {
+  const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  if (term.includes(" ")) return new RegExp(escaped, "i");
+  if (containsArabicChar(term)) return new RegExp(`(?:^|\\s)${escaped}(?:\\s|$)`, "i");
+  return new RegExp(`\\b${escaped}\\b`, "i");
+}
+
+function normalizeArabicPrefixesPlace(q: string): string {
+  return q
+    .replace(/(^|\s)لل/g, "$1ال")
+    .replace(/(^|\s)ل(?=[؀-ۿ])/g, "$1")
+    .replace(/(^|\s)ب(?=[؀-ۿ])/g, "$1");
 }
 
 function matchPlaceCategories(q: string, dbCategories: string[]): string[] {
   const lower = q.toLowerCase();
+  const normalized = normalizeArabicPrefixesPlace(lower);
   const byLower = new Map(dbCategories.map((c) => [c.toLowerCase(), c]));
   const matched = new Set<string>();
-  for (const [term, cats] of Object.entries(PLACE_HINTS)) {
-    if (new RegExp(`\\b${term}\\b`).test(lower)) {
+  const hints = Object.entries(PLACE_HINTS).sort((a, b) => {
+    const aw = a[0].includes(" ") ? 1 : 0;
+    const bw = b[0].includes(" ") ? 1 : 0;
+    return bw - aw || b[0].length - a[0].length;
+  });
+  for (const [term, cats] of hints) {
+    const pat = placeHintPattern(term);
+    if (pat.test(lower) || pat.test(normalized)) {
       for (const c of cats) {
         const real = byLower.get(c.toLowerCase());
         if (real) matched.add(real);
       }
     }
   }
-  // Direct mention of a real category name (e.g. "pharmacy", "museum").
   for (const [lc, real] of byLower) {
-    if (lc.length > 3 && lower.includes(lc)) matched.add(real);
+    if (lc.length > 3 && (lower.includes(lc) || normalized.includes(lc))) matched.add(real);
   }
   return [...matched];
 }
 
 function detectGovernorate(q: string): string | null {
   const lower = q.toLowerCase();
-  for (const [k, v] of Object.entries(GOVERNORATES)) {
-    if (new RegExp(`\\b${k}\\b`).test(lower)) return v;
+  const normalized = normalizeArabicPrefixesPlace(lower);
+  const entries = Object.entries(GOVERNORATES).sort((a, b) => b[0].length - a[0].length);
+  for (const [k, v] of entries) {
+    const escaped = k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const pat = containsArabicChar(k)
+      ? new RegExp(`(?:^|\\s)${escaped}(?:\\s|$)`)
+      : new RegExp(`\\b${escaped}\\b`, "i");
+    if (pat.test(lower) || pat.test(normalized)) return v;
   }
   return null;
 }
@@ -235,9 +398,11 @@ export function parsePlaceIntent(query: string, dbCategories: string[]): PlaceIn
 /** Count matching PLACE_HINTS keywords without requiring DB categories. */
 function staticHintMatches(query: string): number {
   const lower = query.toLowerCase();
+  const normalized = normalizeArabicPrefixesPlace(lower);
   let n = 0;
   for (const term of Object.keys(PLACE_HINTS)) {
-    if (new RegExp(`\\b${term}\\b`).test(lower)) n++;
+    const pat = placeHintPattern(term);
+    if (pat.test(lower) || pat.test(normalized)) n++;
   }
   return n;
 }
@@ -251,22 +416,25 @@ function staticHintMatches(query: string): number {
  * DB-backed bonuses are added when categories are available.
  */
 export function placeSignal(query: string, dbCategories: string[]): number {
+  const lower = query.toLowerCase();
+  const normalized = normalizeArabicPrefixesPlace(lower);
+
   // Static keyword signal — works with an empty DB.
   let s = staticHintMatches(query) * 2;
 
   // DB-backed bonuses: confirmed category hit + direct category name mention.
   if (dbCategories.length > 0) {
-    const lower = query.toLowerCase();
     const byLower = new Map(dbCategories.map((c) => [c.toLowerCase(), c]));
     for (const [term, cats] of Object.entries(PLACE_HINTS)) {
-      if (new RegExp(`\\b${term}\\b`).test(lower)) {
+      const pat = placeHintPattern(term);
+      if (pat.test(lower) || pat.test(normalized)) {
         for (const c of cats) {
           if (byLower.has(c.toLowerCase())) { s += 1; break; }
         }
       }
     }
     for (const [lc] of byLower) {
-      if (lc.length > 3 && lower.includes(lc)) s += 1;
+      if (lc.length > 3 && (lower.includes(lc) || normalized.includes(lc))) s += 1;
     }
   }
 
@@ -274,8 +442,14 @@ export function placeSignal(query: string, dbCategories: string[]): number {
   if (intent.governorate) s += 1;
   // Named Amman district/neighbourhood is a very strong place indicator (+2)
   if (detectDistrict(query)) s += 2;
+  // English proximity signals
   if (/\b(near me|nearby|close to|around here|in town)\b/i.test(query)) s += 2;
   if (/\b(where|place|places|spot|visit|go to|open now)\b/i.test(query)) s += 1;
+  // Arabic proximity / location signals
+  if (/قريب مني|بالقرب من|بجانبي|حواليه|قريبة مني/.test(query)) s += 2;
+  if (/أين|اين|وين|فين|كيف أوصل|كيف اوصل|أماكن|مكان/.test(query)) s += 1;
+  // Arabic governorates or country name (without needing a place category match)
+  if (/عمان|إربد|اربد|الزرقاء|العقبة|الأردن|الاردن/.test(query)) s += 1;
   return s;
 }
 
@@ -373,9 +547,9 @@ async function fetchScrapedCandidates(
     intent.categories.some((c) =>
       /restaurant|cafe|coffee|food|bakery|dessert|fast.food/i.test(c)
     ) ||
-    /\b(eat|food|restaurant|cafe|coffee|lunch|dinner|breakfast|delivery)\b/i.test(
-      intent.rawQuery
-    );
+    /\b(eat|food|restaurant|cafe|coffee|lunch|dinner|breakfast|delivery)\b/i.test(intent.rawQuery) ||
+    // Arabic food & drink queries
+    /مطعم|مطاعم|كافيه|مقهى|قهوة|أكل|اكل|وجبة|فطور|غداء|عشاء|توصيل طعام|بيتزا|برغر|شاورما|فلافل|بوفيه/.test(intent.rawQuery);
   const wantPeople = PEOPLE_RE.test(intent.rawQuery) ||
     intent.categories.some((c) => /doctor|dentist|lawyer|accountant|architect|engineer|pharmacist/i.test(c));
   const wantPlace = !wantRestaurant || intent.categories.length === 0;
@@ -542,7 +716,7 @@ function deduplicateCandidates(candidates: PlaceCandidate[]): PlaceCandidate[] {
   const seen = new Set<string>();
   const out: PlaceCandidate[] = [];
   for (const c of candidates) {
-    const key = c.name.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 24);
+    const key = c.name.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "").slice(0, 24);
     if (!seen.has(key)) {
       seen.add(key);
       out.push(c);

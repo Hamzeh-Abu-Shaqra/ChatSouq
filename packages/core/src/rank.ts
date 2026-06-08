@@ -40,9 +40,21 @@ const TYPE_ATTRIBUTES: { required: RegExp; absent?: RegExp; marker: string }[] =
   { marker: "over-ear",    required: /\b(over.ear|on.ear|circum.aural|full.size|full-size)\b/i },
   { marker: "in-ear",      required: /\b(in.ear|earbud|earbuds|tws|inner.ear)\b/i },
   { marker: "gaming",      required: /\b(gaming|gamer|game)\b/i },
-  { marker: "smartwatch",  required: /\b(smart.?watch|fitness.track|activity.track|health.watch)\b/i },
-  { marker: "4k",          required: /\b(4k|uhd|2160p|ultra.hd)\b/i },
-  { marker: "oled",        required: /\b(oled|amoled|super.amoled)\b/i },
+  { marker: "smartwatch",   required: /\b(smart.?watch|fitness.track|activity.track|health.watch)\b/i },
+  { marker: "4k",           required: /\b(4k|uhd|2160p|ultra.hd)\b/i },
+  { marker: "oled",         required: /\b(oled|amoled|super.amoled)\b/i },
+  // Watches — movement type
+  { marker: "automatic",    required: /\b(automatic|self.?winding|mechanical|skeleton|tourbillon|chronograph)\b/i },
+  { marker: "quartz",       required: /\b(quartz|battery.?powered|solar.?watch)\b/i },
+  // Keyboards
+  { marker: "mechanical",   required: /\b(mechanical|mech|cherry.?mx|clicky|tactile|linear.?switch)\b/i },
+  // Monitors / TVs
+  { marker: "curved",       required: /\b(curved|ultrawide|ultra.?wide|curve)\b/i },
+  // Speakers / audio
+  { marker: "portable",     required: /\b(portable|compact|handheld|travel|waterproof.?speaker|outdoor.?speaker|bluetooth.?speaker)\b/i },
+  // Cameras
+  { marker: "mirrorless",   required: /\b(mirrorless|ilce|alpha|eos.?r|z-?series|om.?system|x-?series)\b/i },
+  { marker: "dslr",         required: /\b(dslr|reflex|digital.?slr)\b/i },
 ];
 
 /**

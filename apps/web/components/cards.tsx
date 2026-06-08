@@ -588,6 +588,7 @@ export function NewspaperFront({ cards }: { cards: InfoCard[] }) {
   const news        = cards.filter((c) => c.section === "news");
   const restaurants = cards.filter((c) => c.section === "restaurant");
   const places      = cards.filter((c) => c.section === "place");
+  const pros        = cards.filter((c) => c.section === "pro");
 
   const today  = new Date();
   const dateEn = today.toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
@@ -643,6 +644,15 @@ export function NewspaperFront({ cards }: { cards: InfoCard[] }) {
             <SectionDivider color="#059669" label="Around Amman" />
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {places.slice(0, 6).map((item, i) => <PlaceTile key={i} item={item} />)}
+            </div>
+          </div>
+        )}
+
+        {pros.length > 0 && (
+          <div>
+            <SectionDivider color="#0891b2" label="Professionals" />
+            <div className="space-y-1">
+              {pros.slice(0, 4).map((item, i) => <ProTile key={i} item={item} />)}
             </div>
           </div>
         )}
@@ -898,5 +908,5 @@ function CheckDot() {
   );
 }
 
-void PROFESSIONAL_ROLES;
-void cleanCons;
+void PROFESSIONAL_ROLES; // reserved for future professional category detection
+void cleanCons;          // intentionally unused: cons with "not listed" data gaps are filtered out at source

@@ -447,10 +447,10 @@ function Hero({ onPick }: { onPick: (q: string) => void }) {
               className="group flex items-start gap-3 rounded-xl bg-white px-4 py-3.5 text-left shadow-sm ring-1 ring-black/[0.07] transition-all hover:-translate-y-px hover:shadow-card hover:ring-black/[0.12] active:scale-[0.99]"
             >
               <span
-                className="mt-0.5 shrink-0 rounded-lg px-2 py-1 text-[11px] font-black uppercase tracking-wider leading-none"
+                className="mt-0.5 shrink-0 rounded-lg px-2 py-1 text-[10px] font-black uppercase tracking-wider leading-none whitespace-nowrap"
                 style={{ background: colors.bg, color: colors.text }}
               >
-                {ex.icon}
+                {ex.icon} {ex.tag}
               </span>
               <span className="text-[13px] text-ink-600 group-hover:text-ink-900 transition-colors leading-snug">
                 {ex.label}
@@ -594,18 +594,26 @@ function SourceLine({ res }: { res: AssistResponse }) {
   return <p className="mt-2 text-[10px] text-ink-300 font-medium">{text}</p>;
 }
 
-// ── ChatText — renders **bold** markdown inline ───────────────────────────────
+// ── ChatText — renders **bold** markdown, multi-paragraph ────────────────────
+
+function renderInline(text: string) {
+  return text.split(/\*\*(.+?)\*\*/g).map((part, i) =>
+    i % 2 === 1
+      ? <strong key={i} className="font-semibold text-ink-900">{part}</strong>
+      : part
+  );
+}
 
 function ChatText({ text, rtl }: { text: string; rtl?: boolean }) {
-  const parts = text.split(/\*\*(.+?)\*\*/g);
+  const paragraphs = text.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
   return (
-    <p dir={rtl ? "rtl" : "ltr"} className="text-[15px] leading-[1.75] text-ink-800">
-      {parts.map((part, i) =>
-        i % 2 === 1
-          ? <strong key={i} className="font-semibold text-ink-900">{part}</strong>
-          : part
-      )}
-    </p>
+    <div dir={rtl ? "rtl" : "ltr"} className="space-y-3">
+      {paragraphs.map((p, i) => (
+        <p key={i} className="text-[15px] leading-[1.75] text-ink-800">
+          {renderInline(p)}
+        </p>
+      ))}
+    </div>
   );
 }
 
@@ -729,15 +737,6 @@ function ResponseView({ res }: { res: AssistResponse }) {
 }
 
 // ── Section labels ────────────────────────────────────────────────────────────
-
-function SectionLabel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return (
-    <div className={`flex items-center gap-3 mb-3 ${className}`}>
-      <p className="text-[9px] font-black uppercase tracking-[0.25em] text-ink-400 shrink-0 leading-none">{children}</p>
-      <div className="flex-1 h-px bg-ink-200" />
-    </div>
-  );
-}
 
 function SectionLabelWithPulse({ children }: { children: React.ReactNode }) {
   return (

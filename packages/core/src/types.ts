@@ -100,6 +100,8 @@ export interface PlaceIntent {
   categories: string[];
   governorate: string | null;
   city: string | null;
+  /** Specific Amman neighbourhood/district, e.g. "jabal amman", "abdoun" */
+  district: string | null;
   keywords: string[];
 }
 

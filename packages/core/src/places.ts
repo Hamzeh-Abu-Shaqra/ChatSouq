@@ -33,6 +33,33 @@ const GOVERNORATES: Record<string, string> = {
 };
 
 /**
+ * Well-known Amman neighbourhoods and districts. Mentioning one of these is a
+ * very strong signal that the query is about a physical place, not a product.
+ * Each adds +2 to the place signal when detected.
+ */
+const AMMAN_DISTRICTS = [
+  // Jabal areas (any "jabal" = hilltop district = always a place query)
+  "jabal amman", "jabal hussein", "jabal webdeh", "jabal luweibdeh", "jabal nuzha",
+  "jabal",       // generic — still a place signal
+  // Upscale west Amman
+  "abdoun", "sweifieh", "shmeisani", "khalda", "dabouq", "deir ghbar",
+  "um uthaina", "umm uthaina", "um utheina", "tla' ali", "tlaa ali",
+  // Circles (landmark references)
+  "1st circle", "2nd circle", "3rd circle", "4th circle",
+  "5th circle", "6th circle", "7th circle", "8th circle",
+  "first circle", "second circle", "third circle", "fourth circle",
+  "fifth circle", "sixth circle", "seventh circle", "eighth circle",
+  // Central / commercial
+  "downtown amman", "downtown", "city centre", "rainbow street",
+  "rainbow", "garden street", "mecca street", "wasfi tal", "wasfi el tal",
+  // East Amman / other
+  "zarqa road", "sports city", "sport city", "jubeiha", "sweileh",
+  "bayader wadi seer", "wadi seer", "nakheel", "marj el hamam", "sahab",
+  // Aqaba districts
+  "aqaba marina", "aqaba port", "tala bay",
+];
+
+/**
  * Curated query-term -> place-category hints. Values are the normalized place
  * categories produced at ingest (see packages/db/scripts/lib/normalize.ts) and
  * are matched case-insensitively against the real categories in the DB.
@@ -180,13 +207,27 @@ function detectGovernorate(q: string): string | null {
   return null;
 }
 
+/** Returns the matched district name if the query references an Amman neighbourhood. */
+function detectDistrict(q: string): string | null {
+  const lower = q.toLowerCase();
+  // Sort longest first so "jabal amman" matches before "jabal"
+  const sorted = [...AMMAN_DISTRICTS].sort((a, b) => b.length - a.length);
+  for (const d of sorted) {
+    const escaped = d.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    if (new RegExp(`\\b${escaped}\\b`).test(lower)) return d;
+  }
+  return null;
+}
+
 /** Parse a place/service query into structured intent. */
 export function parsePlaceIntent(query: string, dbCategories: string[]): PlaceIntent {
+  const district = detectDistrict(query);
   return {
     rawQuery: query,
     categories: matchPlaceCategories(query, dbCategories),
-    governorate: detectGovernorate(query),
-    city: null,
+    governorate: detectGovernorate(query) ?? (district ? "Amman" : null),
+    city: district ? "Amman" : null,
+    district,
     keywords: extractKeywords(query),
   };
 }
@@ -231,6 +272,8 @@ export function placeSignal(query: string, dbCategories: string[]): number {
 
   const intent = parsePlaceIntent(query, dbCategories);
   if (intent.governorate) s += 1;
+  // Named Amman district/neighbourhood is a very strong place indicator (+2)
+  if (detectDistrict(query)) s += 2;
   if (/\b(near me|nearby|close to|around here|in town)\b/i.test(query)) s += 2;
   if (/\b(where|place|places|spot|visit|go to|open now)\b/i.test(query)) s += 1;
   return s;

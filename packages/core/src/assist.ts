@@ -39,9 +39,11 @@ export async function assist(input: RecommendInput, deps: Deps = {}): Promise<As
   const prodSig = productSignal(input.query, productCategories);
   const pSig    = placeSignal(input.query, placeCategories);
 
-  // Strong product signal (category matched + keywords) → go product immediately
-  // This prevents "what is the best headphone under 60 JOD" from hitting general engine
-  if (prodSig >= 3) return recommend(input, deps);
+  // Strong product signal → go product, BUT only when product signal is strictly
+  // stronger than place signal. This prevents "best coffee in Jabal Amman" (which
+  // scores prodSig=3 via food category but pSig=4+ via PLACE_HINTS + governorate)
+  // from being misrouted to the product catalogue.
+  if (prodSig >= 3 && prodSig > pSig) return recommend(input, deps);
 
   // Strong place signal → go places
   if (pSig >= 3 && pSig > prodSig) return recommendPlaces(input, deps);

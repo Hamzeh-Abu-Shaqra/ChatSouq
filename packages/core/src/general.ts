@@ -1026,8 +1026,7 @@ export async function generalAnswer(
         : `ChatSouq can answer general questions about Jordan when connected to its AI reasoning engine. Try asking about a product to buy or a place to visit instead.`;
     }
   } else {
-    // Extract memory block if passed through from the API route
-    const memoryBlock = (input as RecommendInput & { _memoryBlock?: string })._memoryBlock ?? "";
+    const memoryBlock = input.memoryBlock ?? "";
     const result = await callClaude(provider, input.query, history, intentType, budget, city, memoryBlock);
     answer = result.answer;
     cards = result.cards as NeighborhoodCard[] | InfoCard[];

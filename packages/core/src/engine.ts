@@ -167,7 +167,9 @@ export async function recommend(
     })
     .slice(0, limit);
 
-  const { summary: chatSummary, explanations } = await explainItems(provider, input.query, ranked, constraints);
+  const { summary: chatSummary, explanations } = await explainItems(
+    provider, input.query, ranked, constraints, input.memoryBlock
+  );
 
   const items = ranked.map((c, i) => {
     const item = toResultItem(c, i === 0);

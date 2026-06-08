@@ -55,8 +55,10 @@ export async function POST(req: Request) {
       profile: thread.prefs.budget
         ? { financial: { shoppingBudget: thread.prefs.budget as number } }
         : undefined,
-      _memoryBlock: memoryBlock, // passed through to general.ts
-    } as Parameters<typeof assist>[0] & { _memoryBlock?: string });
+      // Memory block is now a first-class field on RecommendInput — injected into
+      // every engine (products, places, general) so all LLM calls have user context.
+      memoryBlock,
+    });
 
     // ── Persist this turn in the background ───────────────────────────────────
     // Get a clean text representation of the assistant response for storage

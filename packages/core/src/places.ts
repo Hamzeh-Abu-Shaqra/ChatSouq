@@ -737,6 +737,88 @@ async function fetchScrapedCandidates(
   return all;
 }
 
+// ── Direct name lookup ────────────────────────────────────────────────────────
+// When the user types a specific named place ("taj mall", "city mall",
+// "mövenpick hotel"), do a fast ILIKE search by name BEFORE the vector search.
+// Results get vecSim=0.95 / txtSim=1.0 so ranking always promotes them to #1.
+
+async function directNameSearch(query: string, limit: number): Promise<PlaceCandidate[]> {
+  // Build %token1%token2% pattern from words longer than 2 characters
+  const tokens = query.trim().toLowerCase().split(/\s+/).filter((w) => w.length > 2);
+  if (tokens.length === 0) return [];
+  const pattern = `%${tokens.join("%")}%`;
+  const results: PlaceCandidate[] = [];
+
+  // OSM places
+  try {
+    const rows = (await db.execute(sql`
+      SELECT p.id, p.name, p.name_ar AS "nameAr", p.category, p.subcategory,
+             p.governorate, p.city, p.address, p.phone, p.website,
+             p.opening_hours AS "openingHours", p.lat, p.lng,
+             p.source_url AS "sourceUrl", p.search_text AS "searchText"
+      FROM places p
+      WHERE lower(p.name) LIKE ${pattern}
+         OR lower(coalesce(p.name_ar, '')) LIKE ${pattern}
+      LIMIT ${limit}
+    `)) as unknown as Record<string, unknown>[];
+    for (const r of rows) {
+      results.push({
+        id: Number(r.id),
+        name: String(r.name),
+        nameAr: (r.nameAr as string) ?? null,
+        category: String(r.category),
+        subcategory: (r.subcategory as string) ?? null,
+        governorate: (r.governorate as string) ?? null,
+        city: (r.city as string) ?? null,
+        address: (r.address as string) ?? null,
+        phone: (r.phone as string) ?? null,
+        website: (r.website as string) ?? null,
+        openingHours: (r.openingHours as string) ?? null,
+        lat: r.lat != null ? Number(r.lat) : null,
+        lng: r.lng != null ? Number(r.lng) : null,
+        sourceUrl: (r.sourceUrl as string) ?? null,
+        searchText: (r.searchText as string) ?? null,
+        rating: null,
+        vecSim: 0.95,
+        txtSim: 1.0,
+      });
+    }
+  } catch { /* skip */ }
+
+  // jordan_places (Google Maps scraped)
+  try {
+    const rows = (await db.execute(sql`
+      SELECT p.id + 2000000 AS id, p.name, p.category, p.address,
+             p.phone, p.website, p.rating, p.search_text AS "searchText"
+      FROM jordan_places p
+      WHERE lower(p.name) LIKE ${pattern}
+      LIMIT ${limit}
+    `)) as unknown as Record<string, unknown>[];
+    for (const r of rows) {
+      results.push({
+        id: Number(r.id),
+        name: String(r.name),
+        nameAr: null,
+        category: String(r.category ?? "Place"),
+        subcategory: null,
+        governorate: "Amman",
+        city: "Amman",
+        address: (r.address as string) ?? null,
+        phone: (r.phone as string) ?? null,
+        website: (r.website as string) ?? null,
+        openingHours: null,
+        lat: null, lng: null, sourceUrl: null,
+        searchText: (r.searchText as string) ?? null,
+        rating: r.rating != null ? Number(r.rating) : null,
+        vecSim: 0.95,
+        txtSim: 1.0,
+      });
+    }
+  } catch { /* skip */ }
+
+  return results;
+}
+
 // ── Deduplication ─────────────────────────────────────────────────────────────
 // Remove scraped candidates whose name is too similar to an already-included
 // OSM candidate (avoids showing the same place twice from different sources).
@@ -978,7 +1060,16 @@ export async function recommendPlaces(
   const intent = parsePlaceIntent(input.query, categories);
 
   const embedText = [input.query, ...intent.categories, ...intent.keywords].filter(Boolean).join(" ");
-  const [queryVec] = await embedder.embed([embedText]);
+
+  // Direct name lookup + vector embedding run in parallel — zero added latency.
+  // The name search finds specific places by ILIKE even when vector similarity is
+  // weak (e.g. "taj mall" → exact name match beats all semantic alternatives).
+  const queryWords = input.query.trim().split(/\s+/).length;
+  const [queryVecResult, nameMatches] = await Promise.all([
+    embedder.embed([embedText]),
+    queryWords <= 5 ? directNameSearch(input.query, 4) : Promise.resolve([]),
+  ]);
+  const [queryVec] = queryVecResult;
   if (!queryVec) throw new Error("Failed to embed the query.");
 
   const wantGov = intent.governorate !== null;
@@ -1015,7 +1106,9 @@ export async function recommendPlaces(
   // Fetch in parallel; merge and deduplicate so OSM records come first and
   // scraped records fill gaps or surface higher-rated options.
   const scraped = await fetchScrapedCandidates(intent, queryVec, input.query, limit * 2);
-  const merged  = deduplicateCandidates([...candidates, ...scraped]);
+  // Name matches go FIRST — their txtSim=1.0 / vecSim=0.95 will naturally win
+  // in rankPlaces, ensuring the specifically-named place beats generic category results.
+  const merged  = deduplicateCandidates([...nameMatches, ...candidates, ...scraped]);
 
   const ranked = rankPlaces(merged, intent).slice(0, limit);
 
@@ -1038,11 +1131,16 @@ export async function recommendPlaces(
       const webResults = await webSearch(webSearchQuery, { maxResults: 3, searchDepth: "basic" });
       const webContext = formatWebResults(webResults, "LIVE WEB INFO");
 
+      // Rich place context — include rating and address so the LLM can write
+      // a genuinely informative summary, not just a template.
       const placeItems = ranked.map((c, i) => ({
         id: c.id,
         name: ARABIC_CHAR_RE.test(c.name) ? (c.nameAr ?? c.name) : c.name,
         category: c.category,
+        subcategory: c.subcategory ?? null,
         city: c.city ?? c.governorate ?? "Jordan",
+        address: c.address ? c.address.slice(0, 80) : null,
+        rating: c.rating != null ? `${c.rating}/5` : null,
         phone: c.phone ? "yes" : "no",
         website: c.website ? "yes" : "no",
         openingHours: c.openingHours ?? null,
@@ -1051,25 +1149,31 @@ export async function recommendPlaces(
       const langInstruction = queryLang === "ar"
         ? "IMPORTANT: Write both the 'summary' and all 'why' values in Arabic only."
         : "Write both the 'summary' and all 'why' values in English.";
+      const memCtx = input.memoryBlock ? `\nUSER CONTEXT (use to personalise):\n${input.memoryBlock}` : "";
       const placeRes = await provider.complete({
         system:
           "You are ChatSouq, Amman's local guide. " +
           "Write a direct, conversational 2–3 sentence reply that actually answers the user's request. " +
           "Mention the top pick and key alternatives by **bolding** their names. " +
-          "Be specific — say what makes the top pick stand out (location, atmosphere, specialty, rating). " +
-          "Then write a 1-sentence 'why' per place (max 20 words) focusing on fit, not just location. " +
+          "Be specific: mention rating, what makes it stand out, or neighbourhood. " +
+          "If the user asked for a specific named place, confirm or clarify that. " +
+          "Then write a 1-sentence 'why' per place (max 20 words). " +
           `Use ONLY the provided facts — no invented details. ${langInstruction}` +
+          memCtx +
           (webContext ? `\n${webContext}` : "") +
-          '\nReturn JSON: {"summary": "string", "items": [{"id": number, "why": "string"}]}',
+          '\nReturn JSON exactly: {"summary": "...", "items": [{"id": number, "why": "..."}]}',
         messages: [{
           role: "user",
           content: `User asked for: "${input.query}"\nPlaces: ${JSON.stringify(placeItems)}`,
         }],
         json: true,
         temperature: 0.4,
-        maxTokens: 800,
+        maxTokens: 900,
       });
-      const parsed = JSON.parse(placeRes.text) as { summary?: string; items?: { id: number; why: string }[] };
+      // Robust parsing: LLM may return old array format [{id,why}] or new {summary,items}
+      const raw: unknown = JSON.parse(placeRes.text);
+      const parsed: { summary?: string; items?: { id: number; why: string }[] } =
+        Array.isArray(raw) ? { items: raw as { id: number; why: string }[] } : (raw as typeof parsed);
       if (typeof parsed.summary === "string" && parsed.summary.trim()) {
         llmSummary = parsed.summary.trim();
       }

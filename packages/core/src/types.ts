@@ -202,6 +202,11 @@ export interface RecommendInput {
   history?: ConvMessage[];
   profile?: UserProfileInput;
   limit?: number;
+  /**
+   * Memory block built from learned user preferences (budget, area, interests…).
+   * Injected into LLM system prompts so every engine has full user context.
+   */
+  memoryBlock?: string;
 }
 
 /** Internal candidate shape returned by retrieval before ranking. */

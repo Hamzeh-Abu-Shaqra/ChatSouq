@@ -115,7 +115,8 @@ export async function explainItems(
   provider: AIProvider,
   query: string,
   ranked: ScoredCandidate[],
-  constraints: Constraints
+  constraints: Constraints,
+  memoryBlock?: string,
 ): Promise<ExplainResult> {
   const lang: "en" | "ar" = ARABIC_RE.test(query) ? "ar" : "en";
   const pricedShown = ranked.filter((c) => c.price !== null).map((c) => c.price as number);
@@ -160,6 +161,7 @@ export async function explainItems(
       constraints.occasion ? `Occasion: ${constraints.occasion}` : "",
     ].filter(Boolean).join("\n");
 
+    const memCtx = memoryBlock ? `\nUSER CONTEXT (use to personalise):\n${memoryBlock}` : "";
     const res = await provider.complete({
       system:
         "You are ChatSouq, Amman's AI shopping assistant. " +
@@ -168,15 +170,19 @@ export async function explainItems(
         "Be specific — say what makes the top pick the right choice (type, quality, availability). " +
         "Then write a 1-sentence 'why' per item (max 20 words) focusing on fit, not price. " +
         "Use ONLY the provided facts. Do NOT invent features, specs, or availability details not in the data. " +
-        `${langInstruction} ` +
-        'Return JSON: {"summary": "string", "items": [{"id": number, "why": "string"}]}',
+        `${langInstruction}${memCtx} ` +
+        'Return JSON exactly: {"summary": "string", "items": [{"id": number, "why": "string"}]}',
       messages: [{ role: "user", content: `${contextLine}\nItems: ${JSON.stringify(items)}` }],
       json: true,
       temperature: 0.4,
       maxTokens: 900,
     });
 
-    const parsed = JSON.parse(res.text) as { summary?: string; items?: { id: number; why: string }[] };
+    // Robust parsing: handle both {summary, items} and legacy [{id, why}] formats
+    const raw: unknown = JSON.parse(res.text);
+    const parsed: { summary?: string; items?: { id: number; why: string }[] } =
+      Array.isArray(raw) ? { items: raw as { id: number; why: string }[] } : (raw as typeof parsed);
+
     const summary = typeof parsed.summary === "string" && parsed.summary.trim()
       ? parsed.summary.trim()
       : buildCodeSummary(ranked, constraints, lang);

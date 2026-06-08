@@ -13,11 +13,28 @@ BASE_URL = "https://maps.googleapis.com/maps/api/place"
 CATEGORIES = [
     "restaurant", "gym", "clinic", "salon", "hospital",
     "pharmacy", "school", "supermarket", "cafe", "hotel",
-    "bank", "gas_station", "shopping_mall", "mosque", "university"
+    "bank", "gas_station", "shopping_mall", "mosque", "university",
+    "store", "spa", "dentist", "veterinary_care", "laundry",
+    "car_repair", "car_wash", "electrician", "plumber", "painter",
+    "bakery", "clothing_store", "electronics_store", "furniture_store",
+    "jewelry_store", "shoe_store", "book_store", "florist", "pet_store"
 ]
 
-AMMAN_LOCATION = "31.9539,35.9106"  # Amman city center
-RADIUS = 15000  # 15km — Amman only
+# Grid of points covering all of Amman
+AMMAN_GRID = [
+    "31.9539,35.9106",  # City center
+    "31.9800,35.9000",  # North Amman (Rabieh/Khalda)
+    "31.9700,35.9300",  # East Amman
+    "31.9300,35.9000",  # West Amman (Sweifieh)
+    "31.9200,35.9300",  # South Amman
+    "31.9600,35.8800",  # Abdoun/Shmeisani
+    "32.0000,35.9200",  # Jubeiha/University
+    "31.9900,35.9500",  # Marka/Zarqa road
+    "31.9400,35.8900",  # Gardens/Mecca St
+    "31.9100,35.9500",  # Sahab/Airport road
+]
+
+RADIUS = 3000  # 3km per point — tight grid coverage
 
 
 def get_db():
@@ -51,34 +68,40 @@ def setup_table():
 
 def search_places(category):
     places = []
+    seen_ids = set()
     url = f"{BASE_URL}/nearbysearch/json"
-    params = {
-        "location": AMMAN_LOCATION,
-        "radius": RADIUS,
-        "type": category,
-        "key": API_KEY
-    }
 
-    while True:
-        res = requests.get(url, params=params).json()
-        for place in res.get("results", []):
-            places.append({
-                "place_id": place.get("place_id"),
-                "name": place.get("name"),
-                "category": category,
-                "address": place.get("vicinity"),
-                "rating": place.get("rating"),
-                "reviews_count": place.get("user_ratings_total"),
-                "lat": place.get("geometry", {}).get("location", {}).get("lat"),
-                "lng": place.get("geometry", {}).get("location", {}).get("lng"),
-            })
+    for grid_point in AMMAN_GRID:
+        params = {
+            "location": grid_point,
+            "radius": RADIUS,
+            "type": category,
+            "key": API_KEY
+        }
 
-        next_token = res.get("next_page_token")
-        if not next_token:
-            break
-        import time
-        time.sleep(2)
-        params = {"pagetoken": next_token, "key": API_KEY}
+        while True:
+            res = requests.get(url, params=params).json()
+            for place in res.get("results", []):
+                pid = place.get("place_id")
+                if pid and pid not in seen_ids:
+                    seen_ids.add(pid)
+                    places.append({
+                        "place_id": pid,
+                        "name": place.get("name"),
+                        "category": category,
+                        "address": place.get("vicinity"),
+                        "rating": place.get("rating"),
+                        "reviews_count": place.get("user_ratings_total"),
+                        "lat": place.get("geometry", {}).get("location", {}).get("lat"),
+                        "lng": place.get("geometry", {}).get("location", {}).get("lng"),
+                    })
+
+            next_token = res.get("next_page_token")
+            if not next_token:
+                break
+            import time
+            time.sleep(2)
+            params = {"pagetoken": next_token, "key": API_KEY}
 
     return places
 

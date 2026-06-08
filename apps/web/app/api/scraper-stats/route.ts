@@ -30,6 +30,8 @@ export async function GET() {
       total: Number(n.count) + Number(p.count) + Number(r.count) + Number(l.count) + Number(c.count),
     });
   } catch (error) {
-    return NextResponse.json({ error: "Failed to fetch stats" }, { status: 500 });
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("scraper-stats error:", message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

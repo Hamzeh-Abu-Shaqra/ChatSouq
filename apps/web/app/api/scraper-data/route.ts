@@ -107,7 +107,6 @@ export async function GET(request: Request) {
       );
       categories = subcats.map((r: any) => r.val);
 
-      const base = `FROM jordan_places WHERE category = '${table}'`;
       if (category && search) {
         data = await safeQuery(sql`SELECT id, name, subcategory, address, rating, reviews_count, phone, scraped_at FROM jordan_places WHERE category = ${table} AND subcategory = ${category} AND name ILIKE ${'%' + search + '%'} ORDER BY rating DESC NULLS LAST LIMIT ${limit} OFFSET ${offset}`);
         const c = await safeQuery(sql`SELECT COUNT(*) as count FROM jordan_places WHERE category = ${table} AND subcategory = ${category} AND name ILIKE ${'%' + search + '%'}`);

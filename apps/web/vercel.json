@@ -3,7 +3,7 @@
   "framework": "nextjs",
   "buildCommand": "cd ../.. && pnpm turbo build --filter=@chatsouq/web",
   "outputDirectory": ".next",
-  "installCommand": "cd ../.. && pnpm install",
+  "installCommand": "npm install -g pnpm@11.5.2 && cd ../.. && pnpm install --frozen-lockfile",
   "env": {
     "CHATSOUQ_MODELS_DIR": "/tmp/.chatsouq-models"
   }

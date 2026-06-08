@@ -1,7 +1,7 @@
 import type { AIProvider } from "@chatsouq/ai";
 import type { Constraints, UserProfileInput } from "./types";
 
-const CURRENCY_WORDS = /\b(jod|jd|dinars?|د\.?ا)\b/i;
+const CURRENCY_WORDS = /\b(jod|jd|dinars?|دينار|دنانير|د\.?ا)\b/i;
 
 /**
  * Curated query-term -> canonical category hints. Values MUST be canonical
@@ -179,9 +179,115 @@ const CATEGORY_HINTS: Record<string, string[]> = {
   gym:          ["sports & outdoors"],
   pen:          ["stationery & office"],
   stationery:   ["stationery & office"],
+
+  // ── Arabic terms ─────────────────────────────────────────────────────────────
+  // Audio
+  "سماعات":        ["audio & headphones"],
+  "سماعة":         ["audio & headphones"],
+  "سماعات لاسلكية":["audio & headphones"],
+  "سماعات بلوتوث": ["audio & headphones"],
+  "إيربودز":       ["audio & headphones"],
+  "ايربودز":       ["audio & headphones"],
+  "سبيكر":         ["speakers"],
+  "مكبر صوت":      ["speakers"],
+  "مكبر":          ["speakers"],
+  // Phones / tablets / computers
+  "موبايل":        ["mobile phones"],
+  "جوال":          ["mobile phones"],
+  "هاتف":          ["mobile phones"],
+  "هواتف":         ["mobile phones"],
+  "آيفون":         ["mobile phones"],
+  "ايفون":         ["mobile phones"],
+  "لابتوب":        ["computers & laptops"],
+  "حاسوب":         ["computers & laptops"],
+  "كمبيوتر":       ["computers & laptops"],
+  "لاب توب":       ["computers & laptops"],
+  "تابلت":         ["tablets"],
+  "لوح ذكي":       ["tablets"],
+  // TV / cameras / gaming
+  "تلفزيون":       ["tvs & displays"],
+  "تلفاز":         ["tvs & displays"],
+  "شاشة":          ["tvs & displays", "computers & laptops"],
+  "كاميرا":        ["cameras"],
+  "البلايستيشن":   ["gaming"],
+  "بلايستيشن":     ["gaming"],
+  "العاب":         ["gaming"],
+  // Electronics accessories
+  "شاحن":          ["electronics & accessories"],
+  "باور بنك":      ["electronics & accessories"],
+  // Watches
+  "ساعة":          ["watches & accessories"],
+  "ساعات":         ["watches & accessories"],
+  "ساعة ذكية":     ["watches & accessories"],
+  "ساعات ذكية":    ["watches & accessories"],
+  // Beauty / makeup / hair / fragrance / health
+  "بشرة":          ["beauty & skincare"],
+  "كريم":          ["beauty & skincare"],
+  "سيروم":         ["beauty & skincare"],
+  "واقي شمس":      ["beauty & skincare"],
+  "مكياج":         ["makeup"],
+  "احمر شفاه":     ["makeup"],
+  "أحمر شفاه":     ["makeup"],
+  "ماسكرا":        ["makeup"],
+  "فاونديشن":      ["makeup"],
+  "شامبو":         ["hair care"],
+  "بلسم":          ["hair care"],
+  "عطر":           ["perfume & fragrance"],
+  "عطور":          ["perfume & fragrance"],
+  "بخاخ":          ["perfume & fragrance"],
+  "عود":           ["perfume & fragrance"],
+  "فيتامين":       ["health & wellness"],
+  "مكمل":          ["health & wellness"],
+  "بروتين":        ["health & wellness"],
+  // Home appliances
+  "خلاط":          ["home appliances"],
+  "غسالة":         ["home appliances"],
+  "ثلاجة":         ["home appliances"],
+  "مكيف":          ["home appliances"],
+  "مكنسة":         ["home appliances"],
+  "ميكرويف":       ["home appliances"],
+  "غلاية":         ["home appliances"],
+  "غلاية ماء":     ["home appliances"],
+  "مكواة":         ["home appliances"],
+  "فرن":           ["home appliances"],
+  "مروحة":         ["home appliances"],
+  "سخان":          ["home appliances"],
+  // Home & living
+  "ديكور":         ["home & living"],
+  "مفرش":          ["home & living"],
+  "شمعة":          ["home & living"],
+  "لحاف":          ["home & living"],
+  "وسادة":         ["home & living"],
+  // Bags / jewelry
+  "حقيبة":         ["bags & luggage"],
+  "شنطة":          ["bags & luggage"],
+  "حقائب":         ["bags & luggage"],
+  "حقيبة سفر":     ["bags & luggage"],
+  "مجوهرات":       ["jewelry"],
+  "خاتم":          ["jewelry"],
+  "قلادة":         ["jewelry"],
+  "سوار":          ["jewelry"],
+  "حلق":           ["jewelry"],
+  // Toys / baby / kids
+  "لعبة":          ["toys & games"],
+  "ألعاب":         ["toys & games"],
+  "أطفال":         ["baby & kids"],
+  "رضيع":          ["baby & kids"],
+  "مواليد":        ["baby & kids"],
+  "عربية أطفال":   ["baby & kids"],
+  // Food
+  "قهوة":          ["food & gourmet"],
+  "شوكولاتة":      ["food & gourmet"],
+  "شوكولا":        ["food & gourmet"],
+  "حلويات":        ["food & gourmet"],
+  // Sports
+  "رياضة":         ["sports & outdoors"],
+  "دراجة":         ["sports & outdoors"],
+  "جيم":           ["sports & outdoors"],
 };
 
 const RECIPIENTS: Record<string, string> = {
+  // English
   mother: "mother", mom: "mother", mum: "mother", mama: "mother",
   wife: "wife", husband: "husband",
   girlfriend: "girlfriend", boyfriend: "boyfriend",
@@ -190,23 +296,55 @@ const RECIPIENTS: Record<string, string> = {
   son: "son", daughter: "daughter",
   kid: "kids", kids: "kids", child: "kids", children: "kids",
   friend: "friend", colleague: "colleague", boss: "boss",
+  // Arabic
+  "أمي": "mother", "امي": "mother", "أمه": "mother", "ماما": "mother",
+  "أبي": "father", "ابي": "father", "بابا": "father", "ابوي": "father",
+  "زوجتي": "wife", "زوجي": "husband",
+  "حبيبتي": "girlfriend", "حبيبي": "boyfriend",
+  "أختي": "sister", "اختي": "sister",
+  "أخي": "brother", "اخي": "brother",
+  "ابني": "son", "ابنتي": "daughter", "بنتي": "daughter",
+  "صديقي": "friend", "صديقتي": "friend",
+  "طفلي": "kids", "ولدي": "son",
 };
 
 const OCCASIONS: Record<string, string> = {
+  // English
   birthday: "birthday", anniversary: "anniversary", wedding: "wedding",
   engagement: "engagement", graduation: "graduation",
   ramadan: "ramadan", eid: "eid", christmas: "christmas",
   valentine: "valentine", valentines: "valentine",
   housewarming: "housewarming", newborn: "new baby",
+  // Arabic
+  "عيد الميلاد": "birthday", "عيد ميلاد": "birthday",
+  "رمضان": "ramadan",
+  "عيد الفطر": "eid", "عيد الأضحى": "eid", "العيد": "eid", "عيد": "eid",
+  "خطوبة": "engagement", "الخطوبة": "engagement",
+  "زفاف": "wedding", "الزفاف": "wedding", "فرح": "wedding",
+  "تخرج": "graduation", "التخرج": "graduation",
+  "الفلانتاين": "valentine", "فلانتاين": "valentine",
+  "أم": "mother", // Mother's Day — لعيد الأم
 };
 
 const STOPWORDS = new Set([
+  // English
   "a","an","the","for","to","of","in","on","under","below","less","than","my","me","i",
   "want","need","looking","find","get","buy","gift","present","with","and","or","best",
   "good","nice","jod","jd","dinar","dinars","around","about","budget","price","cheap",
   "between","max","maximum","up","at","is","that","she","he","her","his","likes","like",
   "show","give","some","top","quality","recommend","recommendations","something",
   "new","latest","using","use","type","kind","which","what","how",
+  // Arabic function words & filler
+  "اريد","أريد","ابغى","أبغى","ابي","أبي","محتاج","محتاجة","ابحث","أبحث",
+  "عن","من","إلى","الى","في","على","عن","هدية","هل","ماذا","كيف","ايش","وش",
+  "لي","لك","له","لها","لهم","لنا","عندي","عندك",
+  "أنا","انا","انت","أنت","هو","هي",
+  "دينار","دنانير","أردني","الأردني",
+  "اريد","بغيت","حابب","حابة","محتاج","محتاجه",
+  "مثل","زي","نوع","نوعية","افضل","أفضل","أحسن","احسن",
+  "اقترح","اقترحلي","وصي","وصيلي","عطني","عطيني",
+  "شوفلي","دورلي","فين","وين","منين",
+  "يسوى","يساوي","بكم","بكم","قيمته","سعره",
 ]);
 
 /**
@@ -238,10 +376,20 @@ const BRAND_NAMES = new Set([
   "iphone","macbook","ipad","airpods","apple watch","galaxy","surface",
 ]);
 
+/** Normalise Arabic-Indic digits (٠١٢٣٤٥٦٧٨٩) to Western digits */
+function normaliseDigits(s: string): string {
+  return s.replace(/[٠١٢٣٤٥٦٧٨٩]/g, (c) => String("٠١٢٣٤٥٦٧٨٩".indexOf(c)));
+}
+
 function parseBudget(q: string): { min: number | null; max: number | null } {
-  const text = q.toLowerCase();
+  const text = normaliseDigits(q.toLowerCase());
   const num = (s: string | undefined) => Number((s ?? "").replace(/,/g, ""));
 
+  // Arabic: "بين X و Y" / "بين X إلى Y"
+  const arBetween = text.match(/بين\s+(\d[\d,]*)\s+(?:و|إلى|الى)\s+(\d[\d,]*)/);
+  if (arBetween) return { min: num(arBetween[1]), max: num(arBetween[2]) };
+
+  // English: "between X and/to Y"
   const between = text.match(/between\s+(\d[\d,]*)\s+(?:and|to|-)\s+(\d[\d,]*)/);
   if (between) return { min: num(between[1]), max: num(between[2]) };
 
@@ -250,21 +398,37 @@ function parseBudget(q: string): { min: number | null; max: number | null } {
     return { min: num(range[1]), max: num(range[2]) };
   }
 
-  // "around/about 80" -> a band centered on the target, not just "<= 80".
+  // Arabic: "حول X" / "تقريباً X" / "ما يقارب X"
+  const arAround = text.match(/(?:حول|تقريبا|تقريباً|ما يقارب|قريب من)\s+(\d[\d,]*)/);
+  if (arAround) {
+    const n = num(arAround[1]);
+    return { min: Math.floor(n * 0.7), max: Math.ceil(n * 1.3) };
+  }
+
+  // English: "around/about 80"
   const around = text.match(/(?:around|about|approximately|roughly|~|circa)\s+(\d[\d,]*)/);
   if (around) {
     const n = num(around[1]);
     return { min: Math.floor(n * 0.7), max: Math.ceil(n * 1.3) };
   }
 
+  // Arabic: "أقل من X" / "تحت X" / "ما يتجاوز X" / "بحدود X"
+  const arUnder = text.match(/(?:أقل من|اقل من|تحت|ما يتجاوز|بحدود|لحد)\s+(\d[\d,]*)/);
+  if (arUnder) return { min: null, max: num(arUnder[1]) };
+
+  // English: "under/below/less than/max/up to"
   const under = text.match(/(?:under|below|less than|max|maximum|up to|within)\s+(\d[\d,]*)/);
   if (under) return { min: null, max: num(under[1]) };
+
+  // Arabic: "أكثر من X" / "فوق X" / "من X"
+  const arOver = text.match(/(?:أكثر من|اكثر من|فوق|ابتداء من|من)\s+(\d[\d,]*)/);
+  if (arOver) return { min: num(arOver[1]), max: null };
 
   const over = text.match(/(?:over|above|more than|at least|from)\s+(\d[\d,]*)/);
   if (over) return { min: num(over[1]), max: null };
 
-  // "50 jod" / "budget of 50"
-  const withCurrency = text.match(/(\d[\d,]*)\s*(?:jod|jd|dinars?)/);
+  // "50 jod" / "budget of 50" / "50 دينار"
+  const withCurrency = text.match(/(\d[\d,]*)\s*(?:jod|jd|dinars?|دينار|دنانير)/);
   if (withCurrency) return { min: null, max: num(withCurrency[1]) };
   const budgetOf = text.match(/(?:budget|price)\s*(?:of|is|:)?\s*(\d[\d,]*)/);
   if (budgetOf) return { min: null, max: num(budgetOf[1]) };
@@ -280,12 +444,53 @@ function parseQuantity(q: string): number | null {
   return map[token] ?? Number(token);
 }
 
+/** True when a string contains at least one Arabic/RTL character */
+function containsArabic(s: string): boolean {
+  return /[؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿]/.test(s);
+}
+
+/**
+ * Strip common single-character Arabic prefix particles (ل، ب، ك، و، ف) that
+ * attach to words without a space. We do this selectively — only when the prefix
+ * is followed by an Arabic letter that starts a known word, so we don't corrupt
+ * words that genuinely start with ل/ب (e.g. لون = color, بنت = girl).
+ *
+ * Strategy: strip only from the QUERY string used for recipient/occasion matching,
+ * NOT from keyword extraction (where the full token is already a stopword anyway).
+ *
+ * Examples: "لأمي" → "أمي", "لعيد" → "عيد", "لرمضان" → "رمضان"
+ */
+function normalizeArabicPrefixes(q: string): string {
+  // Strip "ل" (for/to) and "ب" (with/by) prefix particles that attach without a space.
+  // Only strip when at start of string or after a space (i.e., at the start of a token).
+  // "لأمي" → "أمي", "لعيد" → "عيد", "للعيد" → "العيد"
+  // Note: \b doesn't work for Arabic, so we use (^|\s) boundaries.
+  return q
+    .replace(/(^|\s)لل/g, "$1ال")  // للعيد → العيد
+    .replace(/(^|\s)ل(?=[؀-ۿ])/g, "$1")  // ل + Arabic → strip ل
+    .replace(/(^|\s)ب(?=[؀-ۿ])/g, "$1");  // ب + Arabic → strip ب
+}
+
+/**
+ * Build a regex for a category hint term.
+ * - Multi-word terms: simple substring match (no word boundaries needed).
+ * - Arabic single-word: space/start/end boundaries (JS `\b` doesn't fire on Arabic).
+ * - Latin single-word: standard `\b` word boundary.
+ */
+function hintPattern(term: string): RegExp {
+  const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  if (term.includes(" ")) return new RegExp(escaped, "i");
+  if (containsArabic(term)) return new RegExp(`(?:^|\\s)${escaped}(?:\\s|$)`, "i");
+  return new RegExp(`\\b${escaped}\\b`, "i");
+}
+
 function matchCategories(q: string, dbCategories: string[]): string[] {
   const lower = q.toLowerCase();
+  const normalized = normalizeArabicPrefixes(lower);
   const byLower = new Map(dbCategories.map((c) => [c.toLowerCase(), c]));
   const matched = new Set<string>();
 
-  // 1) curated hints — multi-word first, then single-word
+  // 1) curated hints — multi-word first (longest first), then single-word
   const multiWordHints = Object.entries(CATEGORY_HINTS)
     .filter(([k]) => k.includes(" "))
     .sort((a, b) => b[0].length - a[0].length);
@@ -293,11 +498,8 @@ function matchCategories(q: string, dbCategories: string[]): string[] {
 
   for (const [term, cats] of [...multiWordHints, ...singleWordHints]) {
     if (term === "notebook_stationery") continue; // collision guard
-    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const pattern = term.includes(" ")
-      ? new RegExp(escaped, "i")
-      : new RegExp(`\\b${escaped}\\b`, "i");
-    if (pattern.test(lower)) {
+    const pat = hintPattern(term);
+    if (pat.test(lower) || pat.test(normalized)) {
       for (const c of cats) {
         const real = byLower.get(c.toLowerCase());
         if (real) matched.add(real);
@@ -308,7 +510,7 @@ function matchCategories(q: string, dbCategories: string[]): string[] {
   // 2) direct substring of a real category name appearing in the query
   for (const [lc, real] of byLower) {
     const head = (lc.split(/[&,/]/)[0] ?? "").trim();
-    if (head.length > 3 && lower.includes(head)) matched.add(real);
+    if (head.length > 3 && (lower.includes(head) || normalized.includes(head))) matched.add(real);
   }
 
   return [...matched];
@@ -340,6 +542,8 @@ function extractKeywords(q: string): string[] {
     if (IMPORTANT_ATTRIBUTES.has(w)) return true;
     // Drop brand names from keyword list (they go into `brands`)
     if (BRAND_NAMES.has(w)) return false;
+    // Arabic words are often shorter — keep any Arabic token ≥ 2 chars not in stopwords
+    if (containsArabic(w)) return w.length >= 2;
     if (w.length < 3) return false;
     return true;
   });
@@ -347,8 +551,16 @@ function extractKeywords(q: string): string[] {
 
 function firstMatch(q: string, table: Record<string, string>): string | null {
   const lower = q.toLowerCase();
-  for (const [k, v] of Object.entries(table)) {
-    if (new RegExp(`\\b${k}\\b`).test(lower)) return v;
+  // Also test a prefix-normalised version for Arabic queries
+  const normalized = normalizeArabicPrefixes(lower);
+  // Sort by key length descending so multi-word Arabic phrases match before substrings
+  const entries = Object.entries(table).sort((a, b) => b[0].length - a[0].length);
+  for (const [k, v] of entries) {
+    const escaped = k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const pattern = containsArabic(k)
+      ? new RegExp(`(?:^|\\s)${escaped}(?:\\s|$)`)
+      : new RegExp(`\\b${escaped}\\b`);
+    if (pattern.test(lower) || pattern.test(normalized)) return v;
   }
   return null;
 }

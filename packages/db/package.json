@@ -15,6 +15,7 @@
     "seed": "tsx scripts/seed.ts",
     "embed-scraped": "tsx scripts/embed-scraped.ts",
     "reembed-recategorized": "tsx scripts/reembed-recategorized.ts",
+    "reembed-jewelry-stationery": "tsx scripts/reembed-jewelry-stationery.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

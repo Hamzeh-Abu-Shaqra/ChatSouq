@@ -27,6 +27,11 @@ interface RetrieveOpts {
   useBudgetFilter: boolean;
   /** When true, at least one keyword must appear in the item's name or search_text. */
   useKeywordFilter?: boolean;
+  /**
+   * When true, ALL keywords must appear (AND logic). More precise but may return
+   * fewer results. Fall back to OR (useKeywordFilter) if this yields too few.
+   */
+  useStrictKeywords?: boolean;
 }
 
 /**
@@ -58,14 +63,19 @@ export async function retrieve(
     );
     conditions.push(sql`l.category IN (${cats})`);
   }
-  // Keyword presence filter: require that at least one keyword appears in the
-  // item's name or search_text. This prevents off-topic items (e.g. a vinyl
-  // record in the Audio category) from winning keyword-specific queries.
-  if (opts.useKeywordFilter && constraints.keywords.length > 0) {
-    const kwConditions = constraints.keywords.map(
-      (k) => sql`(lower(coalesce(l.search_text, '')) LIKE ${"%" + k.toLowerCase() + "%"} OR lower(l.name) LIKE ${"%" + k.toLowerCase() + "%"})`
+  // Keyword filter — AND mode requires ALL keywords, OR mode requires at least one.
+  // AND mode is tried first for precision; engine falls back to OR if not enough results.
+  if (constraints.keywords.length > 0) {
+    const kwConds = constraints.keywords.map(
+      (k) => sql`(lower(coalesce(l.search_text, '') || ' ' || lower(l.name)) LIKE ${"%" + k.toLowerCase() + "%"})`
     );
-    conditions.push(sql`(${sql.join(kwConditions, sql` OR `)})`);
+    if (opts.useStrictKeywords) {
+      // ALL keywords must match
+      conditions.push(sql`(${sql.join(kwConds, sql` AND `)})`);
+    } else if (opts.useKeywordFilter) {
+      // At least one keyword must match
+      conditions.push(sql`(${sql.join(kwConds, sql` OR `)})`);
+    }
   }
 
   const whereClause = sql.join(conditions, sql` AND `);

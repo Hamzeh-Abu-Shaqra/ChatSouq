@@ -14,16 +14,16 @@ export interface ScoredCandidate extends Candidate {
   };
 }
 
-// Relevance (vec + txt + keyword + category = 0.88) dominates; price/brand are
-// only tiebreakers (0.12). This is what stops cheap-but-irrelevant items winning.
+// Keyword + vector dominate (0.80). Category adds structure (0.12).
+// Value/brand are micro tiebreakers only — cheap price never overrides relevance.
 const WEIGHTS = {
-  vec: 0.42,
-  txt: 0.12,
-  keyword: 0.22,
-  category: 0.12,
-  budgetFit: 0.04,
-  value: 0.04,
-  brand: 0.04,
+  vec:       0.38,  // semantic meaning
+  txt:       0.10,  // trigram text match
+  keyword:   0.38,  // exact term match — PRIMARY intent signal
+  category:  0.10,  // right department
+  budgetFit: 0.02,  // within budget (binary)
+  value:     0.01,  // cheapest in pool — nearly zero (don't reward irrelevant cheap items)
+  brand:     0.01,  // preferred brand — nearly zero
 };
 
 /**
@@ -36,11 +36,20 @@ function rescaleVec(cos: number): number {
 
 function keywordHitRatio(c: Candidate, keywords: string[]): { ratio: number; hits: number } {
   if (keywords.length === 0) return { ratio: 0, hits: 0 };
-  // Use || not ?? so empty-string searchText falls back to the listing name.
-  const hay = (c.searchText || c.name).toLowerCase();
+  const hay = ((c.searchText || "") + " " + c.name).toLowerCase();
   let hits = 0;
   for (const k of keywords) if (hay.includes(k)) hits++;
-  return { ratio: hits / keywords.length, hits };
+  const rawRatio = hits / keywords.length;
+
+  // Non-linear penalty: matching 1/3 keywords scores much lower than 3/3.
+  // This prevents a cheap item that hits one minor keyword from outranking
+  // a relevant item that hits all keywords.
+  // 3/3 → 1.0,  2/3 → 0.55,  1/3 → 0.20,  0/3 → 0.0
+  const boostedRatio = keywords.length <= 1
+    ? rawRatio
+    : Math.pow(rawRatio, 1.6);
+
+  return { ratio: boostedRatio, hits };
 }
 
 /**

@@ -92,24 +92,30 @@ export async function recommend(
   const requestedCat = constraints.categories.length > 0;
   const requestedBudget = constraints.budgetMax !== null || constraints.budgetMin !== null;
   const hasKeywords = constraints.keywords.length > 0;
+  // Use strict (AND) keyword filter when 2+ specific keywords — prevents cable/
+  // speaker contamination from broad category searches.
+  const useStrict = hasKeywords && constraints.keywords.length >= 2;
 
-  // Plan sequence: try strictest (category + budget + keywords) first, relax progressively.
-  const fullPlan = { c: true, b: true, k: true };
-  const plans = [
-    { c: true,  b: true,  k: hasKeywords },  // keyword-filtered when keywords exist
-    { c: true,  b: true,  k: false },        // category + budget, no keyword filter
-    { c: false, b: true,  k: false },        // budget only
-    { c: true,  b: false, k: false },        // category only
-    { c: false, b: false, k: false },        // no filter
+  // Plan sequence: try strictest first, relax progressively until we have enough results.
+  // s = strict AND keywords, k = OR keywords, c = category, b = budget
+  const plans: { c: boolean; b: boolean; k: boolean; s: boolean }[] = [
+    { c: true,  b: true,  k: false, s: useStrict  }, // strict keywords + cat + budget
+    { c: true,  b: true,  k: hasKeywords, s: false }, // OR keywords + cat + budget
+    { c: true,  b: false, k: hasKeywords, s: false }, // OR keywords + cat, no budget
+    { c: false, b: true,  k: hasKeywords, s: false }, // OR keywords + budget, no cat
+    { c: true,  b: false, k: false, s: false },       // category only
+    { c: false, b: false, k: hasKeywords, s: false }, // OR keywords, no filters
+    { c: false, b: false, k: false, s: false },       // no filter (last resort)
   ];
 
   let candidates: Candidate[] = [];
-  let chosen = fullPlan;
+  let chosen = plans[0]!;
   for (const p of plans) {
     const got = await retrieve(constraints, queryVec, input.query, {
       useCategoryFilter: p.c,
       useBudgetFilter: p.b,
       useKeywordFilter: p.k,
+      useStrictKeywords: p.s,
     });
     if (got.length >= limit) {
       candidates = got;

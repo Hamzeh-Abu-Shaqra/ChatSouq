@@ -4,7 +4,9 @@
 
 :root {
   color-scheme: light;
-  --color-paper: #f9f8f6;
+  --color-paper: #f8f6f2;
+  --color-ink: #0d1117;
+  --color-souq: #059669;
 }
 
 html, body {
@@ -15,10 +17,9 @@ html, body {
 body {
   background-color: var(--color-paper);
   background-image:
-    radial-gradient(ellipse 1000px 500px at 88%  -5%, rgba(16,185,129,0.055), transparent 65%),
-    radial-gradient(ellipse  650px 420px at  -6%  22%, rgba(234,179,8,0.04),  transparent 60%),
-    radial-gradient(ellipse  500px 300px at  50% 110%, rgba(79,70,229,0.025), transparent 70%);
-  color: #0d1117;
+    radial-gradient(ellipse 900px 400px at 90% -10%, rgba(5,150,105,0.05), transparent 60%),
+    radial-gradient(ellipse 600px 350px at -5% 30%, rgba(234,179,8,0.035), transparent 55%);
+  color: var(--color-ink);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -40,7 +41,7 @@ body {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(255,255,255,0.68) 50%,
+    rgba(255,255,255,0.65) 50%,
     transparent 100%
   );
   animation: shimmer 1.6s ease-in-out infinite;
@@ -59,14 +60,13 @@ body {
 .typing-dot:nth-child(3) { animation-delay: 0.30s; }
 
 /* ── Scrollbar ───────────────────────────────── */
-::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar       { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(6,95,70,0.12);
+  background: rgba(5,150,105,0.15);
   border-radius: 999px;
-  border: 1px solid var(--color-paper);
 }
-::-webkit-scrollbar-thumb:hover { background: rgba(6,95,70,0.22); }
+::-webkit-scrollbar-thumb:hover { background: rgba(5,150,105,0.28); }
 
 /* ── Focus visible ───────────────────────────── */
 :focus-visible {
@@ -74,10 +74,30 @@ body {
   outline-offset: 2px;
 }
 
-/* ── Smooth card hover ───────────────────────── */
+/* ── Card hover ──────────────────────────────── */
 .card-hover {
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 .card-hover:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+}
+
+/* ── Newspaper utilities ─────────────────────── */
+.newspaper-rule {
+  border: none;
+  border-top: 2px solid #0d1117;
+  margin: 0;
+}
+.newspaper-rule-thin {
+  border: none;
+  border-top: 1px solid rgba(13,17,23,0.12);
+}
+
+/* ── Fade-in-up animation ────────────────────── */
+@keyframes fade-in-up {
+  0%   { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.fade-in-up {
+  animation: fade-in-up 0.3s ease-out both;
 }

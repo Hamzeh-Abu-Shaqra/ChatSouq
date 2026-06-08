@@ -5,7 +5,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        paper: "#f9f8f6",
+        paper: "#f8f6f2",
         ink: {
           900: "#0d1117",
           800: "#1f2937",
@@ -130,6 +130,8 @@ export default {
         best:   "0 8px 32px -4px rgba(5,150,105,0.16), 0 2px 8px rgba(0,0,0,0.05)",
         rental: "0 8px 32px -4px rgba(37,99,235,0.16), 0 2px 8px rgba(0,0,0,0.05)",
         pro:    "0 8px 32px -4px rgba(8,145,178,0.16), 0 2px 8px rgba(0,0,0,0.05)",
+        news:   "0 4px 20px -2px rgba(225,29,72,0.12), 0 2px 8px rgba(0,0,0,0.05)",
+        place:  "0 4px 20px -2px rgba(5,150,105,0.12), 0 2px 8px rgba(0,0,0,0.04)",
       },
       keyframes: {
         "fade-up": {

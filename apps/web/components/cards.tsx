@@ -662,10 +662,221 @@ export function NeighborhoodAltCard({ item, rank }: { item: NeighborhoodCard; ra
   );
 }
 
+// ── Newspaper front layout (today digest) ────────────────────────────────────
+
+export function NewspaperFront({ cards }: { cards: InfoCard[] }) {
+  const news        = cards.filter((c) => c.section === "news");
+  const restaurants = cards.filter((c) => c.section === "restaurant");
+  const places      = cards.filter((c) => c.section === "place");
+  const pros        = cards.filter((c) => c.section === "pro");
+
+  const today   = new Date();
+  const dateEn  = today.toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+  const dateAr  = today.toLocaleDateString("ar-JO", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+
+  return (
+    <div className="space-y-0">
+      {/* Masthead */}
+      <div className="border-b-2 border-ink-900 pb-3 mb-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink-400">Amman Morning Edition</p>
+            <p className="text-[11px] text-ink-500">{dateEn}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-[11px] text-ink-500" dir="rtl" lang="ar">{dateAr}</p>
+            <div className="flex items-center justify-end gap-1.5 mt-0.5">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-500 opacity-60" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-rose-600" />
+              </span>
+              <p className="text-[10px] font-bold text-rose-600 uppercase tracking-wider">Live</p>
+            </div>
+          </div>
+        </div>
+        <hr className="mt-3 border-t border-ink-200" />
+      </div>
+
+      {/* Hero story */}
+      {news[0] && <HeroNewsStory item={news[0]} />}
+
+      {/* News grid */}
+      {news.length > 1 && (
+        <div className="mt-4">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-ink-400">Top Stories</span>
+            <div className="flex-1 border-t border-ink-200" />
+          </div>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {news.slice(1, 5).map((item, i) => (
+              <NewsGridItem key={i} item={item} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Restaurants */}
+      {restaurants.length > 0 && (
+        <div className="mt-5">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-600">On The Table</span>
+            <div className="flex-1 border-t border-amber-200" />
+            <span className="text-[9px] text-ink-400 font-medium">via Talabat</span>
+          </div>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            {restaurants.slice(0, 3).map((item, i) => (
+              <RestaurantTile key={i} item={item} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Places */}
+      {places.length > 0 && (
+        <div className="mt-5">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-souq-700">Around Amman</span>
+            <div className="flex-1 border-t border-souq-200" />
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {places.slice(0, 6).map((item, i) => (
+              <PlaceTile key={i} item={item} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Professionals */}
+      {pros.length > 0 && (
+        <div className="mt-5">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-cyan-700">Featured Professionals</span>
+            <div className="flex-1 border-t border-cyan-200" />
+          </div>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {pros.slice(0, 2).map((item, i) => (
+              <ProTile key={i} item={item} />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function HeroNewsStory({ item }: { item: InfoCard }) {
+  const inner = (
+    <div className="group rounded-xl overflow-hidden bg-white shadow-news ring-1 ring-black/[0.06]">
+      <div className="h-1 bg-rose-600" />
+      <div className="p-4 sm:p-5">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-[10px] font-bold text-rose-700 uppercase tracking-wider">
+            📰 Breaking
+          </span>
+          {item.body && <span className="text-[10px] text-ink-400">{item.body}</span>}
+        </div>
+        <h2 className="text-[17px] sm:text-[20px] font-black leading-snug text-ink-900 group-hover:text-rose-700 transition-colors">
+          {item.title}
+        </h2>
+        {item.url && (
+          <p className="mt-2 text-[11px] text-ink-400 flex items-center gap-1">
+            <GlobeIcon /> Read full story →
+          </p>
+        )}
+      </div>
+    </div>
+  );
+  if (item.url) {
+    return <a href={item.url} target="_blank" rel="noopener noreferrer">{inner}</a>;
+  }
+  return inner;
+}
+
+function NewsGridItem({ item }: { item: InfoCard }) {
+  const inner = (
+    <div className="group flex items-start gap-3 rounded-lg bg-white px-3.5 py-3 ring-1 ring-black/[0.07] hover:ring-rose-200 transition-all">
+      <div className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-rose-500" />
+      <div className="min-w-0">
+        <p className="text-[12px] font-semibold leading-snug text-ink-800 group-hover:text-rose-700 transition-colors line-clamp-2">
+          {item.title}
+        </p>
+        {item.body && <p className="mt-0.5 text-[10px] text-ink-400">{item.body}</p>}
+      </div>
+    </div>
+  );
+  if (item.url) return <a href={item.url} target="_blank" rel="noopener noreferrer">{inner}</a>;
+  return inner;
+}
+
+function RestaurantTile({ item }: { item: InfoCard }) {
+  const inner = (
+    <div className="group rounded-xl bg-white p-3.5 ring-1 ring-black/[0.07] hover:ring-amber-300 transition-all hover:-translate-y-px">
+      <div className="flex items-center gap-2 mb-1.5">
+        <span className="text-lg">🍽</span>
+        <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600">{item.body}</span>
+      </div>
+      <p className="text-[13px] font-bold text-ink-900 group-hover:text-amber-700 transition-colors leading-snug">
+        {item.title}
+      </p>
+      {item.url && (
+        <p className="mt-1.5 text-[10px] font-semibold text-amber-600 flex items-center gap-1">
+          Order on Talabat →
+        </p>
+      )}
+    </div>
+  );
+  if (item.url) return <a href={item.url} target="_blank" rel="noopener noreferrer" className="block">{inner}</a>;
+  return inner;
+}
+
+function PlaceTile({ item }: { item: InfoCard }) {
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.title + " Amman Jordan")}`;
+  return (
+    <a
+      href={item.url ?? mapsUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group rounded-xl bg-white p-3 ring-1 ring-black/[0.07] hover:ring-souq-300 transition-all hover:-translate-y-px block"
+    >
+      <div className="flex items-center gap-1.5 mb-1">
+        <span className="text-base">📍</span>
+        <span className="text-[10px] font-bold uppercase tracking-wider text-souq-600">{item.body}</span>
+      </div>
+      <p className="text-[12px] font-semibold text-ink-900 group-hover:text-souq-700 transition-colors leading-snug line-clamp-2">
+        {item.title}
+      </p>
+    </a>
+  );
+}
+
+function ProTile({ item }: { item: InfoCard }) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl bg-white p-3.5 ring-1 ring-black/[0.07]">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cyan-100 text-[13px] font-black text-cyan-700">
+        {item.title.split(" ").slice(0, 2).map((w) => w[0] ?? "").join("")}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-[13px] font-bold text-ink-900 truncate">{item.title}</p>
+        <p className="text-[11px] text-ink-400">{item.body}</p>
+      </div>
+      {item.url && (
+        <a
+          href={item.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="ml-auto shrink-0 text-[10px] font-semibold text-cyan-600 hover:underline"
+        >
+          Contact →
+        </a>
+      )}
+    </div>
+  );
+}
+
 // ── News cards ────────────────────────────────────────────────────────────────
 
 export function NewsInfoCard({ item, index }: { item: InfoCard; index: number }) {
-  return (
+  const inner = (
     <div
       className="animate-fade-up group flex items-start gap-3 rounded-xl bg-white px-4 py-3.5 ring-1 ring-black/[0.06] transition hover:ring-rose-200"
       style={{ animationDelay: `${index * 55}ms`, borderLeft: "3px solid #e11d48" }}
@@ -675,13 +886,18 @@ export function NewsInfoCard({ item, index }: { item: InfoCard; index: number })
         <span className="text-sm">📰</span>
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[13px] font-bold leading-snug text-ink-900 group-hover:text-ink-700 transition-colors">
+        <p className="text-[13px] font-bold leading-snug text-ink-900 group-hover:text-rose-700 transition-colors">
           {item.title}
         </p>
         <p className="mt-0.5 text-[11px] leading-relaxed text-ink-400">{item.body}</p>
+        {item.url && (
+          <p className="mt-1 text-[10px] font-semibold text-rose-600">Read →</p>
+        )}
       </div>
     </div>
   );
+  if (item.url) return <a href={item.url} target="_blank" rel="noopener noreferrer">{inner}</a>;
+  return inner;
 }
 
 // ── General info cards ────────────────────────────────────────────────────────

@@ -142,12 +142,16 @@ export interface InfoCard {
   title: string;
   body: string;
   icon: "info" | "map" | "star" | "building" | "calendar" | "phone";
+  /** Real URL from the database — news article, Talabat page, website, etc. */
+  url?: string;
+  /** Section grouping for the newspaper front layout: "news" | "restaurant" | "place" | "pro" */
+  section?: string;
 }
 
 export interface GeneralAnswerResponse {
   kind: "general";
   query: string;
-  intentType: "rental" | "lifestyle" | "tourism" | "weather" | "government" | "history" | "news" | "companies" | "general";
+  intentType: "rental" | "lifestyle" | "tourism" | "weather" | "government" | "history" | "news" | "companies" | "general" | "today";
   summary: string;
   cards: NeighborhoodCard[] | InfoCard[];
   meta: {

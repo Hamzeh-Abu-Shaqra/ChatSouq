@@ -21,7 +21,11 @@ const LIFESTYLE_EN = /\b(family.friendly|best\s+area\s+to\s+live|schools?\s+near
 const WEATHER_EN = /\b(weather|climate|temperature|rain|hot|cold|season|best\s+time\s+to\s+visit)\b/i;
 const GOVERNMENT_EN = /\b(ministry|government\s+service|register|residency|visa|permit|license|passport)\b/i;
 const HISTORY_EN = /\b(history|historical|ancient|heritage|culture|civilization)\b/i;
-const NEWS_EN = /\b(news|latest|today|headlines|what'?s\s+new|current\s+events|happening|update[s]?|recent\s+news|breaking)\b/i;
+// Today digest — must be checked BEFORE NEWS_EN since it overlaps
+const TODAY_EN = /\b(today|this\s+morning|what'?s\s+happening|daily\s+digest|morning\s+briefing|amman\s+today|city\s+update|what'?s\s+new|catch\s+me\s+up|what'?s\s+going\s+on|summary|summarize\s+amman|amman\s+now)\b/i;
+const TODAY_AR = /اليوم|ملخص|ماذا يحدث|أخبار اليوم|ما الجديد|عمان الآن/;
+
+const NEWS_EN = /\b(news|latest|headlines|current\s+events|update[s]?|recent\s+news|breaking)\b/i;
 const COMPANY_EN = /\b(compan(y|ies)|business(es)?|startup[s]?|firm[s]?|employer[s]?|work\s+at|job[s]?\s+at|corporate|industry)\b/i;
 const GENERAL_INFO_EN = /\b(how\s+(much|many|do|does|can|to)|what\s+is|what\s+are|tell\s+me|explain|why\s+is|population|economy|language|religion)\b/i;
 
@@ -32,7 +36,7 @@ const LIFESTYLE_AR = /مدارس|آمن|أمان|مناسب\s+للعائلة|ح�
 const WEATHER_AR = /طقس|مناخ|درجة\s+الحرارة/;
 const GOVERNMENT_AR = /حكومة|وزارة|تسجيل|تأشيرة|جواز/;
 const HISTORY_AR = /تاريخ|حضارة|تراث|أثري/;
-const NEWS_AR = /أخبار|عاجل|اليوم|آخر\s+الأخبار|ما\s+الجديد|مستجدات/;
+const NEWS_AR = /أخبار|عاجل|آخر\s+الأخبار|مستجدات/;
 const COMPANY_AR = /شركة|شركات|أعمال|مؤسسة|توظيف|وظائف/;
 const GENERAL_INFO_AR = /ما\s+هي|ما\s+هو|كيف|ماذا|لماذا|أخبرني|اشرح/;
 
@@ -45,10 +49,13 @@ const HISTORY_RE    = (q: string) => HISTORY_EN.test(q)    || HISTORY_AR.test(q)
 const NEWS_RE       = (q: string) => NEWS_EN.test(q)       || NEWS_AR.test(q);
 const COMPANY_RE    = (q: string) => COMPANY_EN.test(q)    || COMPANY_AR.test(q);
 const GENERAL_INFO_RE = (q: string) => GENERAL_INFO_EN.test(q) || GENERAL_INFO_AR.test(q);
+const TODAY_RE      = (q: string) => TODAY_EN.test(q)      || TODAY_AR.test(q);
 
-export type GeneralIntentType = "rental" | "tourism" | "lifestyle" | "weather" | "government" | "history" | "news" | "companies" | "general";
+export type GeneralIntentType = "rental" | "tourism" | "lifestyle" | "weather" | "government" | "history" | "news" | "companies" | "general" | "today";
 
 export function detectGeneralIntent(query: string): GeneralIntentType {
+  // Check "today" FIRST — it overlaps with news keywords
+  if (TODAY_RE(query))      return "today";
   if (RENTAL_RE(query))     return "rental";
   if (LIFESTYLE_RE(query))  return "lifestyle";
   if (TOURISM_RE(query))    return "tourism";
@@ -63,6 +70,7 @@ export function detectGeneralIntent(query: string): GeneralIntentType {
 /** Returns true when query should be routed to the general answer engine. */
 export function isGeneralQuery(query: string): boolean {
   return (
+    TODAY_RE(query) ||
     RENTAL_RE(query) ||
     LIFESTYLE_RE(query) ||
     TOURISM_RE(query) ||
@@ -521,6 +529,105 @@ async function fetchCompanies(keywords: string[], limit = 12): Promise<CompanyIt
   }
 }
 
+// ── Today digest — parallel fetch of news, restaurants, places, professionals ──
+
+async function fetchTodayDigest(): Promise<InfoCard[]> {
+  const cards: InfoCard[] = [];
+
+  const [news, restaurants, places, pros] = await Promise.all([
+    // Latest news with URLs
+    db.execute(sql`
+      SELECT title, source, url, scraped_at::text AS scraped_at
+      FROM jordan_news
+      ORDER BY scraped_at DESC
+      LIMIT 8
+    `).catch(() => []),
+
+    // Top restaurants by rating (with Talabat URLs)
+    db.execute(sql`
+      SELECT name, cuisine, rating, url
+      FROM jordan_restaurants
+      WHERE url IS NOT NULL
+      ORDER BY COALESCE(rating, 0) DESC
+      LIMIT 5
+    `).catch(() => []),
+
+    // Featured places — gyms, cafes, hotels, etc. by rating
+    db.execute(sql`
+      SELECT name, category, address, phone, website
+      FROM jordan_places
+      WHERE category IN ('Gym','Cafe','Hotel','Restaurant','Mall','Park','Museum','Coffee Shop')
+        AND name IS NOT NULL
+      ORDER BY COALESCE(rating, 0) DESC
+      LIMIT 8
+    `).catch(() => []),
+
+    // Featured professionals
+    db.execute(sql`
+      SELECT name, subcategory, specialty, phone, website
+      FROM jordan_people
+      WHERE subcategory IS NOT NULL
+      ORDER BY id DESC
+      LIMIT 4
+    `).catch(() => []),
+  ]);
+
+  // Map news rows (real URLs from jordan_news)
+  for (const n of news as Record<string, unknown>[]) {
+    const rawDate = n.scraped_at as string | null;
+    const dateStr = rawDate
+      ? new Date(rawDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" })
+      : "";
+    cards.push({
+      title: String(n.title ?? ""),
+      body: `${String(n.source ?? "Jordan News")}${dateStr ? " · " + dateStr : ""}`,
+      icon: "calendar",
+      section: "news",
+      url: (n.url as string | null) ?? undefined,
+    });
+  }
+
+  // Map restaurant rows (real Talabat URLs)
+  for (const r of restaurants as Record<string, unknown>[]) {
+    cards.push({
+      title: String(r.name ?? ""),
+      body: String(r.cuisine ?? "Restaurant"),
+      icon: "star",
+      section: "restaurant",
+      url: (r.url as string | null) ?? undefined,
+    });
+  }
+
+  // Map place rows — use website or fall back to Google Maps search
+  for (const p of places as Record<string, unknown>[]) {
+    const placeName = String(p.name ?? "");
+    const mapsSearch = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(placeName + " Amman Jordan")}`;
+    cards.push({
+      title: placeName,
+      body: String(p.category ?? "Place"),
+      icon: "map",
+      section: "place",
+      url: (p.website as string | null) ?? mapsSearch,
+    });
+  }
+
+  // Map professional rows
+  for (const p of pros as Record<string, unknown>[]) {
+    const sub = String(p.subcategory ?? "");
+    const spec = String(p.specialty ?? "");
+    const bodyParts = [sub, spec].filter(Boolean);
+    cards.push({
+      title: String(p.name ?? ""),
+      body: bodyParts.join(" · "),
+      icon: "phone",
+      section: "pro",
+      url: (p.website as string | null) ?? ((p.phone as string | null) ? `tel:${p.phone}` : undefined),
+    });
+  }
+
+  return cards;
+}
+
 // ── OpenSooq real listings (scraped data) ─────────────────────────────────────
 
 interface OpenSooqListing {
@@ -591,8 +698,31 @@ async function callClaude(
   intentType: GeneralIntentType,
   budget: number | null,
   city: string,
-  memoryBlock = ""
+  memoryBlock = "",
+  todayCards?: InfoCard[]
 ): Promise<{ answer: string; cards: NeighborhoodCard[] | InfoCard[] }> {
+
+  // Handle "today" digest separately — just need a brief journalist intro
+  if (intentType === "today" && todayCards) {
+    const newsHeadlines = todayCards
+      .filter((c) => c.section === "news")
+      .slice(0, 4)
+      .map((c) => `"${c.title}"`)
+      .join("; ");
+    const todaySystemPrompt = `You are ChatSouq's morning editor for Amman, Jordan. Write a warm, journalist-style morning briefing of 2-3 sentences. Reference these actual headlines from today: ${newsHeadlines || "General Amman updates"}. Be specific and local. No markdown.`;
+    try {
+      const res = await provider.complete({
+        system: todaySystemPrompt,
+        messages: [{ role: "user", content: query }],
+        json: false,
+        temperature: 0.4,
+        maxTokens: 200,
+      });
+      return { answer: res.text.trim(), cards: todayCards };
+    } catch {
+      return { answer: "Good morning, Amman! Here's what's happening in the city today.", cards: todayCards };
+    }
+  }
 
   const isRental = intentType === "rental" || intentType === "lifestyle";
   const arabic = isArabic(query);
@@ -835,6 +965,31 @@ export async function generalAnswer(
 
   const arabic = isArabic(input.query);
   const cityDisplay = arabic ? (CITY_AR[city] ?? city) : city;
+
+  // ── Today digest — parallel DB fetch + Claude briefing ──
+  if (intentType === "today") {
+    const digestCards = await fetchTodayDigest();
+    if (provider.isMock) {
+      const newsCount = digestCards.filter((c) => c.section === "news").length;
+      return {
+        kind: "general",
+        query: input.query,
+        intentType: "today",
+        summary: `Good morning, Amman! Here's your daily digest — ${newsCount} live headlines, top restaurants, featured places, and more from around the city.`,
+        cards: digestCards,
+        meta: { provider: provider.name, tookMs: Date.now() - started },
+      };
+    }
+    const result = await callClaude(provider, input.query, history, "today", null, city, "", digestCards);
+    return {
+      kind: "general",
+      query: input.query,
+      intentType: "today",
+      summary: result.answer || "Good morning, Amman! Here's what's happening in the city today.",
+      cards: digestCards,
+      meta: { provider: provider.name, tookMs: Date.now() - started },
+    };
+  }
 
   if (provider.isMock) {
     // Deterministic fallback for when no API key is configured

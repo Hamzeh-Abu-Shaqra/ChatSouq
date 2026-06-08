@@ -9,6 +9,7 @@ import {
   GeneralInfoCard,
   NewsInfoCard,
   CompanyInfoCard,
+  NewspaperFront,
   SkeletonCard,
 } from "../components/cards";
 
@@ -42,17 +43,16 @@ interface Example {
 }
 
 const EXAMPLES: Example[] = [
-  { label: "What's happening in Jordan today?",                 tag: "News",      icon: "📰" },
-  { label: "Best coffee shop in Jabal Amman",                   tag: "Food",      icon: "🍽" },
-  { label: "Find a dentist or doctor in Amman",                 tag: "Health",    icon: "🏥" },
-  { label: "Wireless headphones under 60 JOD",                  tag: "Shopping",  icon: "🛍" },
-  { label: "Hotels in Aqaba or Amman under 80 JOD",            tag: "Hotels",    icon: "🏨" },
-  { label: "Best universities and schools in Jordan",           tag: "Education", icon: "🎓" },
-  { label: "Find a lawyer or accountant in Amman",              tag: "Services",  icon: "⚖️" },
-  { label: "Best areas to rent in Amman for 1,500 JOD/month",  tag: "Rentals",   icon: "🏡" },
+  { label: "What's happening in Amman today?",                  tag: "Today",    icon: "📰" },
+  { label: "Best coffee in Jabal Amman",                        tag: "Food",     icon: "🍽" },
+  { label: "Find a cardiologist in Amman",                      tag: "Health",   icon: "🏥" },
+  { label: "Hotels near 4th Circle under 60 JOD",              tag: "Hotels",   icon: "🏨" },
+  { label: "Rent an apartment in Sweifieh",                     tag: "Rentals",  icon: "🏡" },
+  { label: "Best gym in Abdoun",                                tag: "Fitness",  icon: "💪" },
 ];
 
 const TAG_COLORS: Record<string, { bg: string; text: string }> = {
+  Today:     { bg: "#fff1f2", text: "#be123c" },
   News:      { bg: "#fff1f2", text: "#be123c" },
   Food:      { bg: "#fffbeb", text: "#92400e" },
   Health:    { bg: "#ecfdf5", text: "#065f46" },
@@ -61,6 +61,7 @@ const TAG_COLORS: Record<string, { bg: string; text: string }> = {
   Education: { bg: "#eef2ff", text: "#3730a3" },
   Services:  { bg: "#f5f3ff", text: "#5b21b6" },
   Rentals:   { bg: "#eff6ff", text: "#1d4ed8" },
+  Fitness:   { bg: "#ecfdf5", text: "#065f46" },
   Tourism:   { bg: "#faf5ff", text: "#6b21a8" },
   Companies: { bg: "#eef2ff", text: "#3730a3" },
   Places:    { bg: "#fffbeb", text: "#92400e" },
@@ -95,6 +96,10 @@ function buildAssistantContext(res: AssistResponse): string {
         return `${nb.name}${rent}`;
       }).join("; ");
       lines.push(`Areas: ${areas}`);
+    } else if (res.intentType === "today") {
+      const cards = res.cards as InfoCard[];
+      const newsCards = cards.filter((c) => c.section === "news").slice(0, 3);
+      if (newsCards.length > 0) lines.push(`Headlines: ${newsCards.map((c) => c.title).join("; ")}`);
     } else {
       lines.push(`Topics: ${(res.cards as InfoCard[]).map((c) => c.title).join(", ")}`);
     }
@@ -342,19 +347,47 @@ function Hero({ onPick }: { onPick: (q: string) => void }) {
       <h1 className="text-[52px] sm:text-[72px] font-black tracking-[-0.035em] leading-[0.9] text-ink-900">
         Ask anything
         <br />
-        <span className="text-souq-600">about Jordan.</span>
+        <span className="text-souq-600">about Amman.</span>
       </h1>
 
       <p className="mt-4 text-[15px] font-medium text-ink-400 tracking-wide" dir="rtl" lang="ar">
-        استفسر عن أي شيء في الأردن
+        استفسر عن أي شيء في عمّان
       </p>
 
-      <p className="mt-4 max-w-md text-[14px] text-ink-500 leading-relaxed">
-        Places · Professionals · Restaurants · Hotels · Education · News · Shopping · Rentals
-      </p>
+      {/* TODAY button — prominently featured */}
+      <button
+        onClick={() => onPick("What's happening in Amman today?")}
+        className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-ink-900 px-5 py-3 text-[13px] font-bold text-white shadow-float transition-all hover:bg-ink-800 hover:-translate-y-0.5 active:scale-95"
+      >
+        <span className="relative flex h-2 w-2">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-70" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500" />
+        </span>
+        Today in Amman
+        <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[10px] font-bold tracking-wider">LIVE</span>
+      </button>
+
+      {/* Quick action pills */}
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+        {[
+          { label: "🍽 Food", q: "Best restaurants in Amman" },
+          { label: "🏥 Doctors", q: "Find a doctor in Amman" },
+          { label: "🏨 Hotels", q: "Hotels in Amman" },
+          { label: "🏡 Rent", q: "Rent an apartment in Amman" },
+          { label: "📰 News", q: "Latest news from Jordan" },
+        ].map((p) => (
+          <button
+            key={p.label}
+            onClick={() => onPick(p.q)}
+            className="rounded-full bg-white px-3 py-1.5 text-[12px] font-medium text-ink-600 ring-1 ring-black/[0.08] shadow-sm transition hover:bg-souq-50 hover:ring-souq-300 hover:text-souq-700"
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
 
       {/* Example queries grid */}
-      <div className="mt-10 w-full max-w-2xl grid grid-cols-1 gap-2 sm:grid-cols-2">
+      <div className="mt-8 w-full max-w-2xl grid grid-cols-1 gap-2 sm:grid-cols-2">
         {EXAMPLES.map((ex) => {
           const colors = TAG_COLORS[ex.tag] ?? { bg: "#f3ede2", text: "#374151" };
           return (
@@ -378,7 +411,7 @@ function Hero({ onPick }: { onPick: (q: string) => void }) {
       </div>
 
       <p className="mt-8 text-[11px] text-ink-300 font-medium tracking-wide">
-        Real Jordan data · No hallucinations · Updates daily
+        Real Amman data · No hallucinations · Updates daily
       </p>
     </div>
   );
@@ -485,6 +518,7 @@ function SourceLine({ res }: { res: AssistResponse }) {
       : "📍 Google Maps · Talabat · Jordan DB · Live";
   } else {
     switch (res.intentType) {
+      case "today":     text = "📰 Roya News · Google Maps · Talabat · Live"; break;
       case "news":      text = "📰 Roya News · Live web search"; break;
       case "rental":    text = "🏡 Jordan neighborhoods · OpenSooq · Live"; break;
       case "lifestyle": text = "🏡 Jordan neighborhoods · Live"; break;
@@ -508,11 +542,23 @@ function ResponseView({ res }: { res: AssistResponse }) {
 
   // ── General ──
   if (res.kind === "general") {
+    const isToday     = res.intentType === "today";
     const isRental    = res.intentType === "rental" || res.intentType === "lifestyle";
     const isNews      = res.intentType === "news";
     const isCompanies = res.intentType === "companies";
     const nbCards     = res.cards as NeighborhoodCard[];
     const infoCards   = res.cards as InfoCard[];
+
+    // Newspaper front page layout for today digest
+    if (isToday) {
+      return (
+        <div className="space-y-4">
+          {summaryEl}
+          <NewspaperFront cards={infoCards} />
+          <SourceLine res={res} />
+        </div>
+      );
+    }
 
     return (
       <div className="space-y-4">
@@ -680,8 +726,8 @@ function Composer({ input, setInput, onSubmit, busy, compact }: {
               rows={1}
               placeholder={
                 compact
-                  ? "Ask anything about Jordan…"
-                  : "Try: best restaurant in Amman, find a cardiologist, hotels in Aqaba…"
+                  ? "Ask anything about Amman…"
+                  : "Try: what's happening today, best coffee in Jabal Amman, find a cardiologist…"
               }
               className="max-h-36 flex-1 resize-none bg-transparent py-1 text-[14px] text-ink-900 outline-none placeholder:text-ink-300 leading-relaxed"
             />

@@ -1,5 +1,4 @@
 import os
-import schedule
 import time
 from dotenv import load_dotenv
 load_dotenv()
@@ -16,26 +15,36 @@ from scrapers.talabat import run as run_talabat
 from scrapers.opensooq import run as run_opensooq
 from scrapers.linkedin import run as run_linkedin
 
+SCRAPERS = [
+    ("Google Maps", run_maps),
+    ("Talabat", run_talabat),
+    ("OpenSooq", run_opensooq),
+    ("LinkedIn", run_linkedin),
+    ("Roya News", run_news),
+]
+
 def run_all():
     print("=" * 50)
-    print("Starting all Jordan scrapers...")
+    print("Starting aggressive scrape cycle...")
     print("=" * 50)
-    run_news()
-    run_maps()
-    run_talabat()
-    run_opensooq()
-    run_linkedin()
+    for name, scraper in SCRAPERS:
+        try:
+            print(f"\n>>> Running {name}...")
+            scraper()
+        except Exception as e:
+            print(f"!!! {name} failed: {e} — continuing...")
     print("=" * 50)
-    print("All scrapers done.")
+    print("Cycle complete. Starting next cycle immediately...")
     print("=" * 50)
 
-# Run immediately on start
-run_all()
-
-# Then run every 6 hours
-schedule.every(6).hours.do(run_all)
-
-print("Scheduler running — scraping every 6 hours...")
+# Run continuously — no waiting between cycles
+cycle = 1
 while True:
-    schedule.run_pending()
+    print(f"\n{'='*50}")
+    print(f"CYCLE {cycle}")
+    print(f"{'='*50}")
+    run_all()
+    cycle += 1
+    # 60 second cooldown between cycles to avoid rate limits
+    print("Cooling down 60s before next cycle...")
     time.sleep(60)

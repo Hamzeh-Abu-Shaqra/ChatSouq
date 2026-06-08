@@ -23,8 +23,19 @@ def setup_table():
             min_order TEXT,
             delivery_fee TEXT,
             url TEXT UNIQUE,
+            search_text TEXT,
             scraped_at TIMESTAMP DEFAULT NOW()
         )
+    """)
+    cur.execute("ALTER TABLE jordan_restaurants ADD COLUMN IF NOT EXISTS search_text TEXT")
+    cur.execute("ALTER TABLE jordan_restaurants ADD COLUMN IF NOT EXISTS embedding vector(384)")
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS jordan_restaurants_vec_idx
+        ON jordan_restaurants USING hnsw (embedding vector_cosine_ops)
+    """)
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS jordan_restaurants_trgm_idx
+        ON jordan_restaurants USING gin (search_text gin_trgm_ops)
     """)
     conn.commit()
     cur.close()
@@ -73,21 +84,48 @@ def scrape_talabat():
 
 
 def save_restaurants(restaurants):
+    if not restaurants:
+        return 0
+
+    for r in restaurants:
+        r["search_text"] = (
+            f"{r['name']} {r.get('cuisine') or 'restaurant'} restaurant food delivery amman jordan"
+            .replace("  ", " ").strip()
+        )
+
+    try:
+        from scrapers.embedder import embed_batch, to_pg_vector
+        texts = [r["search_text"] for r in restaurants]
+        vecs = embed_batch(texts)
+        for i, r in enumerate(restaurants):
+            r["embedding"] = to_pg_vector(vecs[i])
+    except Exception as e:
+        print(f"  [embedder] skipped: {e}")
+        for r in restaurants:
+            r["embedding"] = None
+
     conn = get_db()
     cur = conn.cursor()
     saved = 0
     for r in restaurants:
         try:
             cur.execute("""
-                INSERT INTO jordan_restaurants (name, cuisine, rating, delivery_time, min_order, delivery_fee, url)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO jordan_restaurants
+                    (name, cuisine, rating, delivery_time, min_order, delivery_fee, url, search_text, embedding)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s::vector)
                 ON CONFLICT (url) DO UPDATE SET
-                    rating = EXCLUDED.rating,
-                    delivery_time = EXCLUDED.delivery_time
-            """, (r["name"], r["cuisine"], r["rating"], r["delivery_time"], r["min_order"], r["delivery_fee"], r["url"]))
+                    rating        = EXCLUDED.rating,
+                    delivery_time = EXCLUDED.delivery_time,
+                    search_text   = EXCLUDED.search_text,
+                    embedding     = EXCLUDED.embedding
+            """, (
+                r["name"], r.get("cuisine"), r.get("rating"),
+                r.get("delivery_time"), r.get("min_order"), r.get("delivery_fee"),
+                r.get("url"), r.get("search_text"), r.get("embedding")
+            ))
             saved += 1
         except Exception as e:
-            print(f"Error saving {r['name']}: {e}")
+            print(f"Error saving {r.get('name')}: {e}")
     conn.commit()
     cur.close()
     conn.close()

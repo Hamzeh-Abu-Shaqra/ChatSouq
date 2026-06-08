@@ -87,8 +87,21 @@ def setup_table():
             lat FLOAT,
             lng FLOAT,
             opening_hours TEXT,
+            search_text TEXT,
             scraped_at TIMESTAMP DEFAULT NOW()
         )
+    """)
+    # Add embedding column if the table existed before this change
+    cur.execute("ALTER TABLE jordan_places ADD COLUMN IF NOT EXISTS search_text TEXT")
+    cur.execute("ALTER TABLE jordan_places ADD COLUMN IF NOT EXISTS embedding vector(384)")
+    # HNSW index for vector search
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS jordan_places_vec_idx
+        ON jordan_places USING hnsw (embedding vector_cosine_ops)
+    """)
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS jordan_places_trgm_idx
+        ON jordan_places USING gin (search_text gin_trgm_ops)
     """)
     conn.commit()
     cur.close()
@@ -161,21 +174,45 @@ def text_search(query, category):
 def save_places(places):
     if not places:
         return 0
+
+    # Build search_text for each place
+    for p in places:
+        p["search_text"] = (
+            f"{p['name']} {p['category']} {p.get('address', '')} amman jordan"
+            .replace("  ", " ").strip()
+        )
+
+    # Batch embed — falls back gracefully if sentence-transformers not installed
+    try:
+        from scrapers.embedder import embed_batch, to_pg_vector
+        texts = [p["search_text"] for p in places]
+        vecs = embed_batch(texts)
+        for i, p in enumerate(places):
+            p["embedding"] = to_pg_vector(vecs[i])
+    except Exception as e:
+        print(f"  [embedder] skipped: {e}")
+        for p in places:
+            p["embedding"] = None
+
     conn = get_db()
     cur = conn.cursor()
     saved = 0
     for place in places:
         try:
             cur.execute("""
-                INSERT INTO jordan_places (place_id, name, category, address, rating, reviews_count, lat, lng)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO jordan_places
+                    (place_id, name, category, address, rating, reviews_count, lat, lng, search_text, embedding)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s::vector)
                 ON CONFLICT (place_id) DO UPDATE SET
-                    rating = EXCLUDED.rating,
-                    reviews_count = EXCLUDED.reviews_count
+                    rating        = EXCLUDED.rating,
+                    reviews_count = EXCLUDED.reviews_count,
+                    search_text   = EXCLUDED.search_text,
+                    embedding     = EXCLUDED.embedding
             """, (
                 place["place_id"], place["name"], place["category"],
                 place["address"], place["rating"], place["reviews_count"],
-                place["lat"], place["lng"]
+                place["lat"], place["lng"],
+                place.get("search_text"), place.get("embedding")
             ))
             saved += 1
         except Exception as e:

@@ -13,6 +13,7 @@
     "push": "drizzle-kit push",
     "studio": "drizzle-kit studio",
     "seed": "tsx scripts/seed.ts",
+    "embed-scraped": "tsx scripts/embed-scraped.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

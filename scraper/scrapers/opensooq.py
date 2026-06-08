@@ -28,8 +28,19 @@ def setup_table():
             location TEXT,
             category TEXT,
             url TEXT UNIQUE,
+            search_text TEXT,
             scraped_at TIMESTAMP DEFAULT NOW()
         )
+    """)
+    cur.execute("ALTER TABLE jordan_listings ADD COLUMN IF NOT EXISTS search_text TEXT")
+    cur.execute("ALTER TABLE jordan_listings ADD COLUMN IF NOT EXISTS embedding vector(384)")
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS jordan_listings_vec_idx
+        ON jordan_listings USING hnsw (embedding vector_cosine_ops)
+    """)
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS jordan_listings_trgm_idx
+        ON jordan_listings USING gin (search_text gin_trgm_ops)
     """)
     conn.commit()
     cur.close()
@@ -78,17 +89,44 @@ def scrape_category(category_name, url):
 
 
 def save_listings(listings):
+    if not listings:
+        return 0
+
+    for l in listings:
+        price_str = f"{l['price']} JOD" if l.get("price") else ""
+        l["search_text"] = (
+            f"{l.get('title', '')} {l.get('category', '')} {l.get('location', '')} jordan {price_str}"
+            .replace("  ", " ").strip()
+        )
+
+    try:
+        from scrapers.embedder import embed_batch, to_pg_vector
+        texts = [l["search_text"] for l in listings]
+        vecs = embed_batch(texts)
+        for i, l in enumerate(listings):
+            l["embedding"] = to_pg_vector(vecs[i])
+    except Exception as e:
+        print(f"  [embedder] skipped: {e}")
+        for l in listings:
+            l["embedding"] = None
+
     conn = get_db()
     cur = conn.cursor()
     saved = 0
     for l in listings:
         try:
             cur.execute("""
-                INSERT INTO jordan_listings (title, price, location, category, url)
-                VALUES (%s, %s, %s, %s, %s)
+                INSERT INTO jordan_listings (title, price, location, category, url, search_text, embedding)
+                VALUES (%s, %s, %s, %s, %s, %s, %s::vector)
                 ON CONFLICT (url) DO UPDATE SET
-                    price = EXCLUDED.price
-            """, (l["title"], l["price"], l["location"], l["category"], l["url"]))
+                    price       = EXCLUDED.price,
+                    search_text = EXCLUDED.search_text,
+                    embedding   = EXCLUDED.embedding
+            """, (
+                l.get("title"), l.get("price"), l.get("location"),
+                l.get("category"), l.get("url"),
+                l.get("search_text"), l.get("embedding")
+            ))
             saved += 1
         except Exception as e:
             print(f"Error saving: {e}")

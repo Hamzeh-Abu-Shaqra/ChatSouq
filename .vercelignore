@@ -1,0 +1,6 @@
+data/
+.claude/
+node_modules/
+**/.next/cache/
+**/*.ndjson
+**/*.json.gz

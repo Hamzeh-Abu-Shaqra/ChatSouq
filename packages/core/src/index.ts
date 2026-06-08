@@ -6,3 +6,4 @@ export { generalAnswer, isGeneralQuery, detectGeneralIntent } from "./general";
 export { parseConstraints, applyProfile } from "./intent";
 export { getCategories } from "./retrieve";
 export { formatJOD } from "./explain";
+export { webSearch, formatWebResults } from "./web-search";

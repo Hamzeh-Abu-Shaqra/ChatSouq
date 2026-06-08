@@ -4,6 +4,7 @@
 
 :root {
   color-scheme: light;
+  --color-paper: #f4f1ea;
 }
 
 html,
@@ -13,19 +14,22 @@ body {
 }
 
 body {
-  background:
-    radial-gradient(1200px 600px at 80% -10%, rgba(16, 185, 129, 0.10), transparent 60%),
-    radial-gradient(900px 500px at -10% 10%, rgba(245, 158, 11, 0.08), transparent 55%),
-    #faf9f6;
-  color: #0f231d;
+  background-color: var(--color-paper);
+  background-image:
+    radial-gradient(ellipse 1100px 480px at 78% -8%,  rgba(16, 185, 129, 0.07), transparent 65%),
+    radial-gradient(ellipse  700px 380px at -8%  18%, rgba(234, 179, 8, 0.05), transparent 60%);
+  color: #0d1117;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
 }
 
-/* Subtle skeleton shimmer for loading cards */
+/* ── Shimmer skeleton ─────────────────────────────────────────────────────── */
 .shimmer {
   position: relative;
   overflow: hidden;
+  background-color: #ede8df;
 }
 .shimmer::after {
   content: "";
@@ -34,23 +38,39 @@ body {
   transform: translateX(-100%);
   background: linear-gradient(
     90deg,
-    transparent,
-    rgba(255, 255, 255, 0.55),
-    transparent
+    transparent 0%,
+    rgba(255, 255, 255, 0.60) 50%,
+    transparent 100%
   );
-  animation: shimmer 1.4s infinite;
+  animation: shimmer 1.5s ease-in-out infinite;
 }
 @keyframes shimmer {
-  100% {
-    transform: translateX(100%);
-  }
+  100% { transform: translateX(100%); }
 }
 
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+/* ── Typing dots ──────────────────────────────────────────────────────────── */
+@keyframes typing-dot {
+  0%, 60%, 100% { transform: translateY(0);    opacity: 0.4; }
+  30%            { transform: translateY(-4px); opacity: 1;   }
 }
+.typing-dot {
+  animation: typing-dot 1.2s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.typing-dot:nth-child(3) { animation-delay: 0.30s; }
+
+/* ── Scrollbar ────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(6, 95, 70, 0.18);
+  background: rgba(6, 95, 70, 0.14);
   border-radius: 999px;
+  border: 2px solid var(--color-paper);
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(6, 95, 70, 0.24); }
+
+/* ── Focus visible ────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid #059669;
+  outline-offset: 2px;
 }

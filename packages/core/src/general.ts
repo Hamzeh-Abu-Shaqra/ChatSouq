@@ -1,4 +1,7 @@
 import { getProvider, type AIProvider } from "@chatsouq/ai";
+import { sql } from "drizzle-orm";
+import { db } from "@chatsouq/db";
+import { webSearch, formatWebResults } from "./web-search";
 import type { GeneralAnswerResponse, NeighborhoodCard, InfoCard, RecommendInput, ConvMessage } from "./types";
 
 // ── Language detection ────────────────────────────────────────────────────────
@@ -18,6 +21,8 @@ const LIFESTYLE_EN = /\b(family.friendly|best\s+area\s+to\s+live|schools?\s+near
 const WEATHER_EN = /\b(weather|climate|temperature|rain|hot|cold|season|best\s+time\s+to\s+visit)\b/i;
 const GOVERNMENT_EN = /\b(ministry|government\s+service|register|residency|visa|permit|license|passport)\b/i;
 const HISTORY_EN = /\b(history|historical|ancient|heritage|culture|civilization)\b/i;
+const NEWS_EN = /\b(news|latest|today|headlines|what'?s\s+new|current\s+events|happening|update[s]?|recent\s+news|breaking)\b/i;
+const COMPANY_EN = /\b(compan(y|ies)|business(es)?|startup[s]?|firm[s]?|employer[s]?|work\s+at|job[s]?\s+at|corporate|industry)\b/i;
 const GENERAL_INFO_EN = /\b(how\s+(much|many|do|does|can|to)|what\s+is|what\s+are|tell\s+me|explain|why\s+is|population|economy|language|religion)\b/i;
 
 // Arabic patterns (no \b — Arabic chars are not ASCII word chars)
@@ -27,25 +32,31 @@ const LIFESTYLE_AR = /مدارس|آمن|أمان|مناسب\s+للعائلة|ح�
 const WEATHER_AR = /طقس|مناخ|درجة\s+الحرارة/;
 const GOVERNMENT_AR = /حكومة|وزارة|تسجيل|تأشيرة|جواز/;
 const HISTORY_AR = /تاريخ|حضارة|تراث|أثري/;
+const NEWS_AR = /أخبار|عاجل|اليوم|آخر\s+الأخبار|ما\s+الجديد|مستجدات/;
+const COMPANY_AR = /شركة|شركات|أعمال|مؤسسة|توظيف|وظائف/;
 const GENERAL_INFO_AR = /ما\s+هي|ما\s+هو|كيف|ماذا|لماذا|أخبرني|اشرح/;
 
-const RENTAL_RE   = (q: string) => RENTAL_EN.test(q)     || RENTAL_AR.test(q);
-const TOURISM_RE  = (q: string) => TOURISM_EN.test(q)    || TOURISM_AR.test(q);
-const LIFESTYLE_RE = (q: string) => LIFESTYLE_EN.test(q) || LIFESTYLE_AR.test(q);
-const WEATHER_RE  = (q: string) => WEATHER_EN.test(q)    || WEATHER_AR.test(q);
+const RENTAL_RE     = (q: string) => RENTAL_EN.test(q)     || RENTAL_AR.test(q);
+const TOURISM_RE    = (q: string) => TOURISM_EN.test(q)    || TOURISM_AR.test(q);
+const LIFESTYLE_RE  = (q: string) => LIFESTYLE_EN.test(q)  || LIFESTYLE_AR.test(q);
+const WEATHER_RE    = (q: string) => WEATHER_EN.test(q)    || WEATHER_AR.test(q);
 const GOVERNMENT_RE = (q: string) => GOVERNMENT_EN.test(q) || GOVERNMENT_AR.test(q);
-const HISTORY_RE  = (q: string) => HISTORY_EN.test(q)    || HISTORY_AR.test(q);
+const HISTORY_RE    = (q: string) => HISTORY_EN.test(q)    || HISTORY_AR.test(q);
+const NEWS_RE       = (q: string) => NEWS_EN.test(q)       || NEWS_AR.test(q);
+const COMPANY_RE    = (q: string) => COMPANY_EN.test(q)    || COMPANY_AR.test(q);
 const GENERAL_INFO_RE = (q: string) => GENERAL_INFO_EN.test(q) || GENERAL_INFO_AR.test(q);
 
-export type GeneralIntentType = "rental" | "tourism" | "lifestyle" | "weather" | "government" | "history" | "general";
+export type GeneralIntentType = "rental" | "tourism" | "lifestyle" | "weather" | "government" | "history" | "news" | "companies" | "general";
 
 export function detectGeneralIntent(query: string): GeneralIntentType {
-  if (RENTAL_RE(query)) return "rental";
-  if (LIFESTYLE_RE(query)) return "lifestyle";
-  if (TOURISM_RE(query)) return "tourism";
-  if (WEATHER_RE(query)) return "weather";
+  if (RENTAL_RE(query))     return "rental";
+  if (LIFESTYLE_RE(query))  return "lifestyle";
+  if (TOURISM_RE(query))    return "tourism";
+  if (WEATHER_RE(query))    return "weather";
   if (GOVERNMENT_RE(query)) return "government";
-  if (HISTORY_RE(query)) return "history";
+  if (HISTORY_RE(query))    return "history";
+  if (NEWS_RE(query))       return "news";
+  if (COMPANY_RE(query))    return "companies";
   return "general";
 }
 
@@ -58,6 +69,8 @@ export function isGeneralQuery(query: string): boolean {
     WEATHER_RE(query) ||
     GOVERNMENT_RE(query) ||
     HISTORY_RE(query) ||
+    NEWS_RE(query) ||
+    COMPANY_RE(query) ||
     GENERAL_INFO_RE(query)
   );
 }
@@ -262,6 +275,115 @@ function filterByBudget(neighborhoods: NeighborhoodCard[], budget: number | null
   return neighborhoods.filter((n) => n.avgRentMin <= budget).sort((a, b) => b.avgRentMin - a.avgRentMin);
 }
 
+// ── Live scraped data fetchers ────────────────────────────────────────────────
+
+interface NewsItem {
+  title: string;
+  source: string;
+  url: string | null;
+  scraped_at: string | null;
+}
+
+/** Fetch the most recent Jordan news headlines from the scraped jordan_news table. */
+async function fetchRecentNews(limit = 10): Promise<NewsItem[]> {
+  try {
+    const rows = (await db.execute(sql`
+      SELECT title, source, url, scraped_at::text AS scraped_at
+      FROM jordan_news
+      ORDER BY scraped_at DESC
+      LIMIT ${limit}
+    `)) as unknown as NewsItem[];
+    return rows;
+  } catch {
+    return [];
+  }
+}
+
+interface CompanyItem {
+  name: string;
+  industry: string | null;
+  location: string | null;
+  url: string | null;
+}
+
+/** Fetch Jordan companies from the scraped jordan_companies table. */
+async function fetchCompanies(keywords: string[], limit = 12): Promise<CompanyItem[]> {
+  try {
+    const kwPattern = keywords.length > 0 ? `%${keywords[0]}%` : "%";
+    const rows = (await db.execute(sql`
+      SELECT name, industry, location, url
+      FROM jordan_companies
+      WHERE name ILIKE ${kwPattern} OR industry ILIKE ${kwPattern}
+      ORDER BY scraped_at DESC
+      LIMIT ${limit}
+    `)) as unknown as CompanyItem[];
+    return rows;
+  } catch {
+    return [];
+  }
+}
+
+// ── OpenSooq real listings (scraped data) ─────────────────────────────────────
+
+interface OpenSooqListing {
+  title: string;
+  price: string | null;
+  location: string | null;
+  category: string | null;
+  url: string | null;
+}
+
+/**
+ * Fetch real rental/property listings from the jordan_listings table (OpenSooq
+ * scrape). Falls back gracefully if the table doesn't exist or is empty.
+ */
+async function fetchOpenSooqListings(
+  budget: number | null,
+  keywords: string[],
+  limit = 12
+): Promise<OpenSooqListing[]> {
+  try {
+    // Filter by price if budget provided, and by keyword if available
+    const kwPattern = keywords.length > 0
+      ? `%${keywords.slice(0, 3).join("%")}%`
+      : "%";
+
+    let rows: Record<string, unknown>[];
+
+    if (budget) {
+      rows = (await db.execute(sql`
+        SELECT title, price, location, category, url
+        FROM jordan_listings
+        WHERE
+          (price IS NULL OR price::numeric <= ${budget * 1.15})
+          AND (title ILIKE ${kwPattern} OR location ILIKE ${kwPattern})
+          AND category ILIKE '%rent%'
+        ORDER BY
+          CASE WHEN price IS NOT NULL THEN price::numeric ELSE 999999 END DESC
+        LIMIT ${limit}
+      `)) as unknown as Record<string, unknown>[];
+    } else {
+      rows = (await db.execute(sql`
+        SELECT title, price, location, category, url
+        FROM jordan_listings
+        WHERE category ILIKE '%rent%'
+        ORDER BY id DESC
+        LIMIT ${limit}
+      `)) as unknown as Record<string, unknown>[];
+    }
+
+    return rows.map((r) => ({
+      title:    (r.title    as string) ?? "",
+      price:    (r.price    as string) ?? null,
+      location: (r.location as string) ?? null,
+      category: (r.category as string) ?? null,
+      url:      (r.url      as string) ?? null,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 // ── Claude-powered general answer ─────────────────────────────────────────────
 
 async function callClaude(
@@ -304,10 +426,64 @@ async function callClaude(
       ).join("\n")
     : "";
 
+  // ── Parallel data fetching — DB + web search run at the same time ─────────
+  const budgetKeywords = query.toLowerCase().match(/\b(abdoun|jabal|khalda|sweifieh|mecca|gardens|jubaiha|zarqa|irbid|aqaba)\b/g) ?? [];
+  const companyKeywords = query.toLowerCase().match(/\b\w{4,}\b/g)?.filter(w =>
+    !["what","where","which","best","good","find","show","tell","about","jordan"].includes(w)
+  ) ?? [];
+
+  // Decide whether to fire a live web search (skip for rental — we have authoritative DB data)
+  const shouldWebSearch = intentType !== "rental" && intentType !== "lifestyle";
+
+  const [
+    liveListings,
+    newsItems,
+    companyItems,
+    webResults,
+  ] = await Promise.all([
+    isRental ? fetchOpenSooqListings(budget, budgetKeywords, 10) : Promise.resolve([]),
+    intentType === "news"      ? fetchRecentNews(12)                          : Promise.resolve([]),
+    intentType === "companies" ? fetchCompanies(companyKeywords.slice(0, 2), 15) : Promise.resolve([]),
+    shouldWebSearch
+      ? webSearch(query, {
+          maxResults:  5,
+          searchDepth: "basic",
+          topic:       intentType === "news" ? "news" : "general",
+          days:        intentType === "news" ? 3 : undefined,
+        })
+      : Promise.resolve([]),
+  ]);
+
+  const liveListingsBlock = liveListings.length > 0
+    ? `\nLIVE OPENSOOQ LISTINGS (real current market data — reference these to validate prices):\n` +
+      liveListings.map((l) =>
+        `- "${l.title}" | ${l.price ? l.price + " JOD" : "price unlisted"} | ${l.location ?? "Amman"}`
+      ).join("\n")
+    : "";
+
+  const newsBlock = newsItems.length > 0
+    ? `\nLIVE JORDAN NEWS HEADLINES (scraped from Roya News):\n` +
+      newsItems.map((n) => `- "${n.title}" (${n.source})`).join("\n")
+    : "";
+
+  const companiesBlock = companyItems.length > 0
+    ? `\nLIVE JORDAN COMPANIES:\n` +
+      companyItems.map((c) =>
+        `- ${c.name}${c.industry ? ` | ${c.industry}` : ""}${c.location ? ` | ${c.location}` : ""}${c.url ? ` | ${c.url}` : ""}`
+      ).join("\n")
+    : "";
+
+  // Web search results — supplement DB data with live internet data
+  const webBlock = formatWebResults(webResults);
+
+  const isNews     = intentType === "news";
+  const isCompany  = intentType === "companies";
+
   const systemPrompt = isRental
     ? `You are ChatSouq, Jordan's expert AI assistant for real estate and neighborhoods.
 ${langNote}
 ${neighborhoodRefBlock}
+${liveListingsBlock}
 The user is asking about rental areas${budget ? ` with a monthly budget of ${budget} JOD` : ""} in ${cityDisplay}.
 ${priorRentalContext}
 
@@ -339,25 +515,76 @@ Return ONLY valid JSON (no markdown fences):
 
 ${budget ? `STRICT: Only include areas where avgRentMin <= ${budget} JOD. Sort best value first. Never include areas that exceed the budget.` : ""}
 Include 3–6 areas.`
-    : `You are ChatSouq, Jordan's expert AI assistant with deep, specific knowledge of Jordan — its cities, culture, tourism, weather, government services, daily life, and economy.
+    : isNews
+    ? `You are ChatSouq, Jordan's live news assistant. You have access to real-time scraped headlines AND live web search results.
 ${langNote}
-${history.length > 0 ? "Use the conversation history for context and continuity — do not repeat what was already said." : ""}
+${newsBlock || ""}
+${webBlock}
+${(!newsBlock && !webBlock) ? "No live data available right now — answer from your training knowledge of Jordan." : ""}
 
-Answer with depth and specificity. Avoid generic statements. Give practical, actionable, Jordan-specific information that a local expert would give.
+Summarize what is happening in Jordan based on the data above. Be specific. If you have both scraped headlines and web results, combine them — don't duplicate.
 
 Return ONLY valid JSON (no markdown fences):
 {
-  "answer": "3-5 sentences, detailed and specific to Jordan. Plain text, no markdown. Warm and informative tone.",
+  "answer": "2-3 sentence summary of current events in Jordan.",
   "cards": [
     {
-      "title": "Specific, descriptive title (not generic like 'Overview')",
-      "body": "1-2 sentences with concrete, specific information",
+      "title": "Story headline or topic",
+      "body": "What this story is about in 1-2 sentences",
+      "icon": "one of: info|star|calendar|building|map|phone"
+    }
+  ]
+}
+Limit to 5 cards.`
+
+    : isCompany
+    ? `You are ChatSouq, Jordan's business intelligence assistant. You have live web search results AND scraped company data.
+${langNote}
+${companiesBlock || ""}
+${webBlock}
+
+Answer the user's question about Jordan businesses and companies. Use both data sources — be specific about company names, industries, locations, and what they do.
+
+Return ONLY valid JSON (no markdown fences):
+{
+  "answer": "2-4 sentences about the companies or business landscape.",
+  "cards": [
+    {
+      "title": "Company or sector name",
+      "body": "What this company does / sector overview in Jordan",
+      "icon": "one of: building|info|map|star|phone|calendar"
+    }
+  ]
+}
+Limit to 5 cards.`
+
+    : `You are ChatSouq, the smartest AI assistant for anything about Jordan. You have access to:
+1. A live database of Jordan places, restaurants, rental listings, companies, and news
+2. Real-time web search results pulled right now specifically for this query
+3. Deep training knowledge of Jordan — geography, culture, economy, government, daily life
+
+${langNote}
+${webBlock}
+${history.length > 0 ? "\nConversation history (use for context and continuity — don't repeat what was already said):\n" + history.filter(m => m.role === "user").map(m => `User: ${m.content}`).join("\n") : ""}
+
+Rules:
+- Prioritize the live web results and DB data above your training data when they conflict
+- Be specific — name exact places, prices, services, and facts
+- Give the answer a local expert would give, not a tourist brochure
+- If the user asks something conversational or follow-up, respond naturally
+
+Return ONLY valid JSON (no markdown fences):
+{
+  "answer": "3-5 sentences, detailed, specific, and useful. Plain text only — no markdown, no bullet points.",
+  "cards": [
+    {
+      "title": "Specific and descriptive title",
+      "body": "1-2 sentences with concrete, actionable information",
       "icon": "one of: info|map|star|building|calendar|phone"
     }
   ]
 }
-
-Limit to 4 cards. Each card must add new, specific information — no repetition.`;
+Limit to 4 cards. Every card must contain NEW information not already in the answer.`;
 
   // Build messages: prior conversation turns + current question
   const historyMessages = history.map((h) => ({

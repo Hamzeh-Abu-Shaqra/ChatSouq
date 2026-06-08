@@ -1,0 +1,13 @@
+node_modules/
+.next/
+dist/
+.turbo/
+*.log
+.env
+.env.local
+.DS_Store
+# Seed data is generated from external xlsx and is large / not redistributable.
+data/seed/*.ndjson
+data/seed/*.json
+!data/seed/.gitkeep
+.vercel

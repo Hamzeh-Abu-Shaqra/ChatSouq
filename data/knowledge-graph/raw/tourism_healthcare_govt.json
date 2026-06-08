@@ -1,0 +1,3233 @@
+[
+  {
+    "name_en": "Petra Archaeological Site",
+    "name_ar": "البتراء",
+    "category": "Tourism",
+    "subcategory": "Archaeological Site",
+    "description": "UNESCO World Heritage Site and one of the New Seven Wonders of the World; the famous rose-red Nabatean city carved into sandstone cliffs",
+    "website": "https://www.petra.gov.jo/",
+    "phone": null,
+    "city": "Wadi Musa",
+    "governorate": "Ma'an",
+    "address": "Wadi Musa, Petra, Jordan",
+    "source_url": "https://www.visitjordan.com/",
+    "confidence": "high",
+    "tourist_score": 5,
+    "audience_tags": [
+      "tourists",
+      "families",
+      "adventurers",
+      "history-lovers"
+    ]
+  },
+  {
+    "name_en": "Wadi Rum Protected Area",
+    "name_ar": "وادي رم",
+    "category": "Tourism",
+    "subcategory": "Nature Reserve / Desert",
+    "description": "UNESCO World Heritage Site desert landscape of red sandstone and granite with towering cliffs; offers jeep tours, camel rides, and Bedouin camp stays",
+    "website": "https://www.wadirum.jo/",
+    "phone": null,
+    "city": "Wadi Rum",
+    "governorate": "Aqaba",
+    "address": "Wadi Rum, Aqaba Governorate, Jordan",
+    "source_url": "https://www.tripadvisor.com/Attractions-g303973-Activities-c42-Wadi_Rum_Al_Aqabah_Governorate.html",
+    "confidence": "high",
+    "tourist_score": 5,
+    "audience_tags": [
+      "tourists",
+      "adventurers",
+      "families",
+      "photographers"
+    ]
+  },
+  {
+    "name_en": "Jerash Roman Ruins",
+    "name_ar": "جرش",
+    "category": "Tourism",
+    "subcategory": "Archaeological Site",
+    "description": "One of the best-preserved Roman provincial towns in the world; features Hadrian's Arch, the Oval Plaza with 160 Ionic columns, and the Temple of Artemis; known as 'Pompeii of the East'",
+    "website": "https://www.visitjordan.com/",
+    "phone": null,
+    "city": "Jerash",
+    "governorate": "Jerash",
+    "address": "Jerash City, Jerash Governorate, Jordan",
+    "source_url": "https://www.lonelyplanet.com/jordan/jerash-and-the-north/jerash/attractions/roman-ruins-of-jerash/a/poi-sig/1456891/361072",
+    "confidence": "high",
+    "tourist_score": 5,
+    "audience_tags": [
+      "tourists",
+      "history-lovers",
+      "families"
+    ]
+  },
+  {
+    "name_en": "Dead Sea",
+    "name_ar": "البحر الميت",
+    "category": "Tourism",
+    "subcategory": "Natural Attraction",
+    "description": "The lowest point on Earth at 430m below sea level; known for its extreme salinity and mineral-rich mud; a major wellness and tourism destination",
+    "website": "https://www.visitjordan.com/",
+    "phone": null,
+    "city": "Sweimeh",
+    "governorate": "Balqa",
+    "address": "Dead Sea Road, Sweimeh, Jordan",
+    "source_url": "https://jordantraveler.com/best-jordan-dead-sea-resorts/",
+    "confidence": "high",
+    "tourist_score": 5,
+    "audience_tags": [
+      "tourists",
+      "wellness",
+      "families",
+      "couples"
+    ]
+  },
+  {
+    "name_en": "Ajloun Castle",
+    "name_ar": "قلعة عجلون",
+    "category": "Tourism",
+    "subcategory": "Historical Castle",
+    "description": "12th-century Islamic fortress built by Saladin's general to defend against Crusader attacks; offers panoramic views of the Jordan Valley",
+    "website": "https://www.visitjordan.com/",
+    "phone": null,
+    "city": "Ajloun",
+    "governorate": "Ajloun",
+    "address": "Ajloun, Ajloun Governorate, Jordan",
+    "source_url": "https://www.alongdustyroads.com/posts/jerash-ruins-jordan",
+    "confidence": "high",
+    "tourist_score": 4,
+    "audience_tags": [
+      "tourists",
+      "history-lovers",
+      "families"
+    ]
+  },
+  {
+    "name_en": "Kempinski Hotel Ishtar Dead Sea",
+    "name_ar": "فندق كمبينسكي إشتار البحر الميت",
+    "category": "Tourism",
+    "subcategory": "Luxury Resort",
+    "description": "Ultra-luxury Dead Sea resort featuring layered infinity pools, sprawling gardens, and one of the most striking Dead Sea beachfronts; ideal for honeymooners",
+    "website": "https://www.kempinski.com/en/hotel-ishtar-dead-sea",
+    "phone": null,
+    "city": "Sweimeh",
+    "governorate": "Balqa",
+    "address": "Dead Sea Road, Sweimeh, Jordan",
+    "source_url": "https://jordantraveler.com/best-jordan-dead-sea-resorts/",
+    "confidence": "high",
+    "tourist_score": 5,
+    "audience_tags": [
+      "tourists",
+      "couples",
+      "wellness",
+      "luxury"
+    ]
+  },
+  {
+    "name_en": "Mövenpick Resort & Spa Dead Sea",
+    "name_ar": "منتجع وسبا موفنبيك البحر الميت",
+    "category": "Tourism",
+    "subcategory": "Luxury Resort",
+    "description": "5-star resort built like a traditional Jordanian village with winding stone paths, Arabic-style arches, and the Zara Spa",
+    "website": "https://movenpick.accor.com/en/middle-east/jordan/dead-sea.html",
+    "phone": null,
+    "city": "Sweimeh",
+    "governorate": "Balqa",
+    "address": "Dead Sea Road, Sweimeh, Jordan",
+    "source_url": "https://jordantraveler.com/best-jordan-dead-sea-resorts/",
+    "confidence": "high",
+    "tourist_score": 5,
+    "audience_tags": [
+      "tourists",
+      "wellness",
+      "families",
+      "couples"
+    ]
+  },
+  {
+    "name_en": "Hilton Dead Sea Resort & Spa",
+    "name_ar": "هيلتون البحر الميت",
+    "category": "Tourism",
+    "subcategory": "Luxury Resort",
+    "description": "Luxury international resort on the shores of the Dead Sea featuring an infinity pool perched above the shoreline and direct beach access",
+    "website": "https://www.hilton.com/en/hotels/ammdsdi-hilton-dead-sea-resort-and-spa/",
+    "phone": null,
+    "city": "Sweimeh",
+    "governorate": "Balqa",
+    "address": "Dead Sea Road, Sweimeh, Jordan",
+    "source_url": "https://jordantraveler.com/best-jordan-dead-sea-resorts/",
+    "confidence": "high",
+    "tourist_score": 4,
+    "audience_tags": [
+      "tourists",
+      "wellness",
+      "families"
+    ]
+  },
+  {
+    "name_en": "Dead Sea Marriott Resort & Spa",
+    "name_ar": "ماريوت البحر الميت",
+    "category": "Tourism",
+    "subcategory": "Luxury Resort",
+    "description": "Traditional aesthetic resort with terraced layout, water views, three pools including adults-only, full spa and gym facilities",
+    "website": "https://www.marriott.com/en-us/hotels/ammds-dead-sea-marriott-resort-and-spa/overview/",
+    "phone": null,
+    "city": "Sweimeh",
+    "governorate": "Balqa",
+    "address": "Dead Sea Road, Sweimeh, Jordan",
+    "source_url": "https://jordantraveler.com/best-jordan-dead-sea-resorts/",
+    "confidence": "high",
+    "tourist_score": 4,
+    "audience_tags": [
+      "tourists",
+      "wellness",
+      "couples",
+      "corporate"
+    ]
+  },
+  {
+    "name_en": "Crowne Plaza Jordan Dead Sea Resort & Spa",
+    "name_ar": "كراون بلازا البحر الميت",
+    "category": "Tourism",
+    "subcategory": "Resort Hotel",
+    "description": "Modern resort appealing to younger travelers with a saltwater pool featuring a swim-up bar and wide maintained beach",
+    "website": "https://www.ihg.com/crowneplaza/hotels/us/en/dead-sea/ammdz/hoteldetail",
+    "phone": null,
+    "city": "Sweimeh",
+    "governorate": "Balqa",
+    "address": "Dead Sea Road, South Sweimeh, Jordan",
+    "source_url": "https://jordantraveler.com/best-jordan-dead-sea-resorts/",
+    "confidence": "high",
+    "tourist_score": 4,
+    "audience_tags": [
+      "tourists",
+      "families",
+      "couples"
+    ]
+  },
+  {
+    "name_en": "Holiday Inn Resort Dead Sea",
+    "name_ar": "هوليدي إن ريزورت البحر الميت",
+    "category": "Tourism",
+    "subcategory": "Resort Hotel",
+    "description": "Family-friendly beach resort on the north shore of the Dead Sea with multiple pools and modern spacious rooms",
+    "website": "https://www.ihg.com/holidayinnresorts/hotels/us/en/dead-sea/ammdi/hoteldetail",
+    "phone": null,
+    "city": "Sweimeh",
+    "governorate": "Balqa",
+    "address": "Dead Sea Road, North Shore, Jordan",
+    "source_url": "https://jordantraveler.com/best-jordan-dead-sea-resorts/",
+    "confidence": "high",
+    "tourist_score": 4,
+    "audience_tags": [
+      "tourists",
+      "families"
+    ]
+  },
+  {
+    "name_en": "Four Seasons Hotel Amman",
+    "name_ar": "فور سيزونز عمان",
+    "category": "Tourism",
+    "subcategory": "Luxury Hotel",
+    "description": "Iconic 5-star city hotel in Amman with 192 rooms, indoor/outdoor rooftop pools, world-class restaurants, and a panoramic city view",
+    "website": "https://www.fourseasons.com/amman/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "5th Circle, Al Kindi Street, Amman, Jordan",
+    "source_url": "https://www.scottdunn.com/us/jordan/hotels/the-four-seasons-hotel-amman",
+    "confidence": "high",
+    "tourist_score": 5,
+    "audience_tags": [
+      "tourists",
+      "corporate",
+      "luxury",
+      "couples"
+    ]
+  },
+  {
+    "name_en": "Grand Hyatt Amman",
+    "name_ar": "جراند حياة عمان",
+    "category": "Tourism",
+    "subcategory": "Luxury Hotel",
+    "description": "Iconic 5-star hotel with 311 rooms and distinctive pink stone façade; seven restaurants, spa, and panoramic city views; located in the business and diplomatic district",
+    "website": "https://www.hyatt.com/grand-hyatt/en-US/ammgh-grand-hyatt-amman",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Hussein Bin Ali Street, Amman, Jordan",
+    "source_url": "https://www.tripadvisor.com/Hotel_Review-g293986-d308142-Reviews-Grand_Hyatt_Amman-Amman_Amman_Governorate.html",
+    "confidence": "high",
+    "tourist_score": 5,
+    "audience_tags": [
+      "tourists",
+      "corporate",
+      "luxury"
+    ]
+  },
+  {
+    "name_en": "InterContinental Amman",
+    "name_ar": "إنتركونتيننتال عمان",
+    "category": "Tourism",
+    "subcategory": "Luxury Hotel",
+    "description": "Historic luxury hotel in Amman's diplomatic area hosting foreign dignitaries since the early days of Jordan's founding",
+    "website": "https://www.ihg.com/intercontinental/hotels/us/en/amman/ammhb/hoteldetail",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Islamic College Street, 3rd Circle, Amman, Jordan",
+    "source_url": "https://www.tripexpert.com/amman/hotels/four-seasons-hotel-amman-vs-intercontinental-jordan",
+    "confidence": "high",
+    "tourist_score": 4,
+    "audience_tags": [
+      "tourists",
+      "corporate",
+      "luxury"
+    ]
+  },
+  {
+    "name_en": "Mövenpick Resort Petra",
+    "name_ar": "منتجع موفنبيك البتراء",
+    "category": "Tourism",
+    "subcategory": "Luxury Hotel",
+    "description": "5-star resort located 50 meters from Petra's main gate; 183 rooms, seven restaurants, wellness center with outdoor swimming pool; tel. +962 3 2157111",
+    "website": "https://movenpick.accor.com/en/middle-east/jordan/petra/resort-petra.html",
+    "phone": "+962 3 2157111",
+    "city": "Wadi Musa",
+    "governorate": "Ma'an",
+    "address": "Tourism Street, P.O. Box 214, Petra, Jordan",
+    "source_url": "https://movenpick.accor.com/en/middle-east/jordan/petra/resort-petra/location.html",
+    "confidence": "high",
+    "tourist_score": 5,
+    "audience_tags": [
+      "tourists",
+      "families",
+      "luxury",
+      "couples"
+    ]
+  },
+  {
+    "name_en": "Petra Marriott Hotel",
+    "name_ar": "ماريوت البتراء",
+    "category": "Tourism",
+    "subcategory": "Hotel",
+    "description": "Located above Wadi Mousa, this Marriott property provides a comfortable base for exploring the Petra archaeological site",
+    "website": "https://www.marriott.com/en-us/hotels/ammpc-petra-marriott-hotel/overview/",
+    "phone": null,
+    "city": "Wadi Musa",
+    "governorate": "Ma'an",
+    "address": "Wadi Mousa, Petra, Jordan",
+    "source_url": "https://www.scottdunn.com/us/jordan/hotels",
+    "confidence": "high",
+    "tourist_score": 4,
+    "audience_tags": [
+      "tourists",
+      "families"
+    ]
+  },
+  {
+    "name_en": "Kempinski Hotel Aqaba Red Sea",
+    "name_ar": "كمبينسكي أقابا البحر الأحمر",
+    "category": "Tourism",
+    "subcategory": "Luxury Resort",
+    "description": "Modern and stylish hotel with private beach on the Red Sea; views over the Gulf of Aqaba, excellent service and top-class facilities",
+    "website": "https://www.kempinski.com/en/aqaba/hotel-aqaba-red-sea/",
+    "phone": null,
+    "city": "Aqaba",
+    "governorate": "Aqaba",
+    "address": "King Hussein Street, Aqaba, Jordan",
+    "source_url": "https://jordantraveler.com/where-to-stay-in-aqaba/",
+    "confidence": "high",
+    "tourist_score": 5,
+    "audience_tags": [
+      "tourists",
+      "luxury",
+      "couples",
+      "divers"
+    ]
+  },
+  {
+    "name_en": "Al Manara, a Luxury Collection Hotel, Aqaba",
+    "name_ar": "المنارة عقبة",
+    "category": "Tourism",
+    "subcategory": "Luxury Resort",
+    "description": "Luxurious beachfront resort on the Red Sea; private beach, infinity pool, spa, gourmet restaurants, and stunning sea views",
+    "website": "https://www.marriott.com/en-us/hotels/aqjlc-al-manara-a-luxury-collection-hotel-aqaba/overview/",
+    "phone": null,
+    "city": "Aqaba",
+    "governorate": "Aqaba",
+    "address": "King Hussein Street, Aqaba, Jordan",
+    "source_url": "https://www.myjordanstay.com/blog/jordan-hotels-in-aqaba-for-refined-red-sea-stays",
+    "confidence": "high",
+    "tourist_score": 5,
+    "audience_tags": [
+      "tourists",
+      "luxury",
+      "couples",
+      "divers"
+    ]
+  },
+  {
+    "name_en": "Hyatt Regency Aqaba Ayla Resort",
+    "name_ar": "حياة ريجينسي أيلة عقبة",
+    "category": "Tourism",
+    "subcategory": "Luxury Resort",
+    "description": "5-star resort in the Ayla development; private lagoon, water sports, multiple restaurants, and views of the Red Sea",
+    "website": "https://www.hyatt.com/hyatt-regency/en-US/aqjra-hyatt-regency-aqaba-ayla-resort",
+    "phone": null,
+    "city": "Aqaba",
+    "governorate": "Aqaba",
+    "address": "Ayla, Aqaba, Jordan",
+    "source_url": "https://www.tripadvisor.com/Hotels-g303973-Petra_Wadi_Musa_Ma_an_Governorate-Hotels.html",
+    "confidence": "high",
+    "tourist_score": 5,
+    "audience_tags": [
+      "tourists",
+      "families",
+      "luxury",
+      "divers"
+    ]
+  },
+  {
+    "name_en": "Wadi Rum Bubble Luxotel",
+    "name_ar": "فندق بالون وادي رم",
+    "category": "Tourism",
+    "subcategory": "Desert Camp / Glamping",
+    "description": "Luxury bubble tents with clear roofs for stargazing in the heart of Wadi Rum desert; each tent has a private bathroom and seating area",
+    "website": "https://www.wadirum-bubble.com/",
+    "phone": null,
+    "city": "Wadi Rum",
+    "governorate": "Aqaba",
+    "address": "Wadi Rum Protected Area, Aqaba Governorate, Jordan",
+    "source_url": "https://wanderingwheatleys.com/wadi-rum-jordan-luxury-desert-bedouin-camps-bubble-tents-martian-domes/",
+    "confidence": "medium",
+    "tourist_score": 5,
+    "audience_tags": [
+      "tourists",
+      "couples",
+      "adventurers",
+      "photographers"
+    ]
+  },
+  {
+    "name_en": "Memories Aicha Luxury Camp",
+    "name_ar": "مخيم ذكريات عائشة",
+    "category": "Tourism",
+    "subcategory": "Desert Camp / Glamping",
+    "description": "Luxury Bedouin-style tents with ornate decor, private bathroom, and a restaurant; one of the most recommended luxury camps in Wadi Rum",
+    "website": "https://www.memoriesaicha.com/",
+    "phone": null,
+    "city": "Wadi Rum",
+    "governorate": "Aqaba",
+    "address": "Wadi Rum Protected Area, Aqaba Governorate, Jordan",
+    "source_url": "https://wanderingwheatleys.com/wadi-rum-jordan-luxury-desert-bedouin-camps-bubble-tents-martian-domes/",
+    "confidence": "medium",
+    "tourist_score": 5,
+    "audience_tags": [
+      "tourists",
+      "couples",
+      "luxury"
+    ]
+  },
+  {
+    "name_en": "Sun City Camp Wadi Rum",
+    "name_ar": "مخيم صن سيتي وادي رم",
+    "category": "Tourism",
+    "subcategory": "Desert Camp / Glamping",
+    "description": "Offers traditional tents and futuristic 'martian domes'; private bathroom, air conditioning, buffet and à la carte dining; popular for stargazing",
+    "website": "https://www.suncitycamp.com/",
+    "phone": null,
+    "city": "Wadi Rum",
+    "governorate": "Aqaba",
+    "address": "Wadi Rum Protected Area, Aqaba Governorate, Jordan",
+    "source_url": "https://wanderingwheatleys.com/wadi-rum-jordan-luxury-desert-bedouin-camps-bubble-tents-martian-domes/",
+    "confidence": "medium",
+    "tourist_score": 4,
+    "audience_tags": [
+      "tourists",
+      "adventurers",
+      "couples",
+      "families"
+    ]
+  },
+  {
+    "name_en": "Wadi Rum Nomads",
+    "name_ar": "رحل وادي رم",
+    "category": "Tourism",
+    "subcategory": "Desert Camp / Eco-Tourism",
+    "description": "Bedouin-owned desert camp providing authentic tours and accommodations; hosted by local Zalabieh Bedouins with communal dinners and traditional entertainment",
+    "website": "https://www.wadirumnomads.com/",
+    "phone": null,
+    "city": "Wadi Rum",
+    "governorate": "Aqaba",
+    "address": "Rum Village, Wadi Rum, Jordan",
+    "source_url": "https://www.wadirumnomads.com/",
+    "confidence": "high",
+    "tourist_score": 4,
+    "audience_tags": [
+      "tourists",
+      "adventurers",
+      "budget-travelers"
+    ]
+  },
+  {
+    "name_en": "Petra Moon Tourism Services",
+    "name_ar": "خدمات السياحة قمر البتراء",
+    "category": "Tourism",
+    "subcategory": "Tour Operator",
+    "description": "Leading tour operator and official partner of RSCN; offers nature tours, cultural experiences, and customized itineraries; offices in Petra and Amman",
+    "website": "https://petramoon.com/",
+    "phone": null,
+    "city": "Petra",
+    "governorate": "Ma'an",
+    "address": "Wadi Musa, Petra, Jordan",
+    "source_url": "https://petramoon.com/",
+    "confidence": "high",
+    "tourist_score": 4,
+    "audience_tags": [
+      "tourists",
+      "adventurers",
+      "families"
+    ]
+  },
+  {
+    "name_en": "Jordan Horizons Tours",
+    "name_ar": "جوردان هورايزونز",
+    "category": "Tourism",
+    "subcategory": "Tour Operator / DMC",
+    "description": "Multilingual destination management company with over 40 years of professional experience in tourism, hospitality, and Jordan destination management",
+    "website": "https://johtt.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://johtt.com/en/about-us/",
+    "confidence": "high",
+    "tourist_score": 3,
+    "audience_tags": [
+      "tourists",
+      "corporate",
+      "groups"
+    ]
+  },
+  {
+    "name_en": "Experience Jordan Adventures",
+    "name_ar": "إكسبيرينس جوردان",
+    "category": "Tourism",
+    "subcategory": "Tour Operator",
+    "description": "Award-winning tour operator with international recognition for excellence in adventure tourism; specializes in small group adventures",
+    "website": "https://www.experiencejordan.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://www.experiencejordan.com/",
+    "confidence": "high",
+    "tourist_score": 3,
+    "audience_tags": [
+      "tourists",
+      "adventurers",
+      "groups"
+    ]
+  },
+  {
+    "name_en": "YOLO Jordan Tours",
+    "name_ar": "يولو جوردان",
+    "category": "Tourism",
+    "subcategory": "Tour Operator / DMC",
+    "description": "Leading travel agency and DMC specializing in Jordan tours, Petra tours, Wadi Rum tours, Holy Land tours, and bespoke incentive travel services",
+    "website": "https://yolojordan.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://yolojordan.com/",
+    "confidence": "high",
+    "tourist_score": 3,
+    "audience_tags": [
+      "tourists",
+      "groups",
+      "pilgrims"
+    ]
+  },
+  {
+    "name_en": "Jordan Tourism Board",
+    "name_ar": "مجلس السياحة الأردني",
+    "category": "Government",
+    "subcategory": "Tourism Authority",
+    "description": "The official national tourism promotion organization of Jordan; promotes Jordan as a travel destination worldwide",
+    "website": "https://www.visitjordan.com/",
+    "phone": "+962 6 5678444",
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://www.visitjordan.com/",
+    "confidence": "high",
+    "tourist_score": 2,
+    "audience_tags": [
+      "tourists",
+      "corporate",
+      "government"
+    ]
+  },
+  {
+    "name_en": "Royal Society for the Conservation of Nature (RSCN)",
+    "name_ar": "الجمعية الملكية لصون الطبيعة",
+    "category": "Government",
+    "subcategory": "Environmental Authority / Ecotourism",
+    "description": "Independent organization established in 1966; manages 11 nature reserves across Jordan; operates Wild Jordan centers and ecotourism programs",
+    "website": "https://www.rscn.org.jo/",
+    "phone": "+962 6 5157656",
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Dahiyat Alrasheed, Amman, Jordan",
+    "source_url": "https://www.rscn.org.jo/protectedArea?lang=en",
+    "confidence": "high",
+    "tourist_score": 3,
+    "audience_tags": [
+      "tourists",
+      "families",
+      "nature-lovers",
+      "researchers"
+    ]
+  },
+  {
+    "name_en": "Ajloun Forest Biosphere Reserve",
+    "name_ar": "محمية عجلون الغابوية",
+    "category": "Tourism",
+    "subcategory": "Nature Reserve",
+    "description": "RSCN-managed forest biosphere reserve in northern Jordan with hiking trails, wildlife, and eco-lodge accommodation",
+    "website": "https://www.rscn.org.jo/",
+    "phone": null,
+    "city": "Ajloun",
+    "governorate": "Ajloun",
+    "address": "Ajloun Governorate, Northern Jordan",
+    "source_url": "https://www.rscn.org.jo/protectedArea?lang=en",
+    "confidence": "high",
+    "tourist_score": 4,
+    "audience_tags": [
+      "tourists",
+      "nature-lovers",
+      "families",
+      "hikers"
+    ]
+  },
+  {
+    "name_en": "Dana Biosphere Reserve",
+    "name_ar": "محمية ضانا",
+    "category": "Tourism",
+    "subcategory": "Nature Reserve",
+    "description": "Jordan's largest nature reserve spanning four bio-geographic zones; includes Rummana campsite and Dana Guest House; a biodiversity hotspot",
+    "website": "https://www.rscn.org.jo/",
+    "phone": null,
+    "city": "Dana",
+    "governorate": "Tafilah",
+    "address": "Dana Village, Tafilah Governorate, Jordan",
+    "source_url": "https://www.rscn.org.jo/protectedArea?lang=en",
+    "confidence": "high",
+    "tourist_score": 4,
+    "audience_tags": [
+      "tourists",
+      "nature-lovers",
+      "hikers",
+      "researchers"
+    ]
+  },
+  {
+    "name_en": "Mujib Biosphere Reserve",
+    "name_ar": "محمية الموجب",
+    "category": "Tourism",
+    "subcategory": "Nature Reserve",
+    "description": "World's lowest nature reserve; features dramatic canyons and the Siq Trail water adventure along the Mujib River",
+    "website": "https://www.rscn.org.jo/",
+    "phone": null,
+    "city": "Dhiban",
+    "governorate": "Madaba",
+    "address": "Mujib, Madaba Governorate, Central Jordan",
+    "source_url": "https://www.rscn.org.jo/protectedArea?lang=en",
+    "confidence": "high",
+    "tourist_score": 4,
+    "audience_tags": [
+      "tourists",
+      "adventurers",
+      "hikers",
+      "nature-lovers"
+    ]
+  },
+  {
+    "name_en": "Azraq Wetland Reserve",
+    "name_ar": "محمية الأزرق",
+    "category": "Tourism",
+    "subcategory": "Nature Reserve",
+    "description": "RSCN-managed wetland oasis in the eastern desert; a critical resting point for millions of migratory birds on the Africa-Eurasia flyway",
+    "website": "https://www.rscn.org.jo/",
+    "phone": null,
+    "city": "Azraq",
+    "governorate": "Zarqa",
+    "address": "Azraq, Zarqa Governorate, Eastern Jordan",
+    "source_url": "https://www.rscn.org.jo/protectedArea?lang=en",
+    "confidence": "high",
+    "tourist_score": 3,
+    "audience_tags": [
+      "tourists",
+      "nature-lovers",
+      "bird-watchers",
+      "researchers"
+    ]
+  },
+  {
+    "name_en": "Aqaba Marine Reserve",
+    "name_ar": "محمية العقبة البحرية",
+    "category": "Tourism",
+    "subcategory": "Marine Reserve",
+    "description": "Jordan's first marine nature reserve established in 1997; covers 2.8 km²; home to 300 species of coral and 512 fish species in the Red Sea",
+    "website": "https://www.rscn.org.jo/",
+    "phone": null,
+    "city": "Aqaba",
+    "governorate": "Aqaba",
+    "address": "Aqaba Governorate, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/Aqaba_Marine_Reserve",
+    "confidence": "high",
+    "tourist_score": 5,
+    "audience_tags": [
+      "tourists",
+      "divers",
+      "nature-lovers",
+      "snorkelers"
+    ]
+  },
+  {
+    "name_en": "Wild Jordan Café & Center",
+    "name_ar": "وايلد جوردان",
+    "category": "Tourism",
+    "subcategory": "Café / Tourism Center",
+    "description": "RSCN-operated center on Rainbow Street offering panoramic views of Amman's old city; café serving locally-sourced food, a shop with reserve products, and a hotel",
+    "website": "https://www.rscn.org.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Rainbow Street, Jabal Amman, Amman, Jordan",
+    "source_url": "https://everydayvoyager.com/blog/wild-jordan-cafe",
+    "confidence": "high",
+    "tourist_score": 4,
+    "audience_tags": [
+      "tourists",
+      "families",
+      "nature-lovers"
+    ]
+  },
+  {
+    "name_en": "King Hussein Medical Center",
+    "name_ar": "المركز الطبي الملكي",
+    "category": "Healthcare",
+    "subcategory": "Military Hospital",
+    "description": "Jordan's largest military hospital with 1,000+ beds and 1,500+ doctors; offers cardiology, oncology, general surgery, trauma care, and pediatrics",
+    "website": "https://www.khmc.med.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://www.myhospitalnow.com/blog/top-20-best-hospitals-in-jordan/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "healthcare",
+      "military",
+      "patients"
+    ]
+  },
+  {
+    "name_en": "Jordan University Hospital",
+    "name_ar": "مستشفى الجامعة الأردنية",
+    "category": "Healthcare",
+    "subcategory": "Teaching Hospital",
+    "description": "Public teaching hospital affiliated with the University of Jordan; 600+ beds, 2,000+ doctors; offers general surgery, cardiology, neurology, obstetrics, and orthopedics",
+    "website": "https://www.ju.edu.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "University of Jordan Campus, Queen Rania Street, Amman, Jordan",
+    "source_url": "https://www.myhospitalnow.com/blog/top-20-best-hospitals-in-jordan/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "healthcare",
+      "students",
+      "patients",
+      "researchers"
+    ]
+  },
+  {
+    "name_en": "Al-Bashir Hospital",
+    "name_ar": "مستشفى البشير",
+    "category": "Healthcare",
+    "subcategory": "Public Hospital",
+    "description": "Major public hospital with 1,200+ beds; specializes in general surgery, trauma care, pediatrics, and emergency medicine",
+    "website": "https://www.moh.gov.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://www.myhospitalnow.com/blog/top-20-best-hospitals-in-jordan/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "healthcare",
+      "patients"
+    ]
+  },
+  {
+    "name_en": "The Specialty Hospital",
+    "name_ar": "المستشفى التخصصي",
+    "category": "Healthcare",
+    "subcategory": "Private Hospital",
+    "description": "Leading private teaching hospital established in 1993; 265 beds; JCI accredited; renowned for cardiology, orthopedics, and neurology; dedicated medical tourism department",
+    "website": "https://www.specialty-hospital.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Jubeiha, Amman, Jordan",
+    "source_url": "https://www.specialty-hospital.com/en/article/51/Medical-Tourism-in-the-Specialty-Hospital",
+    "confidence": "high",
+    "tourist_score": 2,
+    "audience_tags": [
+      "healthcare",
+      "medical-tourists",
+      "patients"
+    ]
+  },
+  {
+    "name_en": "Istishari Hospital",
+    "name_ar": "مستشفى الاستشاري",
+    "category": "Healthcare",
+    "subcategory": "Private Hospital",
+    "description": "World-class private hospital with 108 beds; JCI accredited; international physicians trained at Harvard and Johns Hopkins; bilingual staff; dedicated medical tourism services",
+    "website": "https://www.istisharihospital.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Queen Rania Street, Amman, Jordan",
+    "source_url": "https://www.istisharihospital.com/en/medical-tourism/",
+    "confidence": "high",
+    "tourist_score": 2,
+    "audience_tags": [
+      "healthcare",
+      "medical-tourists",
+      "patients"
+    ]
+  },
+  {
+    "name_en": "Jordan Hospital",
+    "name_ar": "المستشفى الأردني",
+    "category": "Healthcare",
+    "subcategory": "Private Hospital",
+    "description": "Major private hospital in Amman with 300+ beds; offers cardiology, general surgery, pediatrics, emergency medicine, and obstetrics",
+    "website": "https://www.jordan-hospital.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://www.myhospitalnow.com/blog/top-20-best-hospitals-in-jordan/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "healthcare",
+      "patients"
+    ]
+  },
+  {
+    "name_en": "Arab Medical Center",
+    "name_ar": "المركز العربي الطبي",
+    "category": "Healthcare",
+    "subcategory": "Private Hospital",
+    "description": "Leading private hospital with 200+ beds; known for orthopedics, general surgery, and cardiology",
+    "website": "https://www.arabmedicalcenter.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://www.myhospitalnow.com/blog/top-20-best-hospitals-in-jordan/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "healthcare",
+      "patients"
+    ]
+  },
+  {
+    "name_en": "Al Khalidi Medical Center",
+    "name_ar": "مركز الخالدي الطبي",
+    "category": "Healthcare",
+    "subcategory": "Private Hospital",
+    "description": "Renowned private hospital specializing in cardiology, gynecology (including IVF), and surgery; serves both local and international patients",
+    "website": "https://www.khalidimedical.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://www.myhospitalnow.com/blog/top-20-best-hospitals-in-jordan/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "healthcare",
+      "patients",
+      "medical-tourists"
+    ]
+  },
+  {
+    "name_en": "King Abdullah University Hospital",
+    "name_ar": "مستشفى الملك عبدالله الجامعي",
+    "category": "Healthcare",
+    "subcategory": "Teaching Hospital",
+    "description": "Major teaching hospital affiliated with Jordan University of Science and Technology in Irbid; 600+ beds; specializes in oncology, cardiology, and neurosurgery",
+    "website": "https://www.just.edu.jo/",
+    "phone": null,
+    "city": "Irbid",
+    "governorate": "Irbid",
+    "address": "JUST Campus, Irbid, Jordan",
+    "source_url": "https://www.myhospitalnow.com/blog/top-20-best-hospitals-in-jordan/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "healthcare",
+      "students",
+      "patients",
+      "researchers"
+    ]
+  },
+  {
+    "name_en": "Prince Hamzah Hospital",
+    "name_ar": "مستشفى الأمير حمزة",
+    "category": "Healthcare",
+    "subcategory": "Public Hospital",
+    "description": "Major public hospital in Amman with 400+ beds; offers trauma care, general medicine, pediatrics, and surgery",
+    "website": "https://www.moh.gov.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://www.myhospitalnow.com/blog/top-20-best-hospitals-in-jordan/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "healthcare",
+      "patients"
+    ]
+  },
+  {
+    "name_en": "Jordan Heart Center",
+    "name_ar": "مركز قلب الأردن",
+    "category": "Healthcare",
+    "subcategory": "Specialized Hospital",
+    "description": "Dedicated cardiac hospital offering cardiology, cardiothoracic surgery, and heart disease prevention services",
+    "website": "https://www.jhcjo.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://www.myhospitalnow.com/blog/top-20-best-hospitals-in-jordan/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "healthcare",
+      "patients",
+      "medical-tourists"
+    ]
+  },
+  {
+    "name_en": "Pharmacy 1",
+    "name_ar": "فارماسي ون",
+    "category": "Healthcare",
+    "subcategory": "Pharmacy Chain",
+    "description": "Jordan's first and leading pharmacy chain founded in 2001; 53 branches across the Kingdom; revenue of $48.4M; also offers clinical services",
+    "website": "https://www.pharmacy1.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Multiple branches across Jordan",
+    "source_url": "https://www.jordanyp.com/category/pharmacies/city:Amman",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "healthcare",
+      "families",
+      "patients"
+    ]
+  },
+  {
+    "name_en": "Rawhi Pharmacy",
+    "name_ar": "صيدلية رواحي",
+    "category": "Healthcare",
+    "subcategory": "Pharmacy Chain",
+    "description": "Leading pharmacy chain with 27 branches across Jordan; also operates Rawhi Wellness Clinic offering Functional Medicine and Anti-Aging solutions",
+    "website": "https://www.rawhi.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Multiple branches across Jordan",
+    "source_url": "https://www.rawhi.jo/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "healthcare",
+      "wellness",
+      "families"
+    ]
+  },
+  {
+    "name_en": "Hikma Pharmaceuticals Jordan",
+    "name_ar": "حكمة للصناعات الدوائية",
+    "category": "Healthcare",
+    "subcategory": "Pharmaceutical Manufacturer",
+    "description": "Founded in Jordan in 1978; five manufacturing plants in Jordan; first Arab pharmaceutical company to receive US FDA approval (1996); produces 265+ medicines; 2,000+ employees",
+    "website": "https://www.hikma.com/en-jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://www.hikma.com/en-jo/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "healthcare",
+      "corporate",
+      "researchers"
+    ]
+  },
+  {
+    "name_en": "Altibbi",
+    "name_ar": "الطبي",
+    "category": "Technology",
+    "subcategory": "HealthTech / Telehealth",
+    "description": "Leading MENA telehealth platform connecting patients with medical professionals via audio and chat; heads Jordan's healthtech community",
+    "website": "https://www.altibbi.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://en.arageek.com/top-startups-in-jordan-amman",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "healthcare",
+      "patients",
+      "corporate"
+    ]
+  },
+  {
+    "name_en": "University of Jordan",
+    "name_ar": "الجامعة الأردنية",
+    "category": "Education",
+    "subcategory": "Public University",
+    "description": "Jordan's oldest and largest public university founded in 1962; flagship national institution offering programs across all major disciplines; ranked top among Jordanian universities",
+    "website": "https://www.ju.edu.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Queen Rania Street, Jubeiha, Amman, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/List_of_universities_in_Jordan",
+    "confidence": "high",
+    "tourist_score": 2,
+    "audience_tags": [
+      "students",
+      "researchers",
+      "families"
+    ]
+  },
+  {
+    "name_en": "Jordan University of Science and Technology (JUST)",
+    "name_ar": "جامعة العلوم والتكنولوجيا الأردنية",
+    "category": "Education",
+    "subcategory": "Public University",
+    "description": "Major public technological university in Irbid established in 1986; 12 faculties covering science, engineering, medicine, and technology; affiliated with King Abdullah University Hospital",
+    "website": "https://www.just.edu.jo/",
+    "phone": null,
+    "city": "Irbid",
+    "governorate": "Irbid",
+    "address": "Ar Ramtha, Irbid Governorate, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/Jordan_University_of_Science_and_Technology",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students",
+      "researchers"
+    ]
+  },
+  {
+    "name_en": "Yarmouk University",
+    "name_ar": "جامعة اليرموك",
+    "category": "Education",
+    "subcategory": "Public University",
+    "description": "Major public university in Irbid; one of Jordan's leading institutions for arts, humanities, and sciences",
+    "website": "https://www.yu.edu.jo/",
+    "phone": null,
+    "city": "Irbid",
+    "governorate": "Irbid",
+    "address": "Irbid, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/List_of_universities_in_Jordan",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students",
+      "researchers"
+    ]
+  },
+  {
+    "name_en": "Hashemite University",
+    "name_ar": "الجامعة الهاشمية",
+    "category": "Education",
+    "subcategory": "Public University",
+    "description": "Public university located in Zarqa; one of six Jordanian universities with a medical college; strong programs in engineering and sciences",
+    "website": "https://www.hu.edu.jo/",
+    "phone": null,
+    "city": "Zarqa",
+    "governorate": "Zarqa",
+    "address": "Zarqa, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/List_of_universities_in_Jordan",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students",
+      "researchers"
+    ]
+  },
+  {
+    "name_en": "Mutah University",
+    "name_ar": "جامعة مؤتة",
+    "category": "Education",
+    "subcategory": "Public University",
+    "description": "Public university in Karak governorate in southern Jordan; known for military sciences and engineering programs",
+    "website": "https://www.mutah.edu.jo/",
+    "phone": null,
+    "city": "Karak",
+    "governorate": "Karak",
+    "address": "Mu'tah, Karak Governorate, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/List_of_universities_in_Jordan",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students",
+      "researchers"
+    ]
+  },
+  {
+    "name_en": "German Jordanian University",
+    "name_ar": "الجامعة الألمانية الأردنية",
+    "category": "Education",
+    "subcategory": "Public University",
+    "description": "German-Jordanian partnership university in Amman; focuses on engineering, management, and applied sciences; offers dual degree programs",
+    "website": "https://www.gju.edu.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Mushaggar, Madaba Road, Amman, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/List_of_universities_in_Jordan",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students",
+      "researchers",
+      "corporate"
+    ]
+  },
+  {
+    "name_en": "Al-Ahliyya Amman University",
+    "name_ar": "جامعة عمان الأهلية",
+    "category": "Education",
+    "subcategory": "Private University",
+    "description": "First private university in Jordan (1989); ranked first among private Jordanian universities; ranked in QS 2024 top 1000 globally; comprehensive programs in science, engineering, arts, and business",
+    "website": "https://www.ammanu.edu.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://www.ammanu.edu.jo/news/al-ahliyya-amman-university-ranks-first-among-private-jordanian-universities-and-is-listed-among-the-top-one-thousand-universities-worldwide-in-the-qs-2024-ranking/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students",
+      "researchers"
+    ]
+  },
+  {
+    "name_en": "Princess Sumaya University for Technology",
+    "name_ar": "جامعة الأميرة سمية للتكنولوجيا",
+    "category": "Education",
+    "subcategory": "Private University",
+    "description": "Specialized technology university in Al-Jubaiha, Amman; focuses on computer science, engineering, and technology programs; part of the Royal Scientific Society",
+    "website": "https://www.psut.edu.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Al-Jubaiha, Amman, Jordan",
+    "source_url": "https://www.unirank.org/jo/private/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students",
+      "technology",
+      "researchers"
+    ]
+  },
+  {
+    "name_en": "University of Petra",
+    "name_ar": "جامعة البترا",
+    "category": "Education",
+    "subcategory": "Private University",
+    "description": "Private university in Amman offering programs in engineering, pharmacy, law, arts, and business administration",
+    "website": "https://www.uop.edu.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Airport Road, Amman, Jordan",
+    "source_url": "https://www.unirank.org/jo/private/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students"
+    ]
+  },
+  {
+    "name_en": "Middle East University",
+    "name_ar": "جامعة الشرق الأوسط",
+    "category": "Education",
+    "subcategory": "Private University",
+    "description": "Private university in Amman offering programs across arts, sciences, engineering, business, and law",
+    "website": "https://www.meu.edu.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Airport Road, Amman, Jordan",
+    "source_url": "https://www.unirank.org/jo/private/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students"
+    ]
+  },
+  {
+    "name_en": "American University of Madaba",
+    "name_ar": "الجامعة الأمريكية في ماداب",
+    "category": "Education",
+    "subcategory": "Private University",
+    "description": "Private, not-for-profit liberal arts university established in 2011 in Madaba; offers American-style education",
+    "website": "https://www.aum.edu.jo/",
+    "phone": null,
+    "city": "Madaba",
+    "governorate": "Madaba",
+    "address": "Madaba, Jordan",
+    "source_url": "https://www.unirank.org/jo/private/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students"
+    ]
+  },
+  {
+    "name_en": "Aqaba University of Technology",
+    "name_ar": "جامعة العقبة للتكنولوجيا",
+    "category": "Education",
+    "subcategory": "Private University",
+    "description": "First private university in southern Jordan (established 2011); offers engineering, business, IT, and arts programs; ~2,000 students",
+    "website": "https://www.aut.edu.jo/",
+    "phone": null,
+    "city": "Aqaba",
+    "governorate": "Aqaba",
+    "address": "Aqaba, Jordan",
+    "source_url": "https://www.unirank.org/jo/private/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students"
+    ]
+  },
+  {
+    "name_en": "Mashrek International School",
+    "name_ar": "مدرسة المشرق الدولية",
+    "category": "Education",
+    "subcategory": "International School",
+    "description": "Private bilingual co-educational IB World School recognized by Jordan's Ministry of Education; established 1992; offers IB PYP, MYP, and DP programs",
+    "website": "https://www.mashrek.edu.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://www.international-schools-database.com/in/amman/top-schools-in-amman",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students",
+      "families",
+      "expats"
+    ]
+  },
+  {
+    "name_en": "International School of Choueifat Amman",
+    "name_ar": "المدرسة الدولية الشويفات عمان",
+    "category": "Education",
+    "subcategory": "International School",
+    "description": "Opened in 1997 on a 90,000 m² campus; serves students aged 3-18 from Jordanian and multi-national communities; well-established international curriculum",
+    "website": "https://sabis.net/schools/amman-jordan/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://www.international-schools-database.com/in/amman",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students",
+      "families",
+      "expats"
+    ]
+  },
+  {
+    "name_en": "Amman Academy",
+    "name_ar": "أكاديمية عمان",
+    "category": "Education",
+    "subcategory": "International School",
+    "description": "Nord Anglia Education school founded in 1991; exceptional private school offering international curriculum; one of six Nord Anglia schools in the Middle East",
+    "website": "https://www.nordangliaeducation.com/amman-academy",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://www.nordangliaeducation.com/our-schools/middle-east/jordan/amman",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students",
+      "families",
+      "expats"
+    ]
+  },
+  {
+    "name_en": "Modern American School",
+    "name_ar": "المدرسة الأمريكية الحديثة",
+    "category": "Education",
+    "subcategory": "International School",
+    "description": "Elite international co-educational school in west Amman; teachers from 22 different countries; offers primary and secondary education",
+    "website": "https://www.mas.edu.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "West Amman, Jordan",
+    "source_url": "https://www.international-schools-database.com/in/amman",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students",
+      "families",
+      "expats"
+    ]
+  },
+  {
+    "name_en": "ReBootKamp",
+    "name_ar": "ريبوت كامب",
+    "category": "Education",
+    "subcategory": "Coding Bootcamp / IT Training",
+    "description": "Full-time 18-week software engineering bootcamp for Jordanians and refugees; based on Hack Reactor curriculum; teaches full-stack JavaScript, React, Node.js, and MongoDB",
+    "website": "https://www.rebootkamp.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://www.coursereport.com/cities/amman",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students",
+      "refugees",
+      "technology"
+    ]
+  },
+  {
+    "name_en": "Orange Jordan Coding Academy",
+    "name_ar": "أكاديمية أورانج للبرمجة",
+    "category": "Education",
+    "subcategory": "IT Training Center",
+    "description": "Free 6-month coding training program by Orange Jordan in collaboration with Simplon.co; 85% employment rate among graduates; launched in 2019",
+    "website": "https://orange.jo/en/corporate/csr/coding-academy",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://orange.jo/en/corporate/csr/coding-academy",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students",
+      "technology",
+      "youth"
+    ]
+  },
+  {
+    "name_en": "CODED Jordan",
+    "name_ar": "كودد جوردان",
+    "category": "Education",
+    "subcategory": "Coding Bootcamp",
+    "description": "First coding education company in the Middle East; tuition-free 14-week full-time bootcamp in Amman; teaches Python, Django, JavaScript, React, and React Native",
+    "website": "https://www.coded.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://magnitt.com/news/coded-launches-it-s-first-coding-bootcamp-in-jordan-51373",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students",
+      "technology",
+      "youth"
+    ]
+  },
+  {
+    "name_en": "Oasis500",
+    "name_ar": "واحة 500",
+    "category": "Technology",
+    "subcategory": "Startup Accelerator / Seed Fund",
+    "description": "Jordan's first entrepreneurial catalyst and early-stage investor founded in 2010; pre-seed ($30K-$100K) and seed (up to $350K) fund manager; invested in 193+ startups; portfolio valued at $243M",
+    "website": "https://oasis500.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://oasis500.com/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "technology",
+      "startups",
+      "corporate",
+      "investors"
+    ]
+  },
+  {
+    "name_en": "King Hussein Business Park (KHBP)",
+    "name_ar": "مجمع الملك الحسين للأعمال",
+    "category": "Technology",
+    "subcategory": "Business Park / Innovation Hub",
+    "description": "Premier business park in west Amman; 36 buildings, 151,000+ sqm; hosts 300+ local startups, 30+ international companies, 24 regional corporations; includes GROW entrepreneurial initiative; $175M investment attracted since 2010",
+    "website": "https://businesspark-jo.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "West Amman, Jordan",
+    "source_url": "https://businesspark-jo.com/why-khbp/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "technology",
+      "corporate",
+      "startups"
+    ]
+  },
+  {
+    "name_en": "Tamatem Games",
+    "name_ar": "تمتم للألعاب",
+    "category": "Technology",
+    "subcategory": "Mobile Gaming",
+    "description": "Jordan's leading mobile gaming company; localizes and publishes global games for Arabic-speaking audiences; 40+ published games; 50+ million downloads; headquartered in Amman",
+    "website": "https://tamatem.co/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://en.arageek.com/top-startups-in-jordan-amman",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "technology",
+      "youth",
+      "entertainment"
+    ]
+  },
+  {
+    "name_en": "Abjjad",
+    "name_ar": "أبجد",
+    "category": "Technology",
+    "subcategory": "Digital Publishing / E-Reading",
+    "description": "Leading Arabic e-book platform with 20,000+ Arabic digital books and audiobooks; personalized reading recommendations; headquartered in Amman",
+    "website": "https://www.abjjad.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://en.arageek.com/top-startups-in-jordan-amman",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students",
+      "technology",
+      "youth"
+    ]
+  },
+  {
+    "name_en": "MadfooatCom",
+    "name_ar": "مدفوعاتكم",
+    "category": "Technology",
+    "subcategory": "FinTech / Payment Solutions",
+    "description": "Operator of eFAWATEERcom, Jordan's official electronic bill presentment and payment system; critical financial infrastructure for Jordan's digital ecosystem",
+    "website": "https://madfoat.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://en.arageek.com/top-startups-in-jordan-amman",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "corporate",
+      "government",
+      "technology"
+    ]
+  },
+  {
+    "name_en": "Mawdoo3",
+    "name_ar": "موضوع",
+    "category": "Technology",
+    "subcategory": "Arabic Content Platform",
+    "description": "Jordan's largest Arabic online content publisher; 50M+ monthly active users; 300 full-time employees and 6,000+ freelance writers; raised $23.5M in Series B funding",
+    "website": "https://mawdoo3.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/Mawdoo3",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "technology",
+      "media",
+      "students"
+    ]
+  },
+  {
+    "name_en": "Jamalon",
+    "name_ar": "جمالون",
+    "category": "Technology",
+    "subcategory": "E-Commerce / Books",
+    "description": "MENA's largest Arabic and English online bookstore founded in 2010; 10M+ publications available; raised $15.2M in Series B funding",
+    "website": "https://www.jamalon.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://mena.entrepreneur.com/news-and-trends/arabic-book-retail-platform-jamalon-raises-over-us10/330306",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students",
+      "technology",
+      "families"
+    ]
+  },
+  {
+    "name_en": "Gamiphy",
+    "name_ar": "غامفاي",
+    "category": "Technology",
+    "subcategory": "MarTech / Gamification",
+    "description": "User engagement and retention platform with gamification tools; integrates mini-games and loyalty systems; serves brands across MENA",
+    "website": "https://gamiphy.co/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://en.arageek.com/top-startups-in-jordan-amman",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "technology",
+      "corporate",
+      "startups"
+    ]
+  },
+  {
+    "name_en": "Kharabeesh",
+    "name_ar": "خربيش",
+    "category": "Technology",
+    "subcategory": "Digital Media / Animation",
+    "description": "One of the first companies to create animated and video Arabic content; founded in 2008 in Amman; produces Arabic digital content for MENA audiences",
+    "website": "https://www.kharabeesh.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://magnitt.com/news/meet-5-companies-boosting-jordans-startup-spotlight%20-52249",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "technology",
+      "media",
+      "youth"
+    ]
+  },
+  {
+    "name_en": "Abwaab",
+    "name_ar": "أبواب",
+    "category": "Technology",
+    "subcategory": "EdTech",
+    "description": "Online platform providing interactive, personalized learning experiences for K-12 students; aimed at transforming education beyond traditional classrooms in Jordan and MENA",
+    "website": "https://www.abwaab.me/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://techround.co.uk/startups/10-startups-in-jordan-to-watch-in-2024/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students",
+      "families",
+      "technology"
+    ]
+  },
+  {
+    "name_en": "Estarta Solutions",
+    "name_ar": "استارتا",
+    "category": "Technology",
+    "subcategory": "IT Outsourcing / BPO",
+    "description": "IT consulting and outsourcing company headquartered in Amman; 1,327 employees; operates in 6 countries; specializes in BPO, managed services, and system integration; Microsoft-invested",
+    "website": "https://www.estarta.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://www.dnb.com/business-directory/company-profiles.estarta_solutions.12d0ddcbb4f404972e357943256e4dee.html",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "technology",
+      "corporate"
+    ]
+  },
+  {
+    "name_en": "Aspire IT Services",
+    "name_ar": "أسباير",
+    "category": "Technology",
+    "subcategory": "IT Consulting",
+    "description": "Niche technology consulting firm established in 2002 in Amman; trusted partner for major companies in MENA and US; serves banking, fintech, e-commerce, telecom, government, and health sectors",
+    "website": "https://aspire.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://aspire.jo/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "technology",
+      "corporate"
+    ]
+  },
+  {
+    "name_en": "Optimiza",
+    "name_ar": "أوبتيميزا",
+    "category": "Technology",
+    "subcategory": "ICT Solutions",
+    "description": "Leading ICT solutions provider with 42+ years of experience; 450+ experts; serves health, government, finance, telecom, and education sectors; integration of 9 technology providers",
+    "website": "https://www.optimiza.me/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://jordanict.com/company-profile/al-faris-national-investment-group-optimiza",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "technology",
+      "corporate",
+      "government"
+    ]
+  },
+  {
+    "name_en": "Careem",
+    "name_ar": "كريم",
+    "category": "Technology",
+    "subcategory": "Ride-Hailing / Super App",
+    "description": "Ride-hailing, mass transportation, delivery, and payments platform operating across 120+ cities including Amman, Irbid, and Zarqa; launched in Jordan in 2015; now part of Uber",
+    "website": "https://www.careem.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://en.arageek.com/top-startups-in-jordan-amman",
+    "confidence": "high",
+    "tourist_score": 2,
+    "audience_tags": [
+      "tourists",
+      "families",
+      "corporate",
+      "technology"
+    ]
+  },
+  {
+    "name_en": "Talabat Jordan",
+    "name_ar": "طلبات الأردن",
+    "category": "Technology",
+    "subcategory": "Food Delivery Platform",
+    "description": "Top food delivery platform in Jordan; connects users with hundreds of restaurants and groceries across Amman and other cities; real-time delivery tracking",
+    "website": "https://www.talabat.com/jordan",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://www.talabat.com/jordan",
+    "confidence": "high",
+    "tourist_score": 2,
+    "audience_tags": [
+      "families",
+      "tourists",
+      "corporate",
+      "technology"
+    ]
+  },
+  {
+    "name_en": "Zain Jordan",
+    "name_ar": "زين الأردن",
+    "category": "Technology",
+    "subcategory": "Telecommunications",
+    "description": "Jordan's market-leading mobile operator with 46%+ subscriber share; first to launch 5G in Jordan; operates Zain Cash digital payments platform",
+    "website": "https://www.jo.zain.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://esimjordan.com/operators/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "corporate",
+      "families",
+      "tourists",
+      "technology"
+    ]
+  },
+  {
+    "name_en": "Orange Jordan",
+    "name_ar": "أورانج الأردن",
+    "category": "Technology",
+    "subcategory": "Telecommunications",
+    "description": "Second largest mobile operator in Jordan with 28% subscriber share; provides mobile, fixed telephony, internet, and digital financial services; 20+ years in Jordan",
+    "website": "https://orange.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://esimjordan.com/operators/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "corporate",
+      "families",
+      "tourists",
+      "technology"
+    ]
+  },
+  {
+    "name_en": "Umniah",
+    "name_ar": "أمنية",
+    "category": "Technology",
+    "subcategory": "Telecommunications",
+    "description": "Third mobile operator in Jordan with 26.5% market share; owned by Bahrain's Batelco Group; competitive pricing; offers 4G, fiber, and fintech through UWallet",
+    "website": "https://www.umniah.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://esimjordan.com/operators/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "corporate",
+      "families",
+      "students",
+      "technology"
+    ]
+  },
+  {
+    "name_en": "MakanE",
+    "name_ar": "مكاني",
+    "category": "Technology",
+    "subcategory": "E-Commerce Platform",
+    "description": "E-commerce platform for building online stores, mobile apps, and growth support; no technical expertise required; includes payment and shipment integrations",
+    "website": "https://makane.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://en.arageek.com/top-startups-in-jordan-amman",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "corporate",
+      "startups",
+      "technology"
+    ]
+  },
+  {
+    "name_en": "Arab Bank",
+    "name_ar": "البنك العربي",
+    "category": "Government",
+    "subcategory": "Commercial Bank",
+    "description": "One of Jordan's and the Arab world's largest and oldest banks; established 1930; 600+ global branches; headquartered in Amman",
+    "website": "https://www.arabbank.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Shmeisani, Amman, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/List_of_banks_in_Jordan",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "corporate",
+      "tourists",
+      "families"
+    ]
+  },
+  {
+    "name_en": "Housing Bank for Trade and Finance",
+    "name_ar": "بنك الإسكان للتجارة والتمويل",
+    "category": "Government",
+    "subcategory": "Commercial Bank",
+    "description": "Established in 1973; one of Jordan's leading banks with the largest branch network; offers retail, corporate, and investment banking",
+    "website": "https://www.hbtf.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/List_of_banks_in_Jordan",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "corporate",
+      "families"
+    ]
+  },
+  {
+    "name_en": "Cairo Amman Bank",
+    "name_ar": "بنك القاهرة عمان",
+    "category": "Government",
+    "subcategory": "Commercial Bank",
+    "description": "Trusted financial partner since 1960; 94 branches in Jordan, 22 in Palestine, 1 in Bahrain; ranked 8th locally among Arab banks",
+    "website": "https://www.cab.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/List_of_banks_in_Jordan",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "corporate",
+      "families"
+    ]
+  },
+  {
+    "name_en": "Jordan Islamic Bank",
+    "name_ar": "البنك الإسلامي الأردني",
+    "category": "Government",
+    "subcategory": "Islamic Bank",
+    "description": "One of Jordan's leading Islamic banks offering Sharia-compliant financial products and services",
+    "website": "https://www.jordanislamicbank.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/List_of_banks_in_Jordan",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "corporate",
+      "families"
+    ]
+  },
+  {
+    "name_en": "Bank of Jordan",
+    "name_ar": "بنك الأردن",
+    "category": "Government",
+    "subcategory": "Commercial Bank",
+    "description": "Established Jordanian commercial bank offering retail, corporate, and investment banking services",
+    "website": "https://www.bankofjordan.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/List_of_banks_in_Jordan",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "corporate",
+      "families"
+    ]
+  },
+  {
+    "name_en": "Capital Bank of Jordan",
+    "name_ar": "بنك كابيتال",
+    "category": "Government",
+    "subcategory": "Commercial Bank",
+    "description": "Jordan-based commercial bank offering retail, corporate, and digital banking services",
+    "website": "https://www.capitalbank.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/List_of_banks_in_Jordan",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "corporate",
+      "families"
+    ]
+  },
+  {
+    "name_en": "Royal Jordanian Airlines",
+    "name_ar": "الملكية الأردنية",
+    "category": "Government",
+    "subcategory": "National Airline",
+    "description": "Jordan's flag carrier established in 1963; operates 500+ weekly flights from Amman's Queen Alia International Airport; member of oneworld alliance",
+    "website": "https://www.rj.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Queen Alia International Airport, Amman, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/Royal_Jordanian",
+    "confidence": "high",
+    "tourist_score": 3,
+    "audience_tags": [
+      "tourists",
+      "corporate",
+      "families"
+    ]
+  },
+  {
+    "name_en": "Queen Alia International Airport",
+    "name_ar": "مطار الملكة علياء الدولي",
+    "category": "Government",
+    "subcategory": "International Airport",
+    "description": "Jordan's largest airport located 30km south of Amman; IATA code AMM; main hub for Royal Jordanian and Jordan Aviation; serves millions of passengers annually",
+    "website": "https://www.qaiairport.com/",
+    "phone": null,
+    "city": "Zizya",
+    "governorate": "Amman",
+    "address": "Zizya, 30km south of Amman, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/Queen_Alia_International_Airport",
+    "confidence": "high",
+    "tourist_score": 2,
+    "audience_tags": [
+      "tourists",
+      "corporate",
+      "families"
+    ]
+  },
+  {
+    "name_en": "National Electric Power Company (NEPCO)",
+    "name_ar": "الشركة الوطنية للكهرباء",
+    "category": "Government",
+    "subcategory": "Electricity Utility",
+    "description": "State-owned company owning and operating Jordan's national electrical transmission grid; single-buyer of the electrical system",
+    "website": "https://www.nepco.com.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://www.nepco.com.jo/en/Default.aspx",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "government",
+      "corporate"
+    ]
+  },
+  {
+    "name_en": "Ministry of Tourism and Antiquities",
+    "name_ar": "وزارة السياحة والآثار",
+    "category": "Government",
+    "subcategory": "Ministry",
+    "description": "Jordanian government ministry responsible for tourism policy, development of tourist sites, and preservation of antiquities",
+    "website": "https://www.mota.gov.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/Category:Government_ministries_of_Jordan",
+    "confidence": "high",
+    "tourist_score": 2,
+    "audience_tags": [
+      "government",
+      "tourists"
+    ]
+  },
+  {
+    "name_en": "Ministry of Health Jordan",
+    "name_ar": "وزارة الصحة",
+    "category": "Government",
+    "subcategory": "Ministry",
+    "description": "Jordanian government ministry overseeing all public health services, hospitals, and health policy in the kingdom",
+    "website": "https://moh.gov.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/Category:Government_ministries_of_Jordan",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "government",
+      "patients",
+      "healthcare"
+    ]
+  },
+  {
+    "name_en": "Ministry of Higher Education and Scientific Research",
+    "name_ar": "وزارة التعليم العالي والبحث العلمي",
+    "category": "Government",
+    "subcategory": "Ministry",
+    "description": "Jordanian ministry responsible for regulating and developing higher education institutions and scientific research",
+    "website": "https://www.mohe.gov.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/Category:Government_ministries_of_Jordan",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "government",
+      "students",
+      "researchers"
+    ]
+  },
+  {
+    "name_en": "Ministry of Digital Economy and Entrepreneurship",
+    "name_ar": "وزارة الاقتصاد الرقمي والريادة",
+    "category": "Government",
+    "subcategory": "Ministry",
+    "description": "Jordanian ministry overseeing digital economy policy, ICT infrastructure, and entrepreneurship support",
+    "website": "https://modee.gov.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/Category:Government_ministries_of_Jordan",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "government",
+      "technology",
+      "startups"
+    ]
+  },
+  {
+    "name_en": "Central Bank of Jordan",
+    "name_ar": "البنك المركزي الأردني",
+    "category": "Government",
+    "subcategory": "Central Bank",
+    "description": "Jordan's monetary authority responsible for monetary policy, currency issuance, banking regulation, and financial stability",
+    "website": "https://www.cbj.gov.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "King Hussein Street, Amman, Jordan",
+    "source_url": "https://www.cbj.gov.jo/EN/Pages/Bankingsectorguide",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "government",
+      "corporate",
+      "financial"
+    ]
+  },
+  {
+    "name_en": "Hashem Restaurant",
+    "name_ar": "مطعم هاشم",
+    "category": "Food",
+    "subcategory": "Traditional Jordanian Restaurant",
+    "description": "Iconic downtown Amman institution open for 50+ years; famous for the best falafel and hummus in Jordan; open 24/7; frequently visited by royalty and tourists alike",
+    "website": null,
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Al-Amir Mohammed Street, Downtown, Amman, Jordan",
+    "source_url": "https://www.touristjordan.com/most-famous-restaurants-in-amman/",
+    "confidence": "high",
+    "tourist_score": 5,
+    "audience_tags": [
+      "tourists",
+      "families",
+      "budget-travelers"
+    ]
+  },
+  {
+    "name_en": "Fakhreldin Restaurant",
+    "name_ar": "مطعم فخر الدين",
+    "category": "Food",
+    "subcategory": "Fine Dining / Lebanese",
+    "description": "Amman's most prestigious restaurant in a historic former Prime Minister's residence; 100+ food items on the menu; known for exquisite Lebanese mezze and grilled meats; summer garden dining",
+    "website": "https://www.fakhreldeen.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Taha Hussein Street, Jabal Amman, Jordan",
+    "source_url": "https://www.touristjordan.com/most-famous-restaurants-in-amman/",
+    "confidence": "high",
+    "tourist_score": 4,
+    "audience_tags": [
+      "tourists",
+      "corporate",
+      "luxury",
+      "couples"
+    ]
+  },
+  {
+    "name_en": "Sufra Restaurant",
+    "name_ar": "مطعم سفرة",
+    "category": "Food",
+    "subcategory": "Traditional Jordanian Restaurant",
+    "description": "Traditional Jordanian cuisine in a historic villa on Rainbow Street; indoor and outdoor seating with rooftop views of Amman; frequently visited by the Jordanian royal family",
+    "website": "https://www.sufra-amman.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "26 Al Rainbow Street, Jabal Amman, Jordan",
+    "source_url": "https://www.touristjordan.com/most-famous-restaurants-in-amman/",
+    "confidence": "high",
+    "tourist_score": 4,
+    "audience_tags": [
+      "tourists",
+      "families",
+      "couples"
+    ]
+  },
+  {
+    "name_en": "Habibah Sweets",
+    "name_ar": "حلويات حبيبة",
+    "category": "Food",
+    "subcategory": "Sweets / Desserts Chain",
+    "description": "Iconic Amman sweets shop famous for knafeh and authentic Jordanian desserts; original downtown branch and multiple locations across Amman",
+    "website": null,
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Al Hazar Street 2, Downtown Amman, Jordan",
+    "source_url": "https://www.touristjordan.com/most-famous-restaurants-in-amman/",
+    "confidence": "high",
+    "tourist_score": 4,
+    "audience_tags": [
+      "tourists",
+      "families",
+      "budget-travelers"
+    ]
+  },
+  {
+    "name_en": "Al Quds Restaurant",
+    "name_ar": "مطعم القدس",
+    "category": "Food",
+    "subcategory": "Traditional Jordanian Restaurant",
+    "description": "Famous for the best mansaf (Jordan's national dish of lamb with yogurt and rice) and falafel sandwiches; walking distance from downtown souks; affordable local favorite",
+    "website": null,
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Al-Malek al-Hussein Street, Downtown, Amman, Jordan",
+    "source_url": "https://www.touristjordan.com/most-famous-restaurants-in-amman/",
+    "confidence": "high",
+    "tourist_score": 4,
+    "audience_tags": [
+      "tourists",
+      "families",
+      "budget-travelers"
+    ]
+  },
+  {
+    "name_en": "Reem Al Bawadi",
+    "name_ar": "ريم البوادي",
+    "category": "Food",
+    "subcategory": "Lebanese/Jordanian Restaurant Chain",
+    "description": "Well-known restaurant chain on Mecca Street specializing in Lebanese and Middle Eastern cuisine; family-friendly atmosphere; acclaimed for its grills and mezze",
+    "website": "https://www.reemalbawadi.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Mecca Street, Amman, Jordan",
+    "source_url": "https://etichotels.com/journal/the-12-most-famous-restaurants-in-amman-jordan/",
+    "confidence": "high",
+    "tourist_score": 3,
+    "audience_tags": [
+      "tourists",
+      "families",
+      "corporate"
+    ]
+  },
+  {
+    "name_en": "Books@Café",
+    "name_ar": "بوكس كافيه",
+    "category": "Food",
+    "subcategory": "Café",
+    "description": "Trendy café on Rainbow Street; hub for young locals and international visitors; serves Italian food alongside coffee; known for its diverse menu and book-themed atmosphere",
+    "website": "https://www.booksatcafe.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Rainbow Street, Jabal Amman, Amman, Jordan",
+    "source_url": "https://www.tripadvisor.com/Restaurant_Review-g293986-d1570764-Reviews-Books_at_Cafe-Amman_Amman_Governorate.html",
+    "confidence": "high",
+    "tourist_score": 4,
+    "audience_tags": [
+      "tourists",
+      "youth",
+      "families"
+    ]
+  },
+  {
+    "name_en": "Levant Restaurant",
+    "name_ar": "مطعم ليفانت",
+    "category": "Food",
+    "subcategory": "Mediterranean / Fine Dining",
+    "description": "Upscale restaurant near 3rd Circle specializing in kebabs and seafood including grilled langoustine and mixed grill; attracts business clientele",
+    "website": null,
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "3rd Circle, Amman, Jordan",
+    "source_url": "https://www.touristjordan.com/most-famous-restaurants-in-amman/",
+    "confidence": "medium",
+    "tourist_score": 3,
+    "audience_tags": [
+      "tourists",
+      "corporate",
+      "couples"
+    ]
+  },
+  {
+    "name_en": "Jasmine House Restaurant",
+    "name_ar": "مطعم بيت الياسمين",
+    "category": "Food",
+    "subcategory": "Mediterranean / Art Café",
+    "description": "Set in a 1950s villa with art exhibitions; Mediterranean and Italian cuisine; known for fresh jasmine tea; BYOB policy",
+    "website": null,
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "26 Al-Baouneyah Street, Amman, Jordan",
+    "source_url": "https://www.touristjordan.com/most-famous-restaurants-in-amman/",
+    "confidence": "medium",
+    "tourist_score": 3,
+    "audience_tags": [
+      "tourists",
+      "youth",
+      "couples"
+    ]
+  },
+  {
+    "name_en": "Shams El Balad",
+    "name_ar": "شمس البلد",
+    "category": "Food",
+    "subcategory": "Farm-to-Table / Jordanian",
+    "description": "Popular farm-to-table Amman restaurant using seasonal locally-sourced ingredients; known for healthy Jordanian cuisine and vibrant atmosphere",
+    "website": "https://www.shamsalbalad.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Jabal Amman, Amman, Jordan",
+    "source_url": "https://theculturetrip.com/middle-east/jordan/articles/the-10-best-restaurants-in-amman",
+    "confidence": "high",
+    "tourist_score": 4,
+    "audience_tags": [
+      "tourists",
+      "families",
+      "health-conscious"
+    ]
+  },
+  {
+    "name_en": "City Mall Amman",
+    "name_ar": "سيتي مول عمان",
+    "category": "Food",
+    "subcategory": "Shopping Mall",
+    "description": "Major shopping mall in Amman opened in 2006; 160,000 m² with 55,000 m² leasable space; features local and international brands, food court, and entertainment",
+    "website": "https://www.citymall.com.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Airport Road, Amman, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/City_Mall_(Amman)",
+    "confidence": "high",
+    "tourist_score": 3,
+    "audience_tags": [
+      "tourists",
+      "families",
+      "shoppers"
+    ]
+  },
+  {
+    "name_en": "Mecca Mall",
+    "name_ar": "ميكا مول",
+    "category": "Food",
+    "subcategory": "Shopping Mall",
+    "description": "One of Jordan's largest shopping malls; 65,000 m² on Mecca Street; 450+ well-known brands; major retail and dining destination in Amman",
+    "website": "https://www.meccamall.com.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Mecca Street, Amman, Jordan",
+    "source_url": "https://amman.anvio.com/blog/top-3-shopping-centers-in-amman-mecca-mall-abdali-mall-and-city-mall",
+    "confidence": "high",
+    "tourist_score": 3,
+    "audience_tags": [
+      "tourists",
+      "families",
+      "shoppers"
+    ]
+  },
+  {
+    "name_en": "Abdali Boulevard",
+    "name_ar": "بوليفار عبدلي",
+    "category": "Tourism",
+    "subcategory": "Mixed-Use Development / Shopping",
+    "description": "Amman's new downtown; a $5 billion mixed-use development with shopping, dining, hotels, offices, and entertainment; one of the most popular spots in Amman",
+    "website": "https://www.theabdali.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Abdali, Central Amman, Jordan",
+    "source_url": "https://araburban.org/en/infohub/projects/?id=7737",
+    "confidence": "high",
+    "tourist_score": 4,
+    "audience_tags": [
+      "tourists",
+      "families",
+      "shoppers",
+      "corporate"
+    ]
+  },
+  {
+    "name_en": "Jo Academy",
+    "name_ar": "جو أكاديمي",
+    "category": "Technology",
+    "subcategory": "EdTech",
+    "description": "Virtual classroom platform offering interactive learning for primary through university students; designed for Jordan's education sector",
+    "website": "https://www.joacademy.com/en",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://en.arageek.com/top-startups-in-jordan-amman",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students",
+      "families",
+      "technology"
+    ]
+  },
+  {
+    "name_en": "WashyWash",
+    "name_ar": "واشي واش",
+    "category": "Technology",
+    "subcategory": "Eco-Friendly Services / On-Demand",
+    "description": "On-demand eco-friendly cleaning service using biodegradable materials and non-toxic agents; sustainability-focused startup based in Amman",
+    "website": "https://www.washywash.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://techround.co.uk/startups/10-startups-in-jordan-to-watch-in-2024/",
+    "confidence": "medium",
+    "tourist_score": 1,
+    "audience_tags": [
+      "families",
+      "corporate",
+      "technology"
+    ]
+  },
+  {
+    "name_en": "Abwaab EdTech",
+    "name_ar": "أبواب",
+    "category": "Technology",
+    "subcategory": "EdTech",
+    "description": "Online learning platform providing interactive, personalized K-12 education beyond traditional classrooms; operating in Jordan and expanding across MENA",
+    "website": "https://www.abwaab.me/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://techround.co.uk/startups/10-startups-in-jordan-to-watch-in-2024/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students",
+      "families",
+      "technology"
+    ]
+  },
+  {
+    "name_en": "Shaumari Wildlife Reserve",
+    "name_ar": "محمية الشومري",
+    "category": "Tourism",
+    "subcategory": "Wildlife Reserve",
+    "description": "Jordan's first nature reserve established in 1975; breeds endangered species including the Arabian oryx, gazelles, ostriches, and Persian onagers",
+    "website": "https://www.rscn.org.jo/",
+    "phone": null,
+    "city": "Azraq",
+    "governorate": "Zarqa",
+    "address": "Near Azraq, Zarqa Governorate, Eastern Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/Royal_Society_for_the_Conservation_of_Nature",
+    "confidence": "high",
+    "tourist_score": 3,
+    "audience_tags": [
+      "tourists",
+      "families",
+      "nature-lovers"
+    ]
+  },
+  {
+    "name_en": "Zarqa University",
+    "name_ar": "جامعة الزرقاء",
+    "category": "Education",
+    "subcategory": "Private University",
+    "description": "Private university in Zarqa governorate offering programs in sciences, engineering, law, and business administration",
+    "website": "https://www.zu.edu.jo/",
+    "phone": null,
+    "city": "Zarqa",
+    "governorate": "Zarqa",
+    "address": "Zarqa, Jordan",
+    "source_url": "https://www.unirank.org/jo/private/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students"
+    ]
+  },
+  {
+    "name_en": "Jadara University",
+    "name_ar": "جامعة جدارا",
+    "category": "Education",
+    "subcategory": "Private University",
+    "description": "Private university in Irbid offering programs in information technology, business, arts, and sciences",
+    "website": "https://www.jadara.edu.jo/",
+    "phone": null,
+    "city": "Irbid",
+    "governorate": "Irbid",
+    "address": "Irbid, Jordan",
+    "source_url": "https://www.unirank.org/jo/private/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students"
+    ]
+  },
+  {
+    "name_en": "Jerash University",
+    "name_ar": "جامعة جرش",
+    "category": "Education",
+    "subcategory": "Private University",
+    "description": "Private university located in Jerash governorate; offers programs in humanities, sciences, and law",
+    "website": "https://www.jpu.edu.jo/",
+    "phone": null,
+    "city": "Jerash",
+    "governorate": "Jerash",
+    "address": "Jerash, Jordan",
+    "source_url": "https://www.unirank.org/jo/private/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students"
+    ]
+  },
+  {
+    "name_en": "Al Hussein Technical University",
+    "name_ar": "جامعة الحسين التقنية",
+    "category": "Education",
+    "subcategory": "Public University",
+    "description": "Specialized technical university in Amman focused on vocational and technical education programs",
+    "website": "https://htu.edu.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://www.unirank.org/jo/private/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students",
+      "technology"
+    ]
+  },
+  {
+    "name_en": "Amman Arab University",
+    "name_ar": "جامعة عمان العربية",
+    "category": "Education",
+    "subcategory": "Private University",
+    "description": "Private university in Amman offering graduate and undergraduate programs across multiple disciplines",
+    "website": "https://www.aau.edu.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://www.unirank.org/jo/private/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students"
+    ]
+  },
+  {
+    "name_en": "Al-Ein Hospital",
+    "name_ar": "مستشفى العين",
+    "category": "Healthcare",
+    "subcategory": "Private Hospital",
+    "description": "Private hospital in Amman with 200+ beds; specializes in orthopedics, general surgery, emergency medicine, and cardiology",
+    "website": null,
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://www.myhospitalnow.com/blog/top-20-best-hospitals-in-jordan/",
+    "confidence": "medium",
+    "tourist_score": 1,
+    "audience_tags": [
+      "healthcare",
+      "patients"
+    ]
+  },
+  {
+    "name_en": "Al-Kindi Hospital",
+    "name_ar": "مستشفى الكندي",
+    "category": "Healthcare",
+    "subcategory": "Private Hospital",
+    "description": "Private hospital in Amman with 200+ beds; offers surgery, cardiology, pediatrics, and obstetrics & gynecology",
+    "website": null,
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://www.myhospitalnow.com/blog/top-20-best-hospitals-in-jordan/",
+    "confidence": "medium",
+    "tourist_score": 1,
+    "audience_tags": [
+      "healthcare",
+      "patients"
+    ]
+  },
+  {
+    "name_en": "Al-Maqased Hospital",
+    "name_ar": "مستشفى المقاصد",
+    "category": "Healthcare",
+    "subcategory": "Private Hospital",
+    "description": "Private hospital in Amman with 250+ beds; provides general surgery, pediatrics, cardiology, and obstetrics & gynecology",
+    "website": null,
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://www.myhospitalnow.com/blog/top-20-best-hospitals-in-jordan/",
+    "confidence": "medium",
+    "tourist_score": 1,
+    "audience_tags": [
+      "healthcare",
+      "patients"
+    ]
+  },
+  {
+    "name_en": "Petra Tours Co.",
+    "name_ar": "شركة بيترا للسياحة",
+    "category": "Tourism",
+    "subcategory": "Tour Operator",
+    "description": "Jordan-based incoming tour operator representing international operators; specializes in archaeological, pilgrimage, cultural, nature, adventure, and diving tours",
+    "website": "https://www.petratours.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://www.petratours.com/",
+    "confidence": "high",
+    "tourist_score": 3,
+    "audience_tags": [
+      "tourists",
+      "groups",
+      "pilgrims"
+    ]
+  },
+  {
+    "name_en": "iMENA Digital",
+    "name_ar": "آي مينا",
+    "category": "Technology",
+    "subcategory": "Digital Technology / Mobile Development",
+    "description": "Technology powerhouse founded in 2013; builds and scales digital businesses across Jordan and MENA; 150+ employees; partners include AWS, Google, and Shopify; key clients include Opensooq",
+    "website": "https://www.imenahub.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://360digitmg.com/blog/what-are-the-best-it-companies-in-jordan",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "technology",
+      "corporate",
+      "startups"
+    ]
+  },
+  {
+    "name_en": "Ministry of Education Jordan",
+    "name_ar": "وزارة التربية والتعليم",
+    "category": "Government",
+    "subcategory": "Ministry",
+    "description": "Jordanian government ministry responsible for all aspects of public school education across the kingdom",
+    "website": "https://www.moe.gov.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/Category:Government_ministries_of_Jordan",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "government",
+      "students",
+      "families"
+    ]
+  },
+  {
+    "name_en": "Ministry of Interior Jordan",
+    "name_ar": "وزارة الداخلية",
+    "category": "Government",
+    "subcategory": "Ministry",
+    "description": "Jordanian government ministry overseeing internal security, civil affairs, border control, and governorate administration",
+    "website": "https://moi.gov.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/Category:Government_ministries_of_Jordan",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "government",
+      "tourists",
+      "residents"
+    ]
+  },
+  {
+    "name_en": "Ministry of Finance Jordan",
+    "name_ar": "وزارة المالية",
+    "category": "Government",
+    "subcategory": "Ministry",
+    "description": "Jordanian government ministry responsible for fiscal policy, public finances, and budget management",
+    "website": "https://www.mof.gov.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/Category:Government_ministries_of_Jordan",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "government",
+      "corporate"
+    ]
+  },
+  {
+    "name_en": "Jordan Ahli Bank",
+    "name_ar": "البنك الأهلي الأردني",
+    "category": "Government",
+    "subcategory": "Commercial Bank",
+    "description": "Established Jordanian bank offering retail and corporate banking services across multiple branches",
+    "website": "https://www.ahli.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/List_of_banks_in_Jordan",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "corporate",
+      "families"
+    ]
+  },
+  {
+    "name_en": "Bank al Etihad",
+    "name_ar": "بنك الاتحاد",
+    "category": "Government",
+    "subcategory": "Commercial Bank",
+    "description": "Jordanian commercial bank offering retail, corporate, and digital banking services",
+    "website": "https://www.bankaletihad.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/List_of_banks_in_Jordan",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "corporate",
+      "families"
+    ]
+  },
+  {
+    "name_en": "Safwa Islamic Bank",
+    "name_ar": "بنك صفوة الإسلامي",
+    "category": "Government",
+    "subcategory": "Islamic Bank",
+    "description": "Jordanian Islamic bank offering Sharia-compliant banking products and services",
+    "website": "https://www.safwabank.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/List_of_banks_in_Jordan",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "corporate",
+      "families"
+    ]
+  },
+  {
+    "name_en": "Applied Science Private University",
+    "name_ar": "جامعة العلوم التطبيقية الخاصة",
+    "category": "Education",
+    "subcategory": "Private University",
+    "description": "First private university in Jordan (founded 1989 alongside Al-Ahliyya); offers programs in information technology, engineering, pharmacy, and law",
+    "website": "https://www.asu.edu.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Shafa Badran, Amman, Jordan",
+    "source_url": "https://www.topuniversities.com/universities/applied-science-private-university-jordan",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students"
+    ]
+  },
+  {
+    "name_en": "INVESTBANK",
+    "name_ar": "بنك الاستثمار",
+    "category": "Government",
+    "subcategory": "Commercial Bank",
+    "description": "Jordanian bank focusing on investment, corporate, and retail banking",
+    "website": "https://www.investbank.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/List_of_banks_in_Jordan",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "corporate"
+    ]
+  },
+  {
+    "name_en": "Dibeen Forest Reserve",
+    "name_ar": "محمية ديبين الغابوية",
+    "category": "Tourism",
+    "subcategory": "Nature Reserve",
+    "description": "RSCN-managed pine forest reserve in northern Jordan near Jerash; hiking trails and rich biodiversity",
+    "website": "https://www.rscn.org.jo/",
+    "phone": null,
+    "city": "Jerash",
+    "governorate": "Jerash",
+    "address": "Dibeen, Jerash Governorate, Jordan",
+    "source_url": "https://www.rscn.org.jo/protectedArea?lang=en",
+    "confidence": "high",
+    "tourist_score": 3,
+    "audience_tags": [
+      "tourists",
+      "nature-lovers",
+      "hikers",
+      "families"
+    ]
+  },
+  {
+    "name_en": "Al al-Bayt University",
+    "name_ar": "جامعة آل البيت",
+    "category": "Education",
+    "subcategory": "Public University",
+    "description": "Public university in Mafraq governorate; offers programs in Islamic studies, humanities, sciences, and education",
+    "website": "https://www.aabu.edu.jo/",
+    "phone": null,
+    "city": "Mafraq",
+    "governorate": "Mafraq",
+    "address": "Mafraq, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/List_of_universities_in_Jordan",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students",
+      "researchers"
+    ]
+  },
+  {
+    "name_en": "Jordan River Foundation",
+    "name_ar": "مؤسسة نهر الأردن",
+    "category": "Government",
+    "subcategory": "NGO / Social Development",
+    "description": "Royal NGO established by Queen Noor; focuses on community development, child protection, women empowerment, and handicrafts; operates Jordan River Designs brand",
+    "website": "https://www.jordanriver.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://www.globalgiving.org/locations/jordan/",
+    "confidence": "high",
+    "tourist_score": 2,
+    "audience_tags": [
+      "tourists",
+      "families",
+      "community"
+    ]
+  },
+  {
+    "name_en": "Crown Prince Foundation",
+    "name_ar": "مؤسسة ولي العهد",
+    "category": "Government",
+    "subcategory": "Royal Foundation / Education",
+    "description": "Jordan's Royal foundation focusing on youth empowerment, education, vocational training, and entrepreneurship programs",
+    "website": "https://www.crownprince.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://www.globalgiving.org/locations/jordan/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students",
+      "youth",
+      "government"
+    ]
+  },
+  {
+    "name_en": "Zeina Desert Lodge",
+    "name_ar": "زينا ديزيرت لودج",
+    "category": "Tourism",
+    "subcategory": "Desert Camp / Glamping",
+    "description": "Luxury Wadi Rum accommodation offering desert tents, domes, and luxury suites with private terraces, air conditioning, and bathrobes",
+    "website": "https://www.zeinadesertlodge.com/",
+    "phone": null,
+    "city": "Wadi Rum",
+    "governorate": "Aqaba",
+    "address": "Wadi Rum Protected Area, Aqaba Governorate, Jordan",
+    "source_url": "https://wanderingwheatleys.com/wadi-rum-jordan-luxury-desert-bedouin-camps-bubble-tents-martian-domes/",
+    "confidence": "medium",
+    "tourist_score": 4,
+    "audience_tags": [
+      "tourists",
+      "couples",
+      "luxury"
+    ]
+  },
+  {
+    "name_en": "Hasan Zawaideh Camp",
+    "name_ar": "مخيم حسن الزوايدة",
+    "category": "Tourism",
+    "subcategory": "Desert Camp",
+    "description": "Traditional Bedouin camp in Wadi Rum offering private and shared tents plus martian-style tents; communal dinners cooked in underground Zarb ovens and local entertainment",
+    "website": "https://www.hasanzawaidehcamp.com/",
+    "phone": null,
+    "city": "Wadi Rum",
+    "governorate": "Aqaba",
+    "address": "Wadi Rum Protected Area, Aqaba Governorate, Jordan",
+    "source_url": "https://wanderingwheatleys.com/wadi-rum-jordan-luxury-desert-bedouin-camps-bubble-tents-martian-domes/",
+    "confidence": "medium",
+    "tourist_score": 3,
+    "audience_tags": [
+      "tourists",
+      "adventurers",
+      "budget-travelers"
+    ]
+  },
+  {
+    "name_en": "Wadi Rum Bedouin Camp",
+    "name_ar": "مخيم وادي رم البدوي",
+    "category": "Tourism",
+    "subcategory": "Desert Camp",
+    "description": "Budget-friendly traditional Bedouin camp in Wadi Rum; shared bathrooms, common area with fireplace, traditional Jordanian meals",
+    "website": "https://www.wadirumbedouincamp.com/",
+    "phone": null,
+    "city": "Wadi Rum",
+    "governorate": "Aqaba",
+    "address": "Rum Village, Wadi Rum, Jordan",
+    "source_url": "https://wanderingwheatleys.com/wadi-rum-jordan-luxury-desert-bedouin-camps-bubble-tents-martian-domes/",
+    "confidence": "high",
+    "tourist_score": 3,
+    "audience_tags": [
+      "tourists",
+      "adventurers",
+      "budget-travelers"
+    ]
+  },
+  {
+    "name_en": "Bayanat (Al-Bayanat)",
+    "name_ar": "البيانات",
+    "category": "Technology",
+    "subcategory": "FinTech / Digital Transformation",
+    "description": "Digital transformation specialist for banks and financial institutions; provides payment systems and cloud migration solutions; helps modernise banking across MENA",
+    "website": "https://www.al-bayanat.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://en.arageek.com/top-startups-in-jordan-amman",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "corporate",
+      "technology",
+      "financial"
+    ]
+  },
+  {
+    "name_en": "Al-Hussein Bin Talal University",
+    "name_ar": "جامعة الحسين بن طلال",
+    "category": "Education",
+    "subcategory": "Public University",
+    "description": "Public university in Ma'an governorate in southern Jordan; serves the underserved south with programs in engineering, IT, science, and arts",
+    "website": "https://www.ahu.edu.jo/",
+    "phone": null,
+    "city": "Ma'an",
+    "governorate": "Ma'an",
+    "address": "Ma'an, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/List_of_universities_in_Jordan",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students"
+    ]
+  },
+  {
+    "name_en": "Tafila Technical University",
+    "name_ar": "جامعة الطفيلة التقنية",
+    "category": "Education",
+    "subcategory": "Public University",
+    "description": "Public technical university in Tafilah governorate; focuses on applied and technical sciences, engineering, and IT programs",
+    "website": "https://www.ttu.edu.jo/",
+    "phone": null,
+    "city": "Tafilah",
+    "governorate": "Tafilah",
+    "address": "Tafilah, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/List_of_universities_in_Jordan",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students",
+      "technology"
+    ]
+  },
+  {
+    "name_en": "Balqa Applied University",
+    "name_ar": "جامعة البلقاء التطبيقية",
+    "category": "Education",
+    "subcategory": "Public University",
+    "description": "Major public applied university with multiple campuses across Jordan; one of the largest universities in Jordan by enrolment; focuses on applied sciences and technology",
+    "website": "https://www.bau.edu.jo/",
+    "phone": null,
+    "city": "Salt",
+    "governorate": "Balqa",
+    "address": "Salt, Balqa Governorate, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/List_of_universities_in_Jordan",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students"
+    ]
+  },
+  {
+    "name_en": "Noor Al Hussein Foundation",
+    "name_ar": "مؤسسة نور الحسين",
+    "category": "Government",
+    "subcategory": "Royal Foundation / Development",
+    "description": "Jordan's Royal foundation established by Queen Noor; promotes sustainable development, arts, education, health, and micro-enterprise across Jordan",
+    "website": "https://www.nooralhusseinfoundation.org/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://www.globalgiving.org/locations/jordan/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "community",
+      "families",
+      "government"
+    ]
+  },
+  {
+    "name_en": "King Hussein International Airport (Aqaba)",
+    "name_ar": "مطار الملك الحسين الدولي",
+    "category": "Government",
+    "subcategory": "International Airport",
+    "description": "Aqaba's main international airport (IATA: AQJ); located 9.7km from Aqaba city centre; gateway to Wadi Rum, Petra, and the Red Sea; served by Royal Jordanian and budget carriers",
+    "website": "https://www.aqabaairport.com/",
+    "phone": null,
+    "city": "Aqaba",
+    "governorate": "Aqaba",
+    "address": "Aqaba, Jordan",
+    "source_url": "https://www.touristjordan.com/aqaba-airport-guide/",
+    "confidence": "high",
+    "tourist_score": 2,
+    "audience_tags": [
+      "tourists",
+      "families",
+      "corporate"
+    ]
+  },
+  {
+    "name_en": "ViaVii",
+    "name_ar": "فيافي",
+    "category": "Technology",
+    "subcategory": "Travel Tech / Tourism Platform",
+    "description": "Jordanian travel platform offering personalized, locally-curated travel experiences emphasizing cultural immersion; helps travellers discover authentic Jordan",
+    "website": "https://viavii.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://techround.co.uk/startups/10-startups-in-jordan-to-watch-in-2024/",
+    "confidence": "high",
+    "tourist_score": 3,
+    "audience_tags": [
+      "tourists",
+      "technology",
+      "adventurers"
+    ]
+  },
+  {
+    "name_en": "Frata App",
+    "name_ar": "فراطة",
+    "category": "Technology",
+    "subcategory": "FinTech / Micro-Savings",
+    "description": "Jordanian micro-savings fintech app that rounds up purchases and automatically saves the difference; making saving effortless for consumers",
+    "website": "https://www.frata.me/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://techround.co.uk/startups/10-startups-in-jordan-to-watch-in-2024/",
+    "confidence": "medium",
+    "tourist_score": 1,
+    "audience_tags": [
+      "technology",
+      "youth",
+      "families"
+    ]
+  },
+  {
+    "name_en": "STEAM Hub Jordan",
+    "name_ar": "ستيم هب جوردان",
+    "category": "Technology",
+    "subcategory": "EdTech / Marketplace",
+    "description": "Marketplace connecting schools and educators focused on Science, Technology, Engineering, Arts, and Mathematics; based in Amman",
+    "website": "https://www.steamhub.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://techround.co.uk/startups/10-startups-in-jordan-to-watch-in-2024/",
+    "confidence": "medium",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students",
+      "families",
+      "technology"
+    ]
+  },
+  {
+    "name_en": "Madaba Mosaic City",
+    "name_ar": "مدينة الفسيفساء مادبا",
+    "category": "Tourism",
+    "subcategory": "Cultural / Archaeological Site",
+    "description": "Jordan's 'City of Mosaics'; home to the famous 6th-century Byzantine Madaba Map mosaic in St George's Church; a key stop on the King's Highway tourist route",
+    "website": "https://www.visitjordan.com/",
+    "phone": null,
+    "city": "Madaba",
+    "governorate": "Madaba",
+    "address": "Madaba, Jordan",
+    "source_url": "https://www.visitjordan.com/",
+    "confidence": "high",
+    "tourist_score": 4,
+    "audience_tags": [
+      "tourists",
+      "history-lovers",
+      "families"
+    ]
+  },
+  {
+    "name_en": "Mount Nebo",
+    "name_ar": "جبل نيبو",
+    "category": "Tourism",
+    "subcategory": "Religious / Historical Site",
+    "description": "Biblical site where Moses viewed the Promised Land; panoramic views of the Jordan Valley, Dead Sea, and Jerusalem on clear days; key pilgrimage destination",
+    "website": "https://www.visitjordan.com/",
+    "phone": null,
+    "city": "Madaba",
+    "governorate": "Madaba",
+    "address": "Near Madaba, Madaba Governorate, Jordan",
+    "source_url": "https://www.visitjordan.com/",
+    "confidence": "high",
+    "tourist_score": 4,
+    "audience_tags": [
+      "tourists",
+      "pilgrims",
+      "history-lovers",
+      "families"
+    ]
+  },
+  {
+    "name_en": "Baptism Site (Bethany Beyond the Jordan)",
+    "name_ar": "موقع المغطس",
+    "category": "Tourism",
+    "subcategory": "Religious / Historical Site",
+    "description": "UNESCO World Heritage Site; the traditional site of Jesus's baptism by John the Baptist on the east bank of the Jordan River; major pilgrimage destination",
+    "website": "https://baptismsite.com/",
+    "phone": null,
+    "city": "South Shuneh",
+    "governorate": "Balqa",
+    "address": "Near South Shuneh, Balqa Governorate, Jordan",
+    "source_url": "https://www.visitjordan.com/",
+    "confidence": "high",
+    "tourist_score": 5,
+    "audience_tags": [
+      "tourists",
+      "pilgrims",
+      "history-lovers",
+      "families"
+    ]
+  },
+  {
+    "name_en": "Umm Qais (Gadara)",
+    "name_ar": "أم قيس",
+    "category": "Tourism",
+    "subcategory": "Archaeological Site",
+    "description": "Ruins of the ancient Greco-Roman city of Gadara; offers dramatic views across the Sea of Galilee, Golan Heights, and Jordan Valley; includes basalt ruins and a museum",
+    "website": "https://www.visitjordan.com/",
+    "phone": null,
+    "city": "Umm Qais",
+    "governorate": "Irbid",
+    "address": "Umm Qais, Irbid Governorate, Northern Jordan",
+    "source_url": "https://www.visitjordan.com/",
+    "confidence": "high",
+    "tourist_score": 4,
+    "audience_tags": [
+      "tourists",
+      "history-lovers",
+      "families"
+    ]
+  },
+  {
+    "name_en": "Aqaba Fort (Mamluk Castle)",
+    "name_ar": "قلعة العقبة",
+    "category": "Tourism",
+    "subcategory": "Historical Fort",
+    "description": "16th-century Mamluk fort in downtown Aqaba; features the Hashemite coat of arms; now a museum displaying the history of the Arab Revolt",
+    "website": "https://www.visitjordan.com/",
+    "phone": null,
+    "city": "Aqaba",
+    "governorate": "Aqaba",
+    "address": "Downtown Aqaba, Jordan",
+    "source_url": "https://www.visitjordan.com/",
+    "confidence": "high",
+    "tourist_score": 3,
+    "audience_tags": [
+      "tourists",
+      "history-lovers",
+      "families"
+    ]
+  },
+  {
+    "name_en": "Philadelphia University Jordan",
+    "name_ar": "جامعة فيلادلفيا",
+    "category": "Education",
+    "subcategory": "Private University",
+    "description": "Private university near Amman offering programs in engineering, pharmacy, arts, and sciences; one of Jordan's established private universities",
+    "website": "https://www.philadelphia.edu.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Jerash Road, Amman, Jordan",
+    "source_url": "https://www.unirank.org/jo/private/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students"
+    ]
+  },
+  {
+    "name_en": "Isra University",
+    "name_ar": "جامعة الإسراء",
+    "category": "Education",
+    "subcategory": "Private University",
+    "description": "Private university in Amman with programs in engineering, IT, pharmacy, and arts",
+    "website": "https://www.isra.edu.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://www.unirank.org/jo/private/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students"
+    ]
+  },
+  {
+    "name_en": "Al-Zaytoonah University of Jordan",
+    "name_ar": "جامعة الزيتونة الأردنية",
+    "category": "Education",
+    "subcategory": "Private University",
+    "description": "Private university in Amman offering programs in science, arts, engineering, and law; also affiliated with a teaching hospital",
+    "website": "https://www.alzaytoonah.edu.jo/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://www.unirank.org/jo/private/",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "students"
+    ]
+  },
+  {
+    "name_en": "Jordan Kuwait Bank",
+    "name_ar": "بنك الأردن الكويت",
+    "category": "Government",
+    "subcategory": "Commercial Bank",
+    "description": "Jordanian-Kuwaiti commercial bank offering retail, corporate, and investment banking services across Jordan",
+    "website": "https://www.jkb.com/",
+    "phone": null,
+    "city": "Amman",
+    "governorate": "Amman",
+    "address": "Amman, Jordan",
+    "source_url": "https://en.wikipedia.org/wiki/List_of_banks_in_Jordan",
+    "confidence": "high",
+    "tourist_score": 1,
+    "audience_tags": [
+      "corporate",
+      "families"
+    ]
+  },
+  {
+    "name_en": "Mövenpick Nabatean Castle Hotel",
+    "name_ar": "فندق موفنبيك النبطي",
+    "category": "Tourism",
+    "subcategory": "Hotel",
+    "description": "Mövenpick property situated 10 minutes from Petra's historic site; overlooks Wadi Araba desert valley; offers traditional Jordanian architecture and desert views",
+    "website": "https://movenpick.accor.com/en/middle-east/jordan/petra/nabatean-castle-hotel.html",
+    "phone": null,
+    "city": "Wadi Musa",
+    "governorate": "Ma'an",
+    "address": "Wadi Musa, Petra, Jordan",
+    "source_url": "https://movenpick.accor.com/en/middle-east/jordan/petra.html",
+    "confidence": "high",
+    "tourist_score": 4,
+    "audience_tags": [
+      "tourists",
+      "families",
+      "couples"
+    ]
+  }
+]

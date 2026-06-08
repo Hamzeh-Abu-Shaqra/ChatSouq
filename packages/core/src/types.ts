@@ -147,7 +147,7 @@ export interface InfoCard {
 export interface GeneralAnswerResponse {
   kind: "general";
   query: string;
-  intentType: "rental" | "lifestyle" | "tourism" | "weather" | "government" | "history" | "general";
+  intentType: "rental" | "lifestyle" | "tourism" | "weather" | "government" | "history" | "news" | "companies" | "general";
   summary: string;
   cards: NeighborhoodCard[] | InfoCard[];
   meta: {

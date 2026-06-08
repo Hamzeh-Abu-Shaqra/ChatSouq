@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["-C", "/Users/Hamzeh23/Desktop/chatsouq", "--filter", "@chatsouq/web", "dev"],
+      "autoPort": true
+    }
+  ]
+}

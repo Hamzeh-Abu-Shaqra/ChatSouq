@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import { db } from "@chatsouq/db";
 import { getProvider, getEmbedder, type AIProvider, type Embedder } from "@chatsouq/ai";
+import { webSearch, formatWebResults } from "./web-search";
 import type {
   PlaceCandidate,
   PlaceIntent,
@@ -267,6 +268,152 @@ async function searchPlaces(
   }));
 }
 
+// ── Scraped-source integration ────────────────────────────────────────────────
+//
+// Queries jordan_places (Google Maps) and jordan_restaurants (Talabat) in
+// parallel with the main OSM places table. Falls back gracefully if the
+// embedding column hasn't been added yet (run embed-scraped.ts first).
+//
+// IDs are offset by large constants so they never collide with OSM place IDs:
+//   jordan_places     → id + 2_000_000
+//   jordan_restaurants → id + 3_000_000
+
+async function fetchScrapedCandidates(
+  intent: PlaceIntent,
+  queryVec: number[],
+  queryText: string,
+  limit: number
+): Promise<PlaceCandidate[]> {
+  const vecLit = toVectorLiteral(queryVec);
+  const all: PlaceCandidate[] = [];
+  const wantRestaurant =
+    intent.categories.some((c) =>
+      /restaurant|cafe|coffee|food|bakery|dessert|fast.food/i.test(c)
+    ) ||
+    /\b(eat|food|restaurant|cafe|coffee|lunch|dinner|breakfast|delivery)\b/i.test(
+      intent.rawQuery
+    );
+  const wantPlace = !wantRestaurant || intent.categories.length === 0;
+
+  // ── jordan_places (Google Maps) ──────────────────────────────────────────
+  if (wantPlace) {
+    try {
+      const rows = (await db.execute(sql`
+        SELECT
+          p.id + 2000000   AS id,
+          p.name,
+          p.category,
+          p.address,
+          p.phone,
+          p.website,
+          p.rating,
+          p.search_text    AS "searchText",
+          (1 - (p.embedding <=> ${vecLit}::vector))                          AS "vecSim",
+          similarity(coalesce(p.search_text, ''), ${queryText})              AS "txtSim"
+        FROM jordan_places p
+        WHERE p.embedding IS NOT NULL
+        ORDER BY "vecSim" + 2.0 * "txtSim" DESC
+        LIMIT ${limit}
+      `)) as unknown as Record<string, unknown>[];
+
+      for (const r of rows) {
+        // Encode Google Maps rating (0-5) as a tiny vecSim bonus (max 0.08).
+        const ratingBonus = r.rating ? (Number(r.rating) / 5) * 0.08 : 0;
+        all.push({
+          id: Number(r.id),
+          name: String(r.name),
+          nameAr: null,
+          category: String(r.category ?? "Place"),
+          subcategory: null,
+          governorate: "Amman",
+          city: "Amman",
+          address: (r.address as string) ?? null,
+          phone: (r.phone as string) ?? null,
+          website: (r.website as string) ?? null,
+          openingHours: null,
+          lat: null,
+          lng: null,
+          sourceUrl: null,
+          searchText: (r.searchText as string) ?? null,
+          vecSim: Math.min(1, Number(r.vecSim ?? 0) + ratingBonus),
+          txtSim: Number(r.txtSim ?? 0),
+        });
+      }
+    } catch {
+      /* embedding column not yet created — silently skip */
+    }
+  }
+
+  // ── jordan_restaurants (Talabat) ─────────────────────────────────────────
+  if (wantRestaurant) {
+    try {
+      const rows = (await db.execute(sql`
+        SELECT
+          r.id + 3000000   AS id,
+          r.name,
+          r.cuisine,
+          r.rating,
+          r.delivery_time  AS "deliveryTime",
+          r.url,
+          r.search_text    AS "searchText",
+          (1 - (r.embedding <=> ${vecLit}::vector))                          AS "vecSim",
+          similarity(coalesce(r.search_text, ''), ${queryText})              AS "txtSim"
+        FROM jordan_restaurants r
+        WHERE r.embedding IS NOT NULL
+        ORDER BY "vecSim" + 2.0 * "txtSim" DESC
+        LIMIT ${limit}
+      `)) as unknown as Record<string, unknown>[];
+
+      for (const r of rows) {
+        const ratingBonus = r.rating ? (Number(r.rating) / 5) * 0.10 : 0;
+        const delivery = r.deliveryTime ? `Delivery: ${r.deliveryTime}` : null;
+        all.push({
+          id: Number(r.id),
+          name: String(r.name),
+          nameAr: null,
+          category: String(r.cuisine ?? "Restaurant"),
+          subcategory: "Restaurant",
+          governorate: "Amman",
+          city: "Amman",
+          address: null,
+          phone: null,
+          website: (r.url as string) ?? null,
+          openingHours: delivery,
+          lat: null,
+          lng: null,
+          sourceUrl: (r.url as string) ?? null,
+          searchText: (r.searchText as string) ?? null,
+          vecSim: Math.min(1, Number(r.vecSim ?? 0) + ratingBonus),
+          txtSim: Number(r.txtSim ?? 0),
+        });
+      }
+    } catch {
+      /* embedding column not yet created — silently skip */
+    }
+  }
+
+  return all;
+}
+
+// ── Deduplication ─────────────────────────────────────────────────────────────
+// Remove scraped candidates whose name is too similar to an already-included
+// OSM candidate (avoids showing the same place twice from different sources).
+
+function deduplicateCandidates(candidates: PlaceCandidate[]): PlaceCandidate[] {
+  const seen = new Set<string>();
+  const out: PlaceCandidate[] = [];
+  for (const c of candidates) {
+    const key = c.name.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 24);
+    if (!seen.has(key)) {
+      seen.add(key);
+      out.push(c);
+    }
+  }
+  return out;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 interface ScoredPlace extends PlaceCandidate {
   score: number;
   keywordHits: number;
@@ -427,6 +574,7 @@ export async function recommendPlaces(
     { c: false, g: false },
   ];
 
+  // ── OSM places (main knowledge graph) ──────────────────────────────────────
   let candidates: PlaceCandidate[] = [];
   let chosen = plans[0]!;
   for (const p of plans) {
@@ -448,12 +596,25 @@ export async function recommendPlaces(
   const relaxedGovernorate = wantGov && !chosen.g;
   const relaxedCategory = intent.categories.length > 0 && !chosen.c;
 
-  const ranked = rankPlaces(candidates, intent).slice(0, limit);
+  // ── Scraped sources (Google Maps + Talabat) ─────────────────────────────────
+  // Fetch in parallel; merge and deduplicate so OSM records come first and
+  // scraped records fill gaps or surface higher-rated options.
+  const scraped = await fetchScrapedCandidates(intent, queryVec, input.query, limit * 2);
+  const merged  = deduplicateCandidates([...candidates, ...scraped]);
 
-  // Build code-based why/pros/cons as fallback, then enrich with Claude if available.
+  const ranked = rankPlaces(merged, intent).slice(0, limit);
+
+  // Build code-based why/pros/cons as fallback, then enrich with Claude + web search if available.
   const whyMap = new Map<number, string>(ranked.map((c, i) => [c.id, placeWhy(c, i === 0, queryLang)]));
   if (!provider.isMock && ranked.length > 0) {
     try {
+      // Fire web search in parallel with building the place list — no added latency
+      const webSearchQuery = intent.categories.length > 0
+        ? `${intent.categories[0]} ${intent.governorate ?? "Amman"}`
+        : input.query;
+      const webResults = await webSearch(webSearchQuery, { maxResults: 3, searchDepth: "basic" });
+      const webContext = formatWebResults(webResults, "LIVE WEB INFO");
+
       const placeItems = ranked.map((c, i) => ({
         id: c.id,
         name: ARABIC_CHAR_RE.test(c.name) ? (c.nameAr ?? c.name) : c.name,
@@ -471,8 +632,9 @@ export async function recommendPlaces(
         system:
           "You write one specific sentence (max 28 words) explaining why each place fits the user's " +
           "request, in the context of searching in Jordan. Mention the category and location. " +
-          `Use ONLY the provided facts — no invented details. ${langInstruction} ` +
-          'Return JSON: an array of {"id": number, "why": string}.',
+          `Use ONLY the provided facts — no invented details. ${langInstruction}` +
+          (webContext ? `\n${webContext}` : "") +
+          '\nReturn JSON: an array of {"id": number, "why": string}.',
         messages: [{
           role: "user",
           content: `User asked for: "${input.query}"\nPlaces: ${JSON.stringify(placeItems)}`,

@@ -13,45 +13,21 @@ export async function GET() {
       sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_companies`,
     ]);
 
+    const n = news[0] ?? { count: 0, last_scraped: null };
+    const p = places[0] ?? { count: 0, last_scraped: null };
+    const r = restaurants[0] ?? { count: 0, last_scraped: null };
+    const l = listings[0] ?? { count: 0, last_scraped: null };
+    const c = companies[0] ?? { count: 0, last_scraped: null };
+
     return NextResponse.json({
       tables: [
-        {
-          name: "News",
-          source: "Roya News",
-          icon: "📰",
-          count: Number(news[0].count),
-          last_scraped: news[0].last_scraped,
-        },
-        {
-          name: "Places",
-          source: "Google Maps",
-          icon: "🗺️",
-          count: Number(places[0].count),
-          last_scraped: places[0].last_scraped,
-        },
-        {
-          name: "Restaurants",
-          source: "Talabat",
-          icon: "🍔",
-          count: Number(restaurants[0].count),
-          last_scraped: restaurants[0].last_scraped,
-        },
-        {
-          name: "Listings",
-          source: "OpenSooq",
-          icon: "🛒",
-          count: Number(listings[0].count),
-          last_scraped: listings[0].last_scraped,
-        },
-        {
-          name: "Companies",
-          source: "LinkedIn",
-          icon: "💼",
-          count: Number(companies[0].count),
-          last_scraped: companies[0].last_scraped,
-        },
+        { name: "News", source: "Roya News", icon: "📰", count: Number(n.count), last_scraped: n.last_scraped },
+        { name: "Places", source: "Google Maps", icon: "🗺️", count: Number(p.count), last_scraped: p.last_scraped },
+        { name: "Restaurants", source: "Talabat", icon: "🍔", count: Number(r.count), last_scraped: r.last_scraped },
+        { name: "Listings", source: "OpenSooq", icon: "🛒", count: Number(l.count), last_scraped: l.last_scraped },
+        { name: "Companies", source: "LinkedIn", icon: "💼", count: Number(c.count), last_scraped: c.last_scraped },
       ],
-      total: Number(news[0].count) + Number(places[0].count) + Number(restaurants[0].count) + Number(listings[0].count) + Number(companies[0].count),
+      total: Number(n.count) + Number(p.count) + Number(r.count) + Number(l.count) + Number(c.count),
     });
   } catch (error) {
     return NextResponse.json({ error: "Failed to fetch stats" }, { status: 500 });

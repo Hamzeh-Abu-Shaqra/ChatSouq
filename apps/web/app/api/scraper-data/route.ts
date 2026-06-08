@@ -55,9 +55,25 @@ export async function GET(request: Request) {
       }
 
     } else if (table === "restaurants") {
-      data = await safeQuery(sql`SELECT id, name, cuisine, rating, delivery_time, url, scraped_at FROM jordan_restaurants ORDER BY scraped_at DESC LIMIT ${limit} OFFSET ${offset}`);
-      const count = await safeQuery(sql`SELECT COUNT(*) as count FROM jordan_restaurants`);
-      total = Number(count[0]?.count ?? 0);
+      const rcats = await safeQuery(sql`SELECT DISTINCT area FROM jordan_restaurants WHERE area IS NOT NULL ORDER BY area`);
+      categories = rcats.map((c: any) => c.area);
+      if (category && search) {
+        data = await safeQuery(sql`SELECT id, name, cuisine, rating, rating_count, delivery_time, min_order, delivery_fee, area, is_open, url, scraped_at FROM jordan_restaurants WHERE area = ${category} AND name ILIKE ${'%' + search + '%'} ORDER BY rating DESC NULLS LAST LIMIT ${limit} OFFSET ${offset}`);
+        const count = await safeQuery(sql`SELECT COUNT(*) as count FROM jordan_restaurants WHERE area = ${category} AND name ILIKE ${'%' + search + '%'}`);
+        total = Number(count[0]?.count ?? 0);
+      } else if (category) {
+        data = await safeQuery(sql`SELECT id, name, cuisine, rating, rating_count, delivery_time, min_order, delivery_fee, area, is_open, url, scraped_at FROM jordan_restaurants WHERE area = ${category} ORDER BY rating DESC NULLS LAST LIMIT ${limit} OFFSET ${offset}`);
+        const count = await safeQuery(sql`SELECT COUNT(*) as count FROM jordan_restaurants WHERE area = ${category}`);
+        total = Number(count[0]?.count ?? 0);
+      } else if (search) {
+        data = await safeQuery(sql`SELECT id, name, cuisine, rating, rating_count, delivery_time, min_order, delivery_fee, area, is_open, url, scraped_at FROM jordan_restaurants WHERE name ILIKE ${'%' + search + '%'} ORDER BY rating DESC NULLS LAST LIMIT ${limit} OFFSET ${offset}`);
+        const count = await safeQuery(sql`SELECT COUNT(*) as count FROM jordan_restaurants WHERE name ILIKE ${'%' + search + '%'}`);
+        total = Number(count[0]?.count ?? 0);
+      } else {
+        data = await safeQuery(sql`SELECT id, name, cuisine, rating, rating_count, delivery_time, min_order, delivery_fee, area, is_open, url, scraped_at FROM jordan_restaurants ORDER BY rating DESC NULLS LAST LIMIT ${limit} OFFSET ${offset}`);
+        const count = await safeQuery(sql`SELECT COUNT(*) as count FROM jordan_restaurants`);
+        total = Number(count[0]?.count ?? 0);
+      }
 
     } else if (table === "listings") {
       const cats = await safeQuery(sql`SELECT DISTINCT category FROM jordan_listings ORDER BY category`);

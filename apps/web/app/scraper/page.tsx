@@ -31,7 +31,7 @@ const TABS = [
 const COLUMNS: Record<string, string[]> = {
   news: ["title", "source", "scraped_at"],
   places: ["name", "category", "address", "rating", "phone"],
-  restaurants: ["name", "cuisine", "rating", "delivery_time"],
+  restaurants: ["name", "cuisine", "rating", "delivery_time", "area", "min_order"],
   listings: ["title", "price", "location", "category"],
   companies: ["name", "industry", "location"],
   people: ["name", "title", "subcategory", "specialty", "organization", "phone"],

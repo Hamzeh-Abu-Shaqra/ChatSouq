@@ -84,11 +84,25 @@ export default function ScraperDashboard() {
     }
   };
 
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const [refreshing, setRefreshing] = useState(false);
+
+  const refresh = async () => {
+    setRefreshing(true);
+    await Promise.all([fetchStats(), fetchData(activeTab, page)]);
+    setLastRefresh(new Date());
+    setRefreshing(false);
+  };
+
   useEffect(() => {
     fetchStats();
-    const interval = setInterval(fetchStats, 30000);
+    const interval = setInterval(() => {
+      fetchStats();
+      fetchData(activeTab, page);
+      setLastRefresh(new Date());
+    }, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [activeTab, page]);
 
   useEffect(() => {
     setPage(1);
@@ -109,18 +123,30 @@ export default function ScraperDashboard() {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-green-400 text-xs font-mono">LIVE</span>
+              <div className={`w-2 h-2 rounded-full ${refreshing ? "bg-yellow-400" : "bg-green-400 animate-pulse"}`} />
+              <span className={`text-xs font-mono ${refreshing ? "text-yellow-400" : "text-green-400"}`}>
+                {refreshing ? "REFRESHING..." : "LIVE"}
+              </span>
+              <span className="text-zinc-600 text-xs">· refreshes every 30s</span>
             </div>
             <h1 className="text-2xl font-bold">ChatSouq Scraper</h1>
-            <p className="text-zinc-500 text-sm">Amman, Jordan</p>
+            <p className="text-zinc-500 text-sm">Amman, Jordan · Last updated: {timeAgo(lastRefresh.toISOString())}</p>
           </div>
-          {stats && (
-            <div className="text-right">
-              <p className="text-3xl font-bold">{stats.total.toLocaleString()}</p>
-              <p className="text-zinc-500 text-xs">total records</p>
-            </div>
-          )}
+          <div className="flex items-center gap-4">
+            {stats && (
+              <div className="text-right">
+                <p className="text-3xl font-bold">{stats.total.toLocaleString()}</p>
+                <p className="text-zinc-500 text-xs">total records</p>
+              </div>
+            )}
+            <button
+              onClick={refresh}
+              disabled={refreshing}
+              className="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm disabled:opacity-50 transition-colors"
+            >
+              {refreshing ? "⟳" : "↺"} Refresh
+            </button>
+          </div>
         </div>
       </div>
 

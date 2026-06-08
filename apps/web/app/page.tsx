@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import type { AssistResponse, NeighborhoodCard, InfoCard, ConvMessage } from "@chatsouq/core";
 import {
   AltCard, BestCard,
@@ -12,12 +12,25 @@ import {
   SkeletonCard,
 } from "../components/cards";
 
+const SESSION_KEY = "chatsouq_session_id";
+
+function getOrCreateSessionId(): string {
+  if (typeof window === "undefined") return crypto.randomUUID();
+  const stored = localStorage.getItem(SESSION_KEY);
+  if (stored) return stored;
+  const fresh = crypto.randomUUID();
+  localStorage.setItem(SESSION_KEY, fresh);
+  return fresh;
+}
+
 interface Turn {
   id: number;
   query: string;
   status: "loading" | "done" | "error";
-  response?: AssistResponse;
+  response?: AssistResponse & { sessionId?: string };
   error?: string;
+  conversationId?: string;
+  feedback?: 1 | -1;
 }
 
 const EXAMPLES = [
@@ -104,15 +117,95 @@ function buildHistory(currentTurns: Turn[]): ConvMessage[] {
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function Page() {
-  const [input, setInput]   = useState("");
-  const [turns, setTurns]   = useState<Turn[]>([]);
-  const [busy, setBusy]     = useState(false);
-  const sessionId           = useRef<string>(Math.random().toString(36).slice(2));
-  const bottomRef           = useRef<HTMLDivElement>(null);
+  const [input, setInput]         = useState("");
+  const [turns, setTurns]         = useState<Turn[]>([]);
+  const [busy, setBusy]           = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
+  const [memoryActive, setMemoryActive]   = useState(false);
+  const sessionIdRef              = useRef<string>("");
+  const conversationIdRef         = useRef<string | null>(null);
+  const bottomRef                 = useRef<HTMLDivElement>(null);
+
+  // Initialise session from localStorage and restore history from DB
+  useEffect(() => {
+    const sid = getOrCreateSessionId();
+    sessionIdRef.current = sid;
+
+    fetch(`/api/history?sessionId=${encodeURIComponent(sid)}`)
+      .then((r) => r.json())
+      .then((data: {
+        conversationId: string | null;
+        messages: ConvMessage[];
+        prefs: Record<string, unknown>;
+        turnCount: number;
+      }) => {
+        conversationIdRef.current = data.conversationId;
+        // If there are prior turns, reconstruct them into the Turn list so the
+        // user sees their conversation history on page load.
+        if (data.messages && data.messages.length >= 2) {
+          const restored: Turn[] = [];
+          for (let i = 0; i < data.messages.length - 1; i += 2) {
+            const uMsg = data.messages[i];
+            const aMsg = data.messages[i + 1];
+            if (uMsg?.role === "user" && aMsg?.role === "assistant") {
+              restored.push({
+                id: i,
+                query: uMsg.content,
+                status: "done",
+                // We only have text for restored turns, no structured response
+                response: {
+                  kind: "general",
+                  query: uMsg.content,
+                  intentType: "general",
+                  summary: aMsg.content,
+                  cards: [],
+                  meta: { provider: "restored", tookMs: 0 },
+                } as AssistResponse,
+              });
+            }
+          }
+          if (restored.length > 0) setTurns(restored);
+        }
+        // If prefs have been learned, show the memory indicator
+        if (data.prefs && Object.keys(data.prefs).length > 0) {
+          setMemoryActive(true);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setHistoryLoaded(true));
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [turns]);
+
+  const sendFeedback = useCallback((
+    query: string,
+    res: AssistResponse,
+    rating: 1 | -1,
+    clickedId?: number
+  ) => {
+    const shownIds =
+      res.kind === "products"
+        ? [res.best?.listing.id, ...res.alternatives.map((a) => a.listing.id)].filter(Boolean) as number[]
+        : res.kind === "places"
+        ? [res.best?.place.id, ...res.alternatives.map((a) => a.place.id)].filter(Boolean) as number[]
+        : [];
+
+    fetch("/api/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sessionId: sessionIdRef.current,
+        conversationId: conversationIdRef.current,
+        query,
+        resultKind: res.kind,
+        shownIds,
+        clickedId,
+        rating,
+      }),
+    }).catch(() => {});
+  }, []);
 
   async function ask(query: string) {
     const q = query.trim();
@@ -120,17 +213,22 @@ export default function Page() {
     setBusy(true);
     setInput("");
     const id = Date.now();
-    const history = buildHistory(turns);
     setTurns((t) => [...t, { id, query: q, status: "loading" }]);
 
     try {
       const res = await fetch("/api/recommend", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: q, sessionId: sessionId.current, history }),
+        // Send sessionId only — the server loads history from DB
+        body: JSON.stringify({ query: q, sessionId: sessionIdRef.current }),
       });
       if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error ?? "Request failed");
-      const data = (await res.json()) as AssistResponse;
+      const data = (await res.json()) as AssistResponse & { sessionId?: string };
+      // Update conversationId if server created one
+      if ((data as { conversationId?: string }).conversationId) {
+        conversationIdRef.current = (data as { conversationId?: string }).conversationId ?? null;
+      }
+      setMemoryActive(true);
       setTurns((t) => t.map((x) => (x.id === id ? { ...x, status: "done", response: data } : x)));
     } catch (e) {
       setTurns((t) =>
@@ -141,11 +239,20 @@ export default function Page() {
     }
   }
 
-  const empty = turns.length === 0;
+  function newConversation() {
+    const fresh = crypto.randomUUID();
+    localStorage.setItem(SESSION_KEY, fresh);
+    sessionIdRef.current = fresh;
+    conversationIdRef.current = null;
+    setTurns([]);
+    setMemoryActive(false);
+  }
+
+  const empty = turns.length === 0 && historyLoaded;
 
   return (
     <div className="mx-auto flex min-h-screen max-w-3xl flex-col px-4">
-      <Header />
+      <Header memoryActive={memoryActive} onNewConversation={newConversation} />
 
       <main className="flex-1 pb-48">
         {empty ? (
@@ -153,7 +260,16 @@ export default function Page() {
         ) : (
           <div className="space-y-8 py-6">
             {turns.map((t) => (
-              <TurnView key={t.id} turn={t} />
+              <TurnView
+                key={t.id}
+                turn={t}
+                onFeedback={(rating, clickedId) => {
+                  if (t.response) {
+                    sendFeedback(t.query, t.response, rating, clickedId);
+                    setTurns((prev) => prev.map((x) => x.id === t.id ? { ...x, feedback: rating } : x));
+                  }
+                }}
+              />
             ))}
             <div ref={bottomRef} />
           </div>
@@ -173,7 +289,13 @@ export default function Page() {
 
 // ── Header ────────────────────────────────────────────────────────────────────
 
-function Header() {
+function Header({
+  memoryActive,
+  onNewConversation,
+}: {
+  memoryActive: boolean;
+  onNewConversation: () => void;
+}) {
   return (
     <header className="flex items-center justify-between py-4 border-b border-black/[0.06]">
       <div className="flex items-center gap-2.5">
@@ -182,12 +304,32 @@ function Header() {
           Chat<span className="text-souq-600">Souq</span>
         </span>
       </div>
-      <div className="flex items-center gap-1.5">
-        <span className="relative flex h-2 w-2">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-souq-400 opacity-60" />
-          <span className="relative inline-flex h-2 w-2 rounded-full bg-souq-500" />
-        </span>
-        <span className="text-xs font-medium text-ink-400">Jordan · Live data</span>
+      <div className="flex items-center gap-3">
+        {/* Memory indicator — shown when the AI has learned user prefs */}
+        {memoryActive && (
+          <div className="flex items-center gap-1 rounded-full bg-violet-50 px-2.5 py-1 ring-1 ring-violet-200/60">
+            <span className="text-[10px]">🧠</span>
+            <span className="text-[10px] font-semibold text-violet-600 tracking-wide">Learning</span>
+          </div>
+        )}
+        {/* New conversation */}
+        <button
+          onClick={onNewConversation}
+          title="Start a new conversation"
+          className="flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-medium text-ink-400 ring-1 ring-black/[0.07] transition hover:bg-sand-50 hover:text-ink-700"
+        >
+          <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
+            <path d="M8 1v14M1 8h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+          New
+        </button>
+        <div className="flex items-center gap-1.5">
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-souq-400 opacity-60" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-souq-500" />
+          </span>
+          <span className="text-xs font-medium text-ink-400">Live</span>
+        </div>
       </div>
     </header>
   );
@@ -295,7 +437,13 @@ function Hero({ onPick }: { onPick: (q: string) => void }) {
 
 // ── Turn (one Q&A pair) ───────────────────────────────────────────────────────
 
-function TurnView({ turn }: { turn: Turn }) {
+function TurnView({
+  turn,
+  onFeedback,
+}: {
+  turn: Turn;
+  onFeedback: (rating: 1 | -1, clickedId?: number) => void;
+}) {
   const isRtl = /[؀-ۿ]/.test(turn.query);
 
   return (
@@ -335,10 +483,63 @@ function TurnView({ turn }: { turn: Turn }) {
           )}
 
           {turn.status === "done" && turn.response && (
-            <ResponseView res={turn.response} />
+            <>
+              <ResponseView res={turn.response} />
+              {/* Feedback row — only shown after a real answer */}
+              <FeedbackRow
+                feedback={turn.feedback}
+                onThumbUp={() => onFeedback(1)}
+                onThumbDown={() => onFeedback(-1)}
+              />
+            </>
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── Feedback row ──────────────────────────────────────────────────────────────
+
+function FeedbackRow({
+  feedback,
+  onThumbUp,
+  onThumbDown,
+}: {
+  feedback?: 1 | -1;
+  onThumbUp: () => void;
+  onThumbDown: () => void;
+}) {
+  if (feedback !== undefined) {
+    return (
+      <p className="mt-2 text-[10px] text-ink-300">
+        {feedback === 1 ? "👍 Thanks — I'll keep improving!" : "👎 Got it — I'll do better next time."}
+      </p>
+    );
+  }
+  return (
+    <div className="mt-2 flex items-center gap-2">
+      <span className="text-[10px] text-ink-300">Was this helpful?</span>
+      <button
+        onClick={onThumbUp}
+        className="rounded-md p-1 text-ink-300 transition hover:bg-green-50 hover:text-green-600"
+        title="Good answer"
+      >
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z"/>
+          <path d="M7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/>
+        </svg>
+      </button>
+      <button
+        onClick={onThumbDown}
+        className="rounded-md p-1 text-ink-300 transition hover:bg-red-50 hover:text-red-500"
+        title="Not helpful"
+      >
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M10 15v4a3 3 0 003 3l4-9V2H5.72a2 2 0 00-2 1.7l-1.38 9a2 2 0 002 2.3H10z"/>
+          <path d="M17 2h2.67A2.31 2.31 0 0122 4v7a2.31 2.31 0 01-2.33 2H17"/>
+        </svg>
+      </button>
     </div>
   );
 }

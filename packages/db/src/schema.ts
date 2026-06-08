@@ -2,6 +2,7 @@ import {
   pgTable,
   integer,
   bigint,
+  boolean,
   doublePrecision,
   text,
   numeric,
@@ -207,5 +208,100 @@ export type Region = typeof regions.$inferSelect;
 export type NewRegion = typeof regions.$inferInsert;
 export type Place = typeof places.$inferSelect;
 export type NewPlace = typeof places.$inferInsert;
+// --- Conversation threads (persistent per-session chat history) ---------------
+
+/**
+ * Every chat session is stored as a thread. sessionId is generated client-side
+ * (UUID in localStorage). Messages are appended on every turn. The AI extracts
+ * structured preferences after each exchange and stores them in extractedPrefs
+ * so future turns get personalized context automatically.
+ */
+export const conversations = pgTable(
+  "conversations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sessionId: text("session_id").notNull(),
+    userId: uuid("user_id").references(() => users.id),
+    // Full message history: [{role:"user"|"assistant", content:"..."}]
+    messages: jsonb("messages").$type<{ role: string; content: string }[]>().default([]),
+    // AI-extracted facts: budget, area, preferences, interests
+    extractedPrefs: jsonb("extracted_prefs").$type<Record<string, unknown>>().default({}),
+    // Short summary Claude generates after every 4 turns (for long-thread recall)
+    summary: text("summary"),
+    turnCount: integer("turn_count").default(0).notNull(),
+    lastQuery: text("last_query"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    sessionIdx: index("conversations_session_idx").on(t.sessionId),
+    userIdx: index("conversations_user_idx").on(t.userId),
+    updatedIdx: index("conversations_updated_idx").on(t.updatedAt),
+  })
+);
+
+// --- Query feedback (click + rating signals for learning) ---------------------
+
+/**
+ * Every time a user clicks a result, rates an answer, or explicitly dismisses,
+ * we record it here. Positive signals (clicks, thumbs-up) are the training data
+ * for the embedding fine-tuning pipeline. Negative signals identify gaps.
+ */
+export const queryFeedback = pgTable(
+  "query_feedback",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sessionId: text("session_id"),
+    conversationId: uuid("conversation_id").references(() => conversations.id),
+    query: text("query").notNull(),
+    resultKind: text("result_kind"), // 'products' | 'places' | 'general'
+    // IDs of results shown to the user
+    shownIds: jsonb("shown_ids").$type<number[]>().default([]),
+    // ID the user clicked / engaged with (null = no click = implicit negative)
+    clickedId: integer("clicked_id"),
+    clickedRank: integer("clicked_rank"), // 0=best, 1=alt1, etc.
+    // Explicit rating: 1=thumbs-up, -1=thumbs-down, null=no rating
+    rating: integer("rating"),
+    // Optional free-text from user ("this is wrong", "perfect!")
+    feedbackText: text("feedback_text"),
+    // Whether the result was flagged as irrelevant
+    irrelevant: boolean("irrelevant").default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    sessionIdx: index("qfeedback_session_idx").on(t.sessionId),
+    queryIdx:   index("qfeedback_query_idx").on(t.query),
+    ratingIdx:  index("qfeedback_rating_idx").on(t.rating),
+  })
+);
+
+// --- Learning analytics: aggregated signal for ranking improvement ------------
+
+/**
+ * Aggregated per-(query, resultId) click stats. Updated by a nightly job.
+ * Used to boost results that consistently get clicked for similar queries.
+ */
+export const clickStats = pgTable(
+  "click_stats",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    queryNorm: text("query_norm").notNull(), // lowercased, stripped query
+    resultId: integer("result_id").notNull(),
+    resultKind: text("result_kind").notNull(),
+    impressions: integer("impressions").default(0).notNull(),
+    clicks: integer("clicks").default(0).notNull(),
+    thumbsUp: integer("thumbs_up").default(0).notNull(),
+    thumbsDown: integer("thumbs_down").default(0).notNull(),
+    ctr: doublePrecision("ctr").default(0), // clicks / impressions
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => ({
+    queryResultIdx: uniqueIndex("click_stats_qr_idx").on(t.queryNorm, t.resultId, t.resultKind),
+    ctrIdx: index("click_stats_ctr_idx").on(t.ctr),
+  })
+);
+
 export type User = typeof users.$inferSelect;
 export type UserProfile = typeof userProfiles.$inferSelect;
+export type Conversation = typeof conversations.$inferSelect;
+export type QueryFeedback = typeof queryFeedback.$inferSelect;

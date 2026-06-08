@@ -392,7 +392,8 @@ async function callClaude(
   history: ConvMessage[],
   intentType: GeneralIntentType,
   budget: number | null,
-  city: string
+  city: string,
+  memoryBlock = ""
 ): Promise<{ answer: string; cards: NeighborhoodCard[] | InfoCard[] }> {
 
   const isRental = intentType === "rental" || intentType === "lifestyle";
@@ -482,6 +483,7 @@ async function callClaude(
   const systemPrompt = isRental
     ? `You are ChatSouq, Jordan's expert AI assistant for real estate and neighborhoods.
 ${langNote}
+${memoryBlock}
 ${neighborhoodRefBlock}
 ${liveListingsBlock}
 The user is asking about rental areas${budget ? ` with a monthly budget of ${budget} JOD` : ""} in ${cityDisplay}.
@@ -564,6 +566,7 @@ Limit to 5 cards.`
 3. Deep training knowledge of Jordan — geography, culture, economy, government, daily life
 
 ${langNote}
+${memoryBlock}
 ${webBlock}
 ${history.length > 0 ? "\nConversation history (use for context and continuity — don't repeat what was already said):\n" + history.filter(m => m.role === "user").map(m => `User: ${m.content}`).join("\n") : ""}
 
@@ -670,7 +673,9 @@ export async function generalAnswer(
         : `ChatSouq can answer general questions about Jordan when connected to its AI reasoning engine. Try asking about a product to buy or a place to visit instead.`;
     }
   } else {
-    const result = await callClaude(provider, input.query, history, intentType, budget, city);
+    // Extract memory block if passed through from the API route
+    const memoryBlock = (input as RecommendInput & { _memoryBlock?: string })._memoryBlock ?? "";
+    const result = await callClaude(provider, input.query, history, intentType, budget, city, memoryBlock);
     answer = result.answer;
     cards = result.cards as NeighborhoodCard[] | InfoCard[];
 

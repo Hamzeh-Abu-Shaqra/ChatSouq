@@ -7,3 +7,13 @@ export { parseConstraints, applyProfile } from "./intent";
 export { getCategories } from "./retrieve";
 export { formatJOD } from "./explain";
 export { webSearch, formatWebResults } from "./web-search";
+export {
+  loadThread,
+  appendTurn,
+  extractPreferences,
+  maybeUpdateSummary,
+  buildMemoryBlock,
+  recordFeedback,
+  getCtrBoosts,
+} from "./memory";
+export type { ExtractedPrefs, ThreadContext } from "./memory";

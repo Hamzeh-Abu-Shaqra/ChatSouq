@@ -3,6 +3,7 @@ import { parseConstraints, applyProfile, enrichWithLLM } from "./intent";
 import { getCategories, retrieve } from "./retrieve";
 import { rankCandidates, type ScoredCandidate } from "./rank";
 import { explainItems } from "./explain";
+import { getCtrBoosts } from "./memory";
 import type {
   Candidate,
   Constraints,
@@ -125,7 +126,20 @@ export async function recommend(
   const relaxedBudget = requestedBudget && !chosen.b;
   const _ = chosen; // suppress unused variable warning
 
-  const allRanked = rankCandidates(candidates, constraints).slice(0, limit * 2);
+  // Fetch CTR boosts from historical click data — results people previously
+  // clicked for similar queries get a small relevance bonus (max 0.15).
+  const ctrBoosts = await getCtrBoosts(
+    input.query,
+    candidates.map((c) => c.id),
+    "products"
+  );
+  // Apply CTR boost to vecSim before ranking
+  const boostedCandidates = candidates.map((c) => {
+    const boost = ctrBoosts.get(c.id) ?? 0;
+    return boost > 0 ? { ...c, vecSim: Math.min(1, c.vecSim + boost) } : c;
+  });
+
+  const allRanked = rankCandidates(boostedCandidates, constraints).slice(0, limit * 2);
 
   // When keywords exist, the best pick must match at least one keyword in name or searchText.
   // This prevents off-category items (e.g. vinyl record for headphones) from winning.

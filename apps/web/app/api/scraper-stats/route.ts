@@ -3,21 +3,30 @@ import { neon } from "@neondatabase/serverless";
 
 const sql = neon(process.env.DATABASE_URL!);
 
+async function safeCount(query: Promise<any[]>) {
+  try {
+    const result = await query;
+    return result[0] ?? { count: 0, last_scraped: null };
+  } catch {
+    return { count: 0, last_scraped: null };
+  }
+}
+
 export async function GET() {
   try {
     const [news, places, restaurants, listings, companies] = await Promise.all([
-      sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_news`,
-      sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_places`,
-      sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_restaurants`,
-      sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_listings`,
-      sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_companies`,
+      safeCount(sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_news`),
+      safeCount(sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_places`),
+      safeCount(sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_restaurants`),
+      safeCount(sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_listings`),
+      safeCount(sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_companies`),
     ]);
 
-    const n = news[0] ?? { count: 0, last_scraped: null };
-    const p = places[0] ?? { count: 0, last_scraped: null };
-    const r = restaurants[0] ?? { count: 0, last_scraped: null };
-    const l = listings[0] ?? { count: 0, last_scraped: null };
-    const c = companies[0] ?? { count: 0, last_scraped: null };
+    const n = news;
+    const p = places;
+    const r = restaurants;
+    const l = listings;
+    const c = companies;
 
     return NextResponse.json({
       tables: [

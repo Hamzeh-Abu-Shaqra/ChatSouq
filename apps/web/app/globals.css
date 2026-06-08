@@ -4,11 +4,10 @@
 
 :root {
   color-scheme: light;
-  --color-paper: #f4f1ea;
+  --color-paper: #f9f8f6;
 }
 
-html,
-body {
+html, body {
   padding: 0;
   margin: 0;
 }
@@ -16,8 +15,9 @@ body {
 body {
   background-color: var(--color-paper);
   background-image:
-    radial-gradient(ellipse 1100px 480px at 78% -8%,  rgba(16, 185, 129, 0.07), transparent 65%),
-    radial-gradient(ellipse  700px 380px at -8%  18%, rgba(234, 179, 8, 0.05), transparent 60%);
+    radial-gradient(ellipse 1000px 500px at 88%  -5%, rgba(16,185,129,0.055), transparent 65%),
+    radial-gradient(ellipse  650px 420px at  -6%  22%, rgba(234,179,8,0.04),  transparent 60%),
+    radial-gradient(ellipse  500px 300px at  50% 110%, rgba(79,70,229,0.025), transparent 70%);
   color: #0d1117;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -25,11 +25,12 @@ body {
   font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
 }
 
-/* ── Shimmer skeleton ─────────────────────────────────────────────────────── */
+/* ── Shimmer skeleton ────────────────────────── */
 .shimmer {
   position: relative;
   overflow: hidden;
-  background-color: #ede8df;
+  background-color: #eceae4;
+  border-radius: 6px;
 }
 .shimmer::after {
   content: "";
@@ -39,19 +40,17 @@ body {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.60) 50%,
+    rgba(255,255,255,0.68) 50%,
     transparent 100%
   );
-  animation: shimmer 1.5s ease-in-out infinite;
+  animation: shimmer 1.6s ease-in-out infinite;
 }
-@keyframes shimmer {
-  100% { transform: translateX(100%); }
-}
+@keyframes shimmer { 100% { transform: translateX(100%); } }
 
-/* ── Typing dots ──────────────────────────────────────────────────────────── */
+/* ── Typing dots ─────────────────────────────── */
 @keyframes typing-dot {
-  0%, 60%, 100% { transform: translateY(0);    opacity: 0.4; }
-  30%            { transform: translateY(-4px); opacity: 1;   }
+  0%, 60%, 100% { transform: translateY(0);    opacity: 0.35; }
+  30%           { transform: translateY(-4px); opacity: 1;    }
 }
 .typing-dot {
   animation: typing-dot 1.2s ease-in-out infinite;
@@ -59,18 +58,26 @@ body {
 .typing-dot:nth-child(2) { animation-delay: 0.15s; }
 .typing-dot:nth-child(3) { animation-delay: 0.30s; }
 
-/* ── Scrollbar ────────────────────────────────────────────────────────────── */
-::-webkit-scrollbar       { width: 8px; height: 8px; }
+/* ── Scrollbar ───────────────────────────────── */
+::-webkit-scrollbar       { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(6, 95, 70, 0.14);
+  background: rgba(6,95,70,0.12);
   border-radius: 999px;
-  border: 2px solid var(--color-paper);
+  border: 1px solid var(--color-paper);
 }
-::-webkit-scrollbar-thumb:hover { background: rgba(6, 95, 70, 0.24); }
+::-webkit-scrollbar-thumb:hover { background: rgba(6,95,70,0.22); }
 
-/* ── Focus visible ────────────────────────────────────────────────────────── */
+/* ── Focus visible ───────────────────────────── */
 :focus-visible {
   outline: 2px solid #059669;
   outline-offset: 2px;
+}
+
+/* ── Smooth card hover ───────────────────────── */
+.card-hover {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.card-hover:hover {
+  transform: translateY(-1px);
 }

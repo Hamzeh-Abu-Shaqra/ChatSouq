@@ -5,7 +5,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        paper: "#f4f1ea",
+        paper: "#f9f8f6",
         ink: {
           900: "#0d1117",
           800: "#1f2937",
@@ -15,6 +15,7 @@ export default {
           400: "#9ca3af",
           300: "#d1d5db",
           200: "#e5e7eb",
+          100: "#f3f4f6",
         },
         sand: {
           50:  "#faf7f2",
@@ -42,9 +43,63 @@ export default {
         blue: {
           50:  "#eff6ff",
           100: "#dbeafe",
+          600: "#2563eb",
           700: "#1d4ed8",
         },
-        indigo:  { 50: "#eef2ff" },
+        teal: {
+          50:  "#f0fdfa",
+          100: "#ccfbf1",
+          500: "#14b8a6",
+          600: "#0d9488",
+          700: "#0f766e",
+        },
+        orange: {
+          50:  "#fff7ed",
+          100: "#ffedd5",
+          500: "#f97316",
+          600: "#ea580c",
+          700: "#c2410c",
+        },
+        cyan: {
+          50:  "#ecfeff",
+          100: "#cffafe",
+          500: "#06b6d4",
+          600: "#0891b2",
+          700: "#0e7490",
+        },
+        rose: {
+          50:  "#fff1f2",
+          100: "#ffe4e6",
+          500: "#f43f5e",
+          600: "#e11d48",
+          700: "#be123c",
+        },
+        slate: {
+          50:  "#f8fafc",
+          100: "#f1f5f9",
+          200: "#e2e8f0",
+          500: "#64748b",
+          600: "#475569",
+          700: "#334155",
+        },
+        violet: {
+          50:  "#f5f3ff",
+          100: "#ede9fe",
+          600: "#7c3aed",
+          700: "#6d28d9",
+        },
+        green: {
+          50:  "#f0fdf4",
+          100: "#dcfce7",
+          600: "#16a34a",
+          700: "#15803d",
+        },
+        indigo: {
+          50:  "#eef2ff",
+          100: "#e0e7ff",
+          600: "#4f46e5",
+          700: "#4338ca",
+        },
         emerald: { 50: "#ecfdf5" },
         purple: {
           50:  "#faf5ff",
@@ -69,22 +124,29 @@ export default {
         "2xs": ["0.65rem", { lineHeight: "1rem" }],
       },
       boxShadow: {
-        sm:    "0 1px 3px rgba(0,0,0,0.06)",
-        card:  "0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06)",
-        float: "0 4px 24px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)",
-        best:  "0 8px 32px -4px rgba(5,150,105,0.20), 0 2px 8px rgba(0,0,0,0.06)",
+        sm:     "0 1px 3px rgba(0,0,0,0.06)",
+        card:   "0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06)",
+        float:  "0 4px 24px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)",
+        best:   "0 8px 32px -4px rgba(5,150,105,0.16), 0 2px 8px rgba(0,0,0,0.05)",
+        rental: "0 8px 32px -4px rgba(37,99,235,0.16), 0 2px 8px rgba(0,0,0,0.05)",
+        pro:    "0 8px 32px -4px rgba(8,145,178,0.16), 0 2px 8px rgba(0,0,0,0.05)",
       },
       keyframes: {
         "fade-up": {
-          "0%":   { opacity: "0", transform: "translateY(10px)" },
+          "0%":   { opacity: "0", transform: "translateY(8px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "scale-in": {
+          "0%":   { opacity: "0", transform: "scale(0.97)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
         },
         shimmer: {
           "100%": { transform: "translateX(100%)" },
         },
       },
       animation: {
-        "fade-up": "fade-up 0.35s ease-out both",
+        "fade-up":  "fade-up 0.30s ease-out both",
+        "scale-in": "scale-in 0.25s ease-out both",
       },
     },
   },

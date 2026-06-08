@@ -264,6 +264,31 @@ const PLACE_HINTS: Record<string, string[]> = {
   "مكتبة":         ["Bookstore"],
   "بيطري":         ["Veterinary"],
   "نظارات":        ["Optician"],
+
+  // ── Gifts & Flowers ────────────────────────────────────────────────────────
+  gift:             ["Gift Shop", "Souvenir Shop"],
+  gifts:            ["Gift Shop", "Souvenir Shop"],
+  "gift shop":      ["Gift Shop"],
+  "gift store":     ["Gift Shop"],
+  "gift center":    ["Gift Shop", "Souvenir Shop"],
+  "gifts center":   ["Gift Shop", "Souvenir Shop"],
+  souvenir:         ["Souvenir Shop"],
+  souvenirs:        ["Souvenir Shop"],
+  flowers:          ["Florist"],
+  "flower shop":    ["Florist"],
+  "flower bouquet": ["Florist"],
+  // Arabic gifts & flowers
+  "هدية":           ["Gift Shop"],
+  "هدايا":          ["Gift Shop", "Souvenir Shop"],
+  "محل هدايا":      ["Gift Shop"],
+  "مركز هدايا":     ["Gift Shop", "Souvenir Shop"],
+  "تذكارات":        ["Souvenir Shop"],
+  "ورد":            ["Florist"],
+  "ورود":           ["Florist"],
+  "زهور":           ["Florist"],
+  "زهرات":          ["Florist"],
+  "باقة ورد":       ["Florist"],
+  "محل ورود":       ["Florist"],
 };
 
 let categoryCache: { at: number; values: string[] } | null = null;

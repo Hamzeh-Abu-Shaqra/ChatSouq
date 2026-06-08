@@ -55,6 +55,12 @@ const TYPE_ATTRIBUTES: { required: RegExp; absent?: RegExp; marker: string }[] =
   // Cameras
   { marker: "mirrorless",   required: /\b(mirrorless|ilce|alpha|eos.?r|z-?series|om.?system|x-?series)\b/i },
   { marker: "dslr",         required: /\b(dslr|reflex|digital.?slr)\b/i },
+  // Fragrance product form — "perfume" must not return hair/body mists
+  {
+    marker: "perfume",
+    required: /\b(perfume|eau.?de.?parfum|eau.?de.?toilette|edp|edt|parfum|cologne|edc)\b/i,
+    absent:   /\b(hair.?mist|body.?mist|hair.?spray)\b/i,
+  },
 ];
 
 /**
@@ -104,6 +110,9 @@ function typeMatchScore(c: Candidate, keywords: string[]): number {
     // Check if user requested this attribute
     const userWants = queryAttrs.some((k) => attr.required.test(k) || k === attr.marker);
     if (!userWants) continue;
+    // Hard exclude: item is definitively the WRONG product form (e.g. hair mist when
+    // user asked for perfume, wired-only when user asked for wireless).
+    if (attr.absent && attr.absent.test(hay)) return 0;
     requestedCount++;
     if (attr.required.test(hay)) matchedCount++;
   }

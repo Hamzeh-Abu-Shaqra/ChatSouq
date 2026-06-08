@@ -17,6 +17,15 @@ from dotenv import load_dotenv
 
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
 
+
+def detect_language(text: str) -> str:
+    """Detect AR vs EN from actual character content — ignores query language."""
+    if not text:
+        return "en"
+    arabic = sum(1 for c in text if "؀" <= c <= "ۿ")
+    return "ar" if arabic / max(len(text), 1) > 0.15 else "en"
+
+
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
     "Accept": "application/rss+xml, application/xml, text/xml, */*",
@@ -163,6 +172,16 @@ def setup_table():
         "ALTER TABLE jordan_news ADD COLUMN IF NOT EXISTS published_at TIMESTAMP",
     ]:
         cur.execute(stmt)
+
+    # Fix existing rows: re-detect language from actual title text
+    cur.execute("""
+        UPDATE jordan_news
+        SET language = CASE
+            WHEN title ~ '[\\u0600-\\u06FF]' THEN 'ar'
+            ELSE 'en'
+        END
+        WHERE language IS NULL OR language = 'en'
+    """)
     conn.commit()
     cur.close()
     conn.close()
@@ -221,7 +240,7 @@ def parse_rss(xml_text, source_name, language):
                 "title": title,
                 "url": url,
                 "source": real_source,
-                "language": language,
+                "language": detect_language(title),   # detect from actual text
                 "summary": desc,
                 "published_at": published,
             })
@@ -325,7 +344,7 @@ def scrape_playwright_source(source):
                         "title": title,
                         "url": href,
                         "source": source["name"],
-                        "language": source["language"],
+                        "language": detect_language(title),
                         "summary": None,
                         "published_at": None,
                     })

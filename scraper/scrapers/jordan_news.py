@@ -5,11 +5,13 @@ Fallback: Playwright for sites without RSS
 Sources: Jordan Times, Petra News Agency, Al-Ghad, Jo24, Al-Rai, Roya News
 """
 import os
+import re
 import time
 import requests
 import psycopg2
 import xml.etree.ElementTree as ET
 from datetime import datetime
+from email.utils import parsedate_to_datetime
 from playwright.sync_api import sync_playwright
 from dotenv import load_dotenv
 
@@ -148,13 +150,11 @@ def parse_rss(xml_text, source_name, language):
 
         # Strip HTML from description
         if desc:
-            import re
             desc = re.sub(r"<[^>]+>", "", desc).strip()[:300]
 
         published = None
         if date_el is not None and date_el.text:
             try:
-                from email.utils import parsedate_to_datetime
                 published = parsedate_to_datetime(date_el.text).replace(tzinfo=None)
             except Exception:
                 pass

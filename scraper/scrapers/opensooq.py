@@ -270,10 +270,11 @@ def run():
     total = 0
 
     with sync_playwright() as p:
-        context = p.chromium.launch(
+        browser = p.chromium.launch(
             headless=True,
             args=["--no-sandbox", "--disable-dev-shm-usage"],
-        ).new_context(
+        )
+        context = browser.new_context(
             user_agent=(
                 "Mozilla/5.0 (Linux; Android 13; Pixel 7) "
                 "AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -295,7 +296,7 @@ def run():
             total += saved
             time.sleep(2)
 
-        context.browser.close()
+        browser.close()
 
     print(f"OpenSooq done. Total saved: {total}")
 

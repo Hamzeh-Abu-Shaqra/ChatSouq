@@ -25,6 +25,7 @@ const TABS = [
   { key: "restaurants", label: "Restaurants", icon: "🍔", source: "Talabat" },
   { key: "listings", label: "Listings", icon: "🛒", source: "OpenSooq" },
   { key: "companies", label: "Companies", icon: "💼", source: "LinkedIn" },
+  { key: "people", label: "People", icon: "👤", source: "Google Maps / Web" },
 ];
 
 const COLUMNS: Record<string, string[]> = {
@@ -33,6 +34,7 @@ const COLUMNS: Record<string, string[]> = {
   restaurants: ["name", "cuisine", "rating", "delivery_time"],
   listings: ["title", "price", "location", "category"],
   companies: ["name", "industry", "location"],
+  people: ["name", "title", "subcategory", "organization", "specialty", "phone"],
 };
 
 function timeAgo(date: string | null): string {
@@ -165,7 +167,7 @@ export default function ScraperDashboard() {
       {/* Stats Bar */}
       {stats && (
         <div className="border-b border-zinc-800 px-8 py-4">
-          <div className="max-w-7xl mx-auto grid grid-cols-5 gap-4">
+          <div className="max-w-7xl mx-auto grid grid-cols-6 gap-4">
             {stats.tables.map((t) => (
               <div key={t.name} className="text-center">
                 <p className="text-lg font-bold">{t.count.toLocaleString()}</p>

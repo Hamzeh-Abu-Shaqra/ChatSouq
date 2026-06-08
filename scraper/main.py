@@ -64,9 +64,17 @@ except Exception as e:
     print(f"  linkedin FAILED: {e}", flush=True)
     traceback.print_exc()
 
+try:
+    from scrapers.people import run as run_people
+    print("  people OK", flush=True)
+except Exception as e:
+    print(f"  people FAILED: {e}", flush=True)
+    traceback.print_exc()
+
 SCRAPERS = []
 for name, var in [("Google Maps", "run_maps"), ("Talabat", "run_talabat"),
                    ("OpenSooq", "run_opensooq"), ("LinkedIn", "run_linkedin"),
+                   ("People", "run_people"),
                    ("Roya News", "run_news")]:
     if var in dir():
         SCRAPERS.append((name, eval(var)))

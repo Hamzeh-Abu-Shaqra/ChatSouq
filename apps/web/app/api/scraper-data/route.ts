@@ -76,6 +76,28 @@ export async function GET(request: Request) {
       data = await safeQuery(sql`SELECT id, name, industry, location, url, scraped_at FROM jordan_companies ORDER BY scraped_at DESC LIMIT ${limit} OFFSET ${offset}`);
       const count = await safeQuery(sql`SELECT COUNT(*) as count FROM jordan_companies`);
       total = Number(count[0]?.count ?? 0);
+
+    } else if (table === "people") {
+      const cats = await safeQuery(sql`SELECT DISTINCT subcategory FROM jordan_people WHERE subcategory IS NOT NULL ORDER BY subcategory`);
+      categories = cats.map((c: any) => c.subcategory);
+
+      if (category && search) {
+        data = await safeQuery(sql`SELECT id, name, title, subcategory, organization, specialty, phone, address, scraped_at FROM jordan_people WHERE subcategory = ${category} AND name ILIKE ${'%' + search + '%'} ORDER BY scraped_at DESC LIMIT ${limit} OFFSET ${offset}`);
+        const count = await safeQuery(sql`SELECT COUNT(*) as count FROM jordan_people WHERE subcategory = ${category} AND name ILIKE ${'%' + search + '%'}`);
+        total = Number(count[0]?.count ?? 0);
+      } else if (category) {
+        data = await safeQuery(sql`SELECT id, name, title, subcategory, organization, specialty, phone, address, scraped_at FROM jordan_people WHERE subcategory = ${category} ORDER BY scraped_at DESC LIMIT ${limit} OFFSET ${offset}`);
+        const count = await safeQuery(sql`SELECT COUNT(*) as count FROM jordan_people WHERE subcategory = ${category}`);
+        total = Number(count[0]?.count ?? 0);
+      } else if (search) {
+        data = await safeQuery(sql`SELECT id, name, title, subcategory, organization, specialty, phone, address, scraped_at FROM jordan_people WHERE name ILIKE ${'%' + search + '%'} ORDER BY scraped_at DESC LIMIT ${limit} OFFSET ${offset}`);
+        const count = await safeQuery(sql`SELECT COUNT(*) as count FROM jordan_people WHERE name ILIKE ${'%' + search + '%'}`);
+        total = Number(count[0]?.count ?? 0);
+      } else {
+        data = await safeQuery(sql`SELECT id, name, title, subcategory, organization, specialty, phone, address, scraped_at FROM jordan_people ORDER BY scraped_at DESC LIMIT ${limit} OFFSET ${offset}`);
+        const count = await safeQuery(sql`SELECT COUNT(*) as count FROM jordan_people`);
+        total = Number(count[0]?.count ?? 0);
+      }
     }
 
     return NextResponse.json({ data, total, page, limit, categories });

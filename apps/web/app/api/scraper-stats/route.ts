@@ -16,12 +16,13 @@ async function safeCount(query: Promise<any[]>) {
 
 export async function GET() {
   try {
-    const [news, places, restaurants, listings, companies] = await Promise.all([
+    const [news, places, restaurants, listings, companies, people] = await Promise.all([
       safeCount(sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_news`),
       safeCount(sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_places`),
       safeCount(sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_restaurants`),
       safeCount(sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_listings`),
       safeCount(sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_companies`),
+      safeCount(sql`SELECT COUNT(*) as count, MAX(scraped_at) as last_scraped FROM jordan_people`),
     ]);
 
     const n = news;
@@ -29,6 +30,7 @@ export async function GET() {
     const r = restaurants;
     const l = listings;
     const c = companies;
+    const pe = people;
 
     return NextResponse.json({
       tables: [
@@ -37,8 +39,9 @@ export async function GET() {
         { name: "Restaurants", source: "Talabat", icon: "🍔", count: Number(r.count), last_scraped: r.last_scraped },
         { name: "Listings", source: "OpenSooq", icon: "🛒", count: Number(l.count), last_scraped: l.last_scraped },
         { name: "Companies", source: "LinkedIn", icon: "💼", count: Number(c.count), last_scraped: c.last_scraped },
+        { name: "People", source: "Google Maps / Web", icon: "👤", count: Number(pe.count), last_scraped: pe.last_scraped },
       ],
-      total: Number(n.count) + Number(p.count) + Number(r.count) + Number(l.count) + Number(c.count),
+      total: Number(n.count) + Number(p.count) + Number(r.count) + Number(l.count) + Number(c.count) + Number(pe.count),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

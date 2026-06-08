@@ -11,8 +11,9 @@ from dotenv import load_dotenv
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 
-# Talabat Amman area slugs — these cover all major Amman delivery zones
+# Talabat Jordan area slugs — covers all major cities and delivery zones
 AMMAN_AREA_URLS = [
+    # ── Amman ─────────────────────────────────────────────────────────────────
     "https://www.talabat.com/jordan/restaurants",
     "https://www.talabat.com/jordan/restaurants/822/abdali",
     "https://www.talabat.com/jordan/restaurants/823/abdoun",
@@ -33,6 +34,26 @@ AMMAN_AREA_URLS = [
     "https://www.talabat.com/jordan/restaurants/838/um-uthaina",
     "https://www.talabat.com/jordan/restaurants/839/marj-el-hamam",
     "https://www.talabat.com/jordan/restaurants/840/airport-road",
+    # ── Irbid ─────────────────────────────────────────────────────────────────
+    "https://www.talabat.com/jordan/restaurants/irbid",
+    "https://www.talabat.com/jordan/restaurants/841/irbid-city",
+    "https://www.talabat.com/jordan/restaurants/842/al-hussein-camp",
+    "https://www.talabat.com/jordan/restaurants/843/yarmouk-university",
+    # ── Zarqa ─────────────────────────────────────────────────────────────────
+    "https://www.talabat.com/jordan/restaurants/zarqa",
+    "https://www.talabat.com/jordan/restaurants/844/zarqa-city",
+    "https://www.talabat.com/jordan/restaurants/845/russeifa",
+    # ── Aqaba ─────────────────────────────────────────────────────────────────
+    "https://www.talabat.com/jordan/restaurants/aqaba",
+    "https://www.talabat.com/jordan/restaurants/846/aqaba-city",
+    # ── Salt ──────────────────────────────────────────────────────────────────
+    "https://www.talabat.com/jordan/restaurants/847/salt",
+    # ── Madaba ────────────────────────────────────────────────────────────────
+    "https://www.talabat.com/jordan/restaurants/848/madaba",
+    # ── Jerash ────────────────────────────────────────────────────────────────
+    "https://www.talabat.com/jordan/restaurants/849/jerash",
+    # ── Ajloun ────────────────────────────────────────────────────────────────
+    "https://www.talabat.com/jordan/restaurants/850/ajloun",
 ]
 
 
@@ -347,8 +368,14 @@ def scrape_talabat():
             },
         )
 
+        # Map city-level slugs to friendly names
+        CITY_LABELS = {
+            "irbid": "Irbid", "zarqa": "Zarqa", "aqaba": "Aqaba",
+            "salt": "Salt", "madaba": "Madaba", "jerash": "Jerash", "ajloun": "Ajloun",
+        }
         for area_url in AMMAN_AREA_URLS:
-            area_name = area_url.rstrip("/").split("/")[-1].replace("-", " ").title()
+            slug = area_url.rstrip("/").split("/")[-1]
+            area_name = CITY_LABELS.get(slug.lower(), slug.replace("-", " ").title())
             print(f"  Scraping area: {area_name}...")
             page = context.new_page()
 

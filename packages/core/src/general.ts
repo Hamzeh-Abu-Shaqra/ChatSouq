@@ -291,7 +291,182 @@ Amman: [
     cons: ["Limited modern amenities", "Older building stock", "Distance from west Amman"],
     bestFor: ["Families on tight budgets", "Local Jordanians", "Those working in east Amman"],
   },
-];
+],
+
+// ── Irbid ─────────────────────────────────────────────────────────────────────
+Irbid: [
+  {
+    name: "University District", nameAr: "منطقة الجامعة", city: "Irbid", governorate: "Irbid",
+    avgRentMin: 150, avgRentMax: 350, tier: "budget",
+    characteristics: ["Near Yarmouk University", "Student hub", "Lively cafes & shops", "Affordable"],
+    pros: ["Very affordable rents", "Lively student scene", "Good transport", "Many cheap restaurants"],
+    cons: ["Crowded & noisy", "Parking difficult", "Busy during term time"],
+    bestFor: ["University students", "Young professionals", "Budget renters"],
+  },
+  {
+    name: "Al-Husn", nameAr: "الحصن", city: "Irbid", governorate: "Irbid",
+    avgRentMin: 130, avgRentMax: 280, tier: "budget",
+    characteristics: ["North Irbid suburb", "Quiet residential", "Family-oriented", "Affordable"],
+    pros: ["Very affordable", "Quiet neighbourhood", "Good schools nearby", "Family atmosphere"],
+    cons: ["Car needed", "Limited nightlife", "Fewer modern amenities"],
+    bestFor: ["Families", "Budget renters", "Those who want quiet life"],
+  },
+  {
+    name: "City Centre", nameAr: "وسط البلد", city: "Irbid", governorate: "Irbid",
+    avgRentMin: 160, avgRentMax: 380, tier: "mid-range",
+    characteristics: ["Central Irbid", "Commercial district", "Well-connected", "All amenities nearby"],
+    pros: ["Everything walking distance", "Good transport links", "Markets & shops", "Central location"],
+    cons: ["Traffic congestion", "Noisy", "Older building stock"],
+    bestFor: ["Working professionals", "Singles", "Those who want city convenience"],
+  },
+  {
+    name: "Al-Rahebah", nameAr: "الراهبة", city: "Irbid", governorate: "Irbid",
+    avgRentMin: 200, avgRentMax: 450, tier: "mid-range",
+    characteristics: ["Upscale Irbid district", "Modern apartments", "Good schools", "Quiet"],
+    pros: ["Best quality housing in Irbid", "Safe & quiet", "Good schools nearby", "Modern buildings"],
+    cons: ["Higher rents for Irbid", "Car essential", "Limited entertainment"],
+    bestFor: ["Families", "Professionals", "Those wanting best Irbid has to offer"],
+  },
+],
+
+// ── Zarqa ─────────────────────────────────────────────────────────────────────
+Zarqa: [
+  {
+    name: "New Zarqa", nameAr: "الزرقاء الجديدة", city: "Zarqa", governorate: "Zarqa",
+    avgRentMin: 120, avgRentMax: 280, tier: "budget",
+    characteristics: ["Newer residential area", "More modern buildings", "Quieter", "Affordable"],
+    pros: ["More modern than old city", "Affordable rents", "Decent infrastructure", "Family-friendly"],
+    cons: ["Car essential", "Far from Amman (30 min)", "Limited upscale amenities"],
+    bestFor: ["Families on budget", "Workers in Zarqa industrial area", "Budget renters"],
+  },
+  {
+    name: "Old Zarqa", nameAr: "الزرقاء القديمة", city: "Zarqa", governorate: "Zarqa",
+    avgRentMin: 90, avgRentMax: 220, tier: "budget",
+    characteristics: ["Historic city centre", "Cheap", "Dense", "Working-class area"],
+    pros: ["Cheapest rents in Zarqa", "Good transport to Amman", "Strong local market"],
+    cons: ["Older buildings", "Dense & noisy", "Less modern infrastructure"],
+    bestFor: ["Extremely tight budgets", "Those working in Zarqa", "Local families"],
+  },
+  {
+    name: "Russeifa", nameAr: "رصيفة", city: "Zarqa", governorate: "Zarqa",
+    avgRentMin: 100, avgRentMax: 250, tier: "budget",
+    characteristics: ["Between Amman & Zarqa", "Affordable suburb", "Good access to both cities"],
+    pros: ["Easy access to both Amman and Zarqa", "Very affordable", "Growing area"],
+    cons: ["Crowded main road", "Traffic on highway", "Industrial feel in parts"],
+    bestFor: ["Budget renters", "Those working in either city", "Young families"],
+  },
+],
+
+// ── Aqaba ─────────────────────────────────────────────────────────────────────
+Aqaba: [
+  {
+    name: "City Centre", nameAr: "وسط البلد", city: "Aqaba", governorate: "Aqaba",
+    avgRentMin: 200, avgRentMax: 500, tier: "mid-range",
+    characteristics: ["Central Aqaba", "Near beach & port", "Walkable", "Lively"],
+    pros: ["Walking distance to beach", "All amenities close", "Good restaurants", "Sea breeze"],
+    cons: ["Tourist-heavy in season", "Traffic near port", "Limited parking"],
+    bestFor: ["Young professionals", "Expats", "Those who love the sea"],
+  },
+  {
+    name: "Al-Razi / Al-Zaher", nameAr: "الرازي / الزاهر", city: "Aqaba", governorate: "Aqaba",
+    avgRentMin: 150, avgRentMax: 350, tier: "budget",
+    characteristics: ["Residential neighbourhoods", "Away from tourist areas", "Quieter", "Local feel"],
+    pros: ["More affordable than seafront", "Quiet residential streets", "Good for families"],
+    cons: ["Need a car for beach", "Less walkable", "Far from tourist amenities"],
+    bestFor: ["Local families", "Long-term residents", "Budget renters"],
+  },
+  {
+    name: "Tala Bay / South Beach", nameAr: "تالا باي", city: "Aqaba", governorate: "Aqaba",
+    avgRentMin: 500, avgRentMax: 1500, tier: "luxury",
+    characteristics: ["Luxury beach resort area", "Private beaches", "International community", "5-star hotels"],
+    pros: ["Private beach access", "High security", "Stunning sea views", "International standards"],
+    cons: ["Very expensive", "Far from city centre (15 min)", "Isolated from local life"],
+    bestFor: ["Expats", "High-income professionals", "Those wanting luxury beach lifestyle"],
+  },
+  {
+    name: "Al-Sakanah", nameAr: "السكنة", city: "Aqaba", governorate: "Aqaba",
+    avgRentMin: 120, avgRentMax: 300, tier: "budget",
+    characteristics: ["Affordable suburb", "Local working-class area", "Family-oriented"],
+    pros: ["Cheapest rents in Aqaba", "Strong local community", "Good for large families"],
+    cons: ["Far from beach (15-20 min walk)", "Limited modern amenities"],
+    bestFor: ["Families on tight budget", "Local workers", "Long-term residents"],
+  },
+],
+
+// ── Salt (Balqa) ──────────────────────────────────────────────────────────────
+Salt: [
+  {
+    name: "Old Salt", nameAr: "السلط القديمة", city: "Salt", governorate: "Balqa",
+    avgRentMin: 130, avgRentMax: 300, tier: "budget",
+    characteristics: ["Historic centre", "UNESCO heritage area", "Ottoman architecture", "Hilly"],
+    pros: ["Unique historic character", "Very affordable", "Strong community feel", "Near Amman (30 min)"],
+    cons: ["Old buildings", "Hilly terrain", "Limited modern amenities", "Traffic in narrow streets"],
+    bestFor: ["History lovers", "Budget renters", "Those who commute to Amman"],
+  },
+  {
+    name: "Al-Salhieh", nameAr: "الصالحية", city: "Salt", governorate: "Balqa",
+    avgRentMin: 150, avgRentMax: 320, tier: "budget",
+    characteristics: ["Residential suburb", "Quiet", "Modern apartments", "Families"],
+    pros: ["More modern buildings", "Quiet residential", "Good schools nearby", "Affordable"],
+    cons: ["Car essential", "Limited entertainment", "Smaller city feel"],
+    bestFor: ["Families", "Those commuting to Amman", "Budget renters wanting quiet life"],
+  },
+],
+
+// ── Madaba ────────────────────────────────────────────────────────────────────
+Madaba: [
+  {
+    name: "City Centre", nameAr: "وسط البلد", city: "Madaba", governorate: "Madaba",
+    avgRentMin: 120, avgRentMax: 280, tier: "budget",
+    characteristics: ["Historic Christian city", "Mosaic art centre", "Near Dead Sea & Amman", "Quiet"],
+    pros: ["Very affordable", "Charming historic city", "Close to Amman (30 min)", "Tourist attractions nearby"],
+    cons: ["Small city", "Limited job market", "Car essential for most trips"],
+    bestFor: ["Budget renters", "Families", "Those who commute to Amman", "Tourism workers"],
+  },
+],
+
+// ── Karak ─────────────────────────────────────────────────────────────────────
+Karak: [
+  {
+    name: "Karak City", nameAr: "مدينة الكرك", city: "Karak", governorate: "Karak",
+    avgRentMin: 80, avgRentMax: 220, tier: "budget",
+    characteristics: ["Crusader castle city", "South Jordan", "Affordable", "Traditional community"],
+    pros: ["Cheapest rents in Jordan", "Strong community", "Historic setting", "Quiet life"],
+    cons: ["Far from Amman (2 hrs)", "Limited jobs & amenities", "Very small city feel"],
+    bestFor: ["Locals", "Extreme budget renters", "Those working in south Jordan"],
+  },
+],
+
+// ── Petra area ────────────────────────────────────────────────────────────────
+Petra: [
+  {
+    name: "Wadi Musa", nameAr: "وادي موسى", city: "Petra", governorate: "Ma'an",
+    avgRentMin: 100, avgRentMax: 300, tier: "budget",
+    characteristics: ["Gateway to Petra", "Tourist town", "Guesthouses & hotels", "Scenic views"],
+    pros: ["Unique location next to Petra", "Tourism economy", "Stunning desert scenery", "Affordable rents"],
+    cons: ["Very small town", "Limited amenities", "Seasonal economy", "Far from major cities"],
+    bestFor: ["Tourism workers", "Adventure seekers", "Those working in the Petra hospitality sector"],
+  },
+],
+
+// ── Jerash ────────────────────────────────────────────────────────────────────
+Jerash: [
+  {
+    name: "Jerash City", nameAr: "مدينة جرش", city: "Jerash", governorate: "Jerash",
+    avgRentMin: 90, avgRentMax: 230, tier: "budget",
+    characteristics: ["Roman ruins city", "North Jordan", "Quiet", "Traditional"],
+    pros: ["Very affordable", "Quiet lifestyle", "Historic Roman ruins", "Close to Irbid & Amman"],
+    cons: ["Small city", "Limited job market", "Car essential"],
+    bestFor: ["Budget renters", "Families", "Tourism workers", "Those commuting to Irbid"],
+  },
+],
+
+}; // end JORDAN_NEIGHBORHOODS
+
+// Convenience getter — falls back to Amman data if city not yet covered
+function getNeighborhoods(city: string): NeighborhoodCard[] {
+  return JORDAN_NEIGHBORHOODS[city] ?? JORDAN_NEIGHBORHOODS["Amman"] ?? [];
+}
 
 function filterByBudget(neighborhoods: NeighborhoodCard[], budget: number | null): NeighborhoodCard[] {
   if (!budget) return neighborhoods;
@@ -439,11 +614,11 @@ async function callClaude(
 
   // Pass verified neighborhood data as grounding reference — Claude must use these
   // exact numbers instead of guessing from training data.
-  const refNeighborhoods = city === "Amman" ? AMMAN_NEIGHBORHOODS : null;
-  const eligibleRef = refNeighborhoods
-    ? (budget ? refNeighborhoods.filter((n) => n.avgRentMin <= budget) : refNeighborhoods)
-    : null;
-  const neighborhoodRefBlock = eligibleRef && eligibleRef.length > 0
+  const refNeighborhoods = getNeighborhoods(city);
+  const eligibleRef = budget
+    ? refNeighborhoods.filter((n) => n.avgRentMin <= budget)
+    : refNeighborhoods;
+  const neighborhoodRefBlock = eligibleRef.length > 0
     ? `\nVERIFIED ${city.toUpperCase()} NEIGHBORHOOD REFERENCE DATA (use these exact numbers):\n` +
       eligibleRef.map((n) =>
         `- ${n.name} (${n.nameAr}): ${n.avgRentMin}–${n.avgRentMax} JOD/month [${n.tier}] — ${n.characteristics.join(", ")}`
@@ -664,7 +839,7 @@ export async function generalAnswer(
   if (provider.isMock) {
     // Deterministic fallback for when no API key is configured
     if (intentType === "rental" || intentType === "lifestyle") {
-      const filtered = filterByBudget(AMMAN_NEIGHBORHOODS, budget);
+      const filtered = filterByBudget(getNeighborhoods(city), budget);
       cards = filtered.slice(0, 6) as NeighborhoodCard[];
       if (arabic) {
         answer = budget
@@ -704,7 +879,7 @@ export async function generalAnswer(
 
     // If Claude returned no cards for rental, fall back to curated data
     if ((intentType === "rental" || intentType === "lifestyle") && (!cards || cards.length === 0)) {
-      cards = filterByBudget(AMMAN_NEIGHBORHOODS, budget).slice(0, 6);
+      cards = filterByBudget(getNeighborhoods(city), budget).slice(0, 6);
       if (!answer) {
         answer = arabic
           ? (budget ? `إليك أفضل الأحياء في ${cityDisplay} التي تناسب ميزانية ${budget} دينار شهرياً.` : `إليك أبرز الأحياء في ${cityDisplay} للإيجار.`)

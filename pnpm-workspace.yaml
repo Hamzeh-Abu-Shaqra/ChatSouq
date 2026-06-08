@@ -1,6 +1,7 @@
 packages:
   - "apps/*"
   - "packages/*"
+allowedDeprecatedVersions: {}
 onlyBuiltDependencies:
   - esbuild
   - sharp

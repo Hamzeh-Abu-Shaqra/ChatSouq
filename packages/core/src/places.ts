@@ -758,18 +758,18 @@ interface ScoredPlace extends PlaceCandidate {
   keywordHits: number;
 }
 
-// vec reduced (was 0.50) — less dominant so quality + location can discriminate
-// txt reduced (was 0.15) — trigram on raw query is noisy for place names
-// geo doubled (was 0.05) — location is a core feature of place recommendations
-// rating + completeness are new first-class signals
+// vec reduced further — semantic similarity alone should not win over completeness
+// completeness tripled (0.04 → 0.13) — an OSM stub with no contact info must not rank #1
+// rating increased (0.06 → 0.11) — Google Maps / Talabat stars are a strong quality proxy
+// total = 1.00
 const PLACE_WEIGHTS = {
-  vec:          0.38,
-  txt:          0.07,
+  vec:          0.25,
+  txt:          0.05,
   keyword:      0.22,
   category:     0.13,
-  geo:          0.10,
-  rating:       0.06,  // Google Maps / Talabat 0-5 score
-  completeness: 0.04,  // phone + address + hours + coords + website
+  geo:          0.11,
+  rating:       0.11,  // Google Maps / Talabat 0-5 score
+  completeness: 0.13,  // phone + address + hours + coords + website
 };
 
 function rescaleVec(cos: number): number {
@@ -830,7 +830,24 @@ function rankPlaces(candidates: PlaceCandidate[], intent: PlaceIntent): ScoredPl
     return { ...c, score, keywordHits: hits };
   });
   scored.sort((a, b) => b.score - a.score || b.vecSim - a.vecSim);
+
+  // Hard guard: the #1 pick must have at least one piece of actionable data.
+  // An OSM stub with only coordinates but no phone / address / website should
+  // never win when alternatives with real contact info exist.
+  if (scored.length > 1 && !hasActionableData(scored[0]!)) {
+    const firstWithData = scored.findIndex(hasActionableData);
+    if (firstWithData > 0) {
+      const [stub] = scored.splice(firstWithData, 1);
+      scored.unshift(stub!);
+    }
+  }
+
   return scored;
+}
+
+/** At least one piece of contact/navigation info the user can actually act on. */
+function hasActionableData(c: PlaceCandidate): boolean {
+  return !!(c.phone || c.address || c.website || c.sourceUrl);
 }
 
 function toResultPlace(c: PlaceCandidate): ResultPlace {
@@ -988,9 +1005,16 @@ export async function recommendPlaces(
   if (!provider.isMock && ranked.length > 0) {
     try {
       // Fire web search in parallel with building the place list — no added latency
-      const webSearchQuery = intent.categories.length > 0
-        ? `${intent.categories[0]} ${intent.governorate ?? "Amman"}`
-        : input.query;
+      // Use the full original query for trend/discovery/temporal searches so "new cafes
+      // in Rainbow Street this week" actually searches for that, not just "Cafe Amman".
+      const hasTrendSignal = /trending|this week|new\b|open(ed|ing)|pop.?up|latest|recent|what.?s/i.test(input.query);
+      const webSearchQuery = hasTrendSignal
+        ? `${input.query} Amman Jordan`
+        : [
+            ...(intent.categories.length > 0 ? [intent.categories[0]!] : []),
+            ...(intent.district ? [intent.district] : []),
+            intent.governorate ?? "Amman",
+          ].join(" ") || input.query;
       const webResults = await webSearch(webSearchQuery, { maxResults: 3, searchDepth: "basic" });
       const webContext = formatWebResults(webResults, "LIVE WEB INFO");
 

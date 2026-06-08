@@ -4,11 +4,33 @@ import { recommendPlaces, placeSignal, getPlaceCategories } from "./places";
 import { generalAnswer, isGeneralQuery } from "./general";
 import { getCategories } from "./retrieve";
 import { parseConstraints } from "./intent";
-import type { AssistResponse, RecommendInput } from "./types";
+import type { AssistResponse, ConvMessage, RecommendInput } from "./types";
 
 interface Deps {
   provider?: AIProvider;
   embedder?: Embedder;
+}
+
+/**
+ * If the current query is a bare location refinement — "in X", "near X",
+ * "around X" — with no standalone intent, prepend the previous user turn so
+ * context carries over.
+ *
+ * Example:  "Best restaurants in Amman" → "in deir ghbar"
+ *   becomes: "Best restaurants in Amman in deir ghbar"
+ *
+ * This prevents follow-up queries from being re-routed as product searches
+ * because they happen to contain two generic keywords.
+ */
+function resolveFollowUp(query: string, history?: ConvMessage[]): string {
+  if (!history?.length) return query;
+  const trimmed = query.trim();
+  // A pure location refinement: starts with a preposition and is short (≤ 6 words)
+  if (!/^(in|near|around|at|close to|by)\s+\S/i.test(trimmed)) return query;
+  if (trimmed.split(/\s+/).length > 6) return query; // too long — has own intent
+  const lastUser = [...history].reverse().find((m) => m.role === "user");
+  if (!lastUser) return query;
+  return `${lastUser.content} ${trimmed}`;
 }
 
 /** 0..N "this is a product-shopping query" signal. */
@@ -31,37 +53,43 @@ function productSignal(query: string, productCategories: string[]): number {
  * 4. Product catalogue (e-commerce listings)
  */
 export async function assist(input: RecommendInput, deps: Deps = {}): Promise<AssistResponse> {
+  // Resolve bare follow-ups like "in deir ghbar" → "best restaurants in Amman in deir ghbar"
+  const resolvedQuery = resolveFollowUp(input.query, input.history);
+  const effectiveInput: RecommendInput = resolvedQuery !== input.query
+    ? { ...input, query: resolvedQuery }
+    : input;
+
   const [productCategories, placeCategories] = await Promise.all([
     getCategories(),
     getPlaceCategories(),
   ]);
 
-  const prodSig = productSignal(input.query, productCategories);
-  const pSig    = placeSignal(input.query, placeCategories);
+  const prodSig = productSignal(effectiveInput.query, productCategories);
+  const pSig    = placeSignal(effectiveInput.query, placeCategories);
 
   // Strong product signal → go product, BUT only when product signal is strictly
   // stronger than place signal. This prevents "best coffee in Jabal Amman" (which
   // scores prodSig=3 via food category but pSig=4+ via PLACE_HINTS + governorate)
   // from being misrouted to the product catalogue.
-  if (prodSig >= 3 && prodSig > pSig) return recommend(input, deps);
+  if (prodSig >= 3 && prodSig > pSig) return recommend(effectiveInput, deps);
 
-  // Strong place signal → go places
-  if (pSig >= 3 && pSig > prodSig) return recommendPlaces(input, deps);
+  // Strong place signal → go places (threshold lowered to 2 when clearly stronger than product)
+  if (pSig >= 2 && pSig > prodSig) return recommendPlaces(effectiveInput, deps);
 
   // General query (rental, tourism, news, Jordan info, etc.)
   // Guard: product questions like "what is the best phone?" or "ما هو أفضل موبايل" have
   // prodSig > 0 and must NOT be sent to the general engine even though they contain
   // question words that match GENERAL_INFO patterns.
-  if (isGeneralQuery(input.query) && prodSig === 0) {
-    return generalAnswer(input, { provider: deps.provider });
+  if (isGeneralQuery(effectiveInput.query) && prodSig === 0) {
+    return generalAnswer(effectiveInput, { provider: deps.provider });
   }
 
   // Weak product signal or keyword-only
-  if (prodSig > 0) return recommend(input, deps);
+  if (prodSig > 0) return recommend(effectiveInput, deps);
 
   // Moderate place signal
-  if (pSig > 0) return recommendPlaces(input, deps);
+  if (pSig > 0) return recommendPlaces(effectiveInput, deps);
 
   // Default: try product search
-  return recommend(input, deps);
+  return recommend(effectiveInput, deps);
 }

@@ -24,6 +24,44 @@ HEADERS = {
 
 # RSS-based sources (most reliable — no JS, structured XML)
 RSS_SOURCES = [
+    # ── Google News RSS — aggregates 50+ Jordan sources automatically ──────────
+    {
+        "name": "Google News",
+        "language": "ar",
+        "urls": [
+            "https://news.google.com/rss/search?q=عمان+الأردن&hl=ar&gl=JO&ceid=JO:ar",
+        ],
+    },
+    {
+        "name": "Google News",
+        "language": "en",
+        "urls": [
+            "https://news.google.com/rss/search?q=Amman+Jordan&hl=en-JO&gl=JO&ceid=JO:en",
+        ],
+    },
+    {
+        "name": "Google News",
+        "language": "ar",
+        "urls": [
+            "https://news.google.com/rss/headlines/section/geo/JO?hl=ar&gl=JO&ceid=JO:ar",
+        ],
+    },
+    # ── Breaking / local Amman topics ─────────────────────────────────────────
+    {
+        "name": "Google News",
+        "language": "ar",
+        "urls": [
+            "https://news.google.com/rss/search?q=حوادث+عمان&hl=ar&gl=JO&ceid=JO:ar",
+        ],
+    },
+    {
+        "name": "Google News",
+        "language": "ar",
+        "urls": [
+            "https://news.google.com/rss/search?q=أخبار+عمان+اليوم&hl=ar&gl=JO&ceid=JO:ar",
+        ],
+    },
+    # ── Direct RSS feeds ───────────────────────────────────────────────────────
     {
         "name": "Jordan Times",
         "language": "en",
@@ -39,7 +77,6 @@ RSS_SOURCES = [
         "urls": [
             "https://www.petra.gov.jo/Api/Rss",
             "https://petra.gov.jo/rss.aspx",
-            "https://petra.gov.jo/Include/rss.php",
         ],
     },
     {
@@ -72,6 +109,14 @@ RSS_SOURCES = [
         "urls": [
             "https://www.ammonnews.net/rss",
             "https://ammonnews.net/feed",
+        ],
+    },
+    {
+        "name": "Roya News",
+        "language": "en",
+        "urls": [
+            "https://en.roya.tv/rss",
+            "https://en.roya.tv/feed",
         ],
     },
 ]
@@ -159,11 +204,23 @@ def parse_rss(xml_text, source_name, language):
             except Exception:
                 pass
 
+        # Google News embeds source in title: "Headline - Source Name"
+        # Also check <source> tag for the real publisher
+        source_el = item.find("source")
+        real_source = source_name
+        if source_el is not None and source_el.text:
+            real_source = source_el.text.strip()
+        elif source_name == "Google News" and title and " - " in title:
+            parts = title.rsplit(" - ", 1)
+            if len(parts) == 2 and len(parts[1]) < 50:
+                title = parts[0].strip()
+                real_source = parts[1].strip()
+
         if title and url and len(title) > 10 and url.startswith("http"):
             articles.append({
                 "title": title,
                 "url": url,
-                "source": source_name,
+                "source": real_source,
                 "language": language,
                 "summary": desc,
                 "published_at": published,

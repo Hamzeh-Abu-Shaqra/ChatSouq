@@ -17,37 +17,46 @@ function productSignal(query: string, productCategories: string[]): number {
   let s = c.categories.length * 2;
   // Budget alone doesn't make it a product query — need product category too
   if ((c.budgetMax !== null || c.budgetMin !== null) && c.categories.length > 0) s += 2;
-  if (/\b(buy|gift|present|cheap|price)\b/i.test(query)) s += 1;
+  if (/\b(buy|gift|present|cheap|price|recommend|best\s+\w+\s+under|i\s+want|show\s+me|find\s+me|looking\s+for)\b/i.test(query)) s += 1;
   if (c.brands.length) s += 1;
+  if (c.keywords.length >= 2) s += 1; // multi-keyword product search
   return s;
 }
 
 /**
  * Top-level router. Priority order:
- * 1. General knowledge queries (rental, neighborhoods, tourism info, Jordan facts)
- * 2. Places / services (restaurants, gyms, hospitals, etc.)
- * 3. Product catalogue (e-commerce listings)
+ * 1. Strong product signal overrides general — "best headphones" is NOT general
+ * 2. General knowledge queries (rental, neighborhoods, tourism info, Jordan facts)
+ * 3. Places / services (restaurants, gyms, hospitals, etc.)
+ * 4. Product catalogue (e-commerce listings)
  */
 export async function assist(input: RecommendInput, deps: Deps = {}): Promise<AssistResponse> {
-  // Check general intent FIRST before product/place scoring
-  if (isGeneralQuery(input.query)) {
-    // Only override if it's not also a strong places query
-    const [placeCategories] = await Promise.all([getPlaceCategories()]);
-    const pSig = placeSignal(input.query, placeCategories);
-    // General wins unless there's a strong place signal (cafe, hospital, etc.)
-    if (pSig < 3) {
-      return generalAnswer(input, { provider: deps.provider });
-    }
-  }
-
   const [productCategories, placeCategories] = await Promise.all([
     getCategories(),
     getPlaceCategories(),
   ]);
 
-  const pSig = placeSignal(input.query, placeCategories);
   const prodSig = productSignal(input.query, productCategories);
+  const pSig    = placeSignal(input.query, placeCategories);
 
-  if (pSig > prodSig && pSig > 0) return recommendPlaces(input, deps);
+  // Strong product signal (category matched + keywords) → go product immediately
+  // This prevents "what is the best headphone under 60 JOD" from hitting general engine
+  if (prodSig >= 3) return recommend(input, deps);
+
+  // Strong place signal → go places
+  if (pSig >= 3 && pSig > prodSig) return recommendPlaces(input, deps);
+
+  // General query (rental, tourism, news, Jordan info, etc.)
+  if (isGeneralQuery(input.query)) {
+    return generalAnswer(input, { provider: deps.provider });
+  }
+
+  // Weak product signal or keyword-only
+  if (prodSig > 0) return recommend(input, deps);
+
+  // Moderate place signal
+  if (pSig > 0) return recommendPlaces(input, deps);
+
+  // Default: try product search
   return recommend(input, deps);
 }

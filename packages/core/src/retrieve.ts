@@ -45,7 +45,7 @@ export async function retrieve(
   queryText: string,
   opts: RetrieveOpts
 ): Promise<Candidate[]> {
-  const poolSize = opts.poolSize ?? 120;
+  const poolSize = opts.poolSize ?? 150;
   const vecLit = toVectorLiteral(queryVec);
 
   const conditions = [sql`l.embedding IS NOT NULL`];
@@ -64,10 +64,13 @@ export async function retrieve(
     conditions.push(sql`l.category IN (${cats})`);
   }
   // Keyword filter — AND mode requires ALL keywords, OR mode requires at least one.
-  // AND mode is tried first for precision; engine falls back to OR if not enough results.
+  // We search in: lower(name) || ' ' || lower(coalesce(search_text,''))
+  // Searching both name AND search_text ensures we catch items whose name is the
+  // canonical product title and search_text contains supplementary attributes.
   if (constraints.keywords.length > 0) {
+    const haystack = sql`(lower(l.name) || ' ' || lower(coalesce(l.search_text, '')))`;
     const kwConds = constraints.keywords.map(
-      (k) => sql`(lower(coalesce(l.search_text, '') || ' ' || lower(l.name)) LIKE ${"%" + k.toLowerCase() + "%"})`
+      (k) => sql`(${haystack} LIKE ${"%" + k.toLowerCase() + "%"})`
     );
     if (opts.useStrictKeywords) {
       // ALL keywords must match

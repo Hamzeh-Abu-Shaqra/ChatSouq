@@ -12,21 +12,24 @@ export interface ScoredCandidate extends Candidate {
     value: number;
     brand: number;
     typeMatch: number;
+    dataQuality: number;
   };
 }
 
-// Keyword + vector dominate (0.76). Category adds structure (0.10).
+// Keyword + vector dominate (0.70). Category adds structure (0.10).
 // typeMatch guards against product-type confusion (wireless vs wired etc.).
+// dataQuality rewards complete listings (price + image + link + brand + description).
 // Value/brand are micro tiebreakers only.
 const WEIGHTS = {
-  vec:       0.35,  // semantic meaning
-  txt:       0.08,  // trigram text match
-  keyword:   0.35,  // exact term match — PRIMARY intent signal
-  category:  0.10,  // right department
-  typeMatch: 0.08,  // product-type discrimination (wireless, ANC, etc.)
-  budgetFit: 0.02,  // within budget (binary)
-  value:     0.01,  // cheapest in pool — nearly zero
-  brand:     0.01,  // preferred brand — nearly zero
+  vec:         0.30,  // semantic meaning
+  txt:         0.06,  // trigram text match (noisy for short queries, kept low)
+  keyword:     0.35,  // exact term match — PRIMARY intent signal
+  category:    0.10,  // right department
+  typeMatch:   0.08,  // product-type discrimination (wireless, ANC, perfume vs mist, etc.)
+  dataQuality: 0.07,  // listing completeness — price, image, link, brand, description
+  budgetFit:   0.02,  // within budget
+  value:       0.01,  // cheapest in pool — gentle tiebreaker only
+  brand:       0.01,  // preferred brand — gentle tiebreaker only
 };
 
 /**
@@ -71,9 +74,32 @@ function rescaleVec(cos: number): number {
   return Math.max(0, Math.min(1, (cos - 0.15) / 0.5));
 }
 
+/**
+ * Data-quality score [0..1]: rewards listings that have all the fields a user
+ * needs to make a real buying decision — price, image, a link to buy, brand,
+ * and a meaningful description. Stubs with missing fields score lower.
+ *
+ * Points (max 8):
+ *   price present        +2  (most important — can't budget without it)
+ *   image present        +2  (visual trust / product recognition)
+ *   sourceUrl present    +2  (can actually click through and buy)
+ *   brand present        +1  (brand clarity)
+ *   description ≥ 30ch   +1  (meaningful description, not a stub)
+ */
+function dataQualityScore(c: Candidate): number {
+  let pts = 0;
+  if (c.price !== null)                              pts += 2;
+  if (c.imageUrl)                                    pts += 2;
+  if (c.sourceUrl)                                   pts += 2;
+  if (c.brand)                                       pts += 1;
+  if (c.description && c.description.length >= 30)  pts += 1;
+  return pts / 8;
+}
+
 function keywordHitRatio(c: Candidate, keywords: string[]): { ratio: number; hits: number } {
   if (keywords.length === 0) return { ratio: 0, hits: 0 };
-  const hay = ((c.searchText || "") + " " + c.name).toLowerCase();
+  // Search name + searchText + description so attributes buried in long descriptions are found.
+  const hay = ((c.searchText || "") + " " + c.name + " " + (c.description || "")).toLowerCase();
   let hits = 0;
   for (const k of keywords) if (hay.includes(k)) hits++;
   const rawRatio = hits / keywords.length;
@@ -140,9 +166,15 @@ export function rankCandidates(
     const { ratio: keyword, hits } = keywordHitRatio(c, constraints.keywords);
     const typeMatch = typeMatchScore(c, constraints.keywords);
 
+    // Budget fit: 1.0 = in range, 0.0 = out of range, 0.25 = price unknown when budget specified.
+    const budgetRequested = constraints.budgetMax !== null || constraints.budgetMin !== null;
     let budgetFit = 0.5;
-    if (constraints.budgetMax !== null && c.price !== null) {
-      budgetFit = c.price <= constraints.budgetMax ? 1 : 0;
+    if (c.price === null) {
+      budgetFit = budgetRequested ? 0.25 : 0.5;
+    } else {
+      const underMax = constraints.budgetMax === null || c.price <= constraints.budgetMax;
+      const overMin  = constraints.budgetMin === null || c.price >= constraints.budgetMin;
+      budgetFit = underMax && overMin ? 1 : 0;
     }
 
     // Cheaper-within-pool = better value (gentle nudge, never overrides relevance).
@@ -167,6 +199,7 @@ export function rankCandidates(
         : 0;
 
     const vec = rescaleVec(c.vecSim);
+    const dataQuality = dataQualityScore(c);
 
     const components = {
       vec,
@@ -174,20 +207,22 @@ export function rankCandidates(
       keyword,
       category,
       typeMatch,
+      dataQuality,
       budgetFit,
       value,
       brand,
     };
 
     const score =
-      WEIGHTS.vec       * components.vec +
-      WEIGHTS.txt       * components.txt +
-      WEIGHTS.keyword   * components.keyword +
-      WEIGHTS.category  * components.category +
-      WEIGHTS.typeMatch * components.typeMatch +
-      WEIGHTS.budgetFit * components.budgetFit +
-      WEIGHTS.value     * components.value +
-      WEIGHTS.brand     * components.brand;
+      WEIGHTS.vec         * components.vec +
+      WEIGHTS.txt         * components.txt +
+      WEIGHTS.keyword     * components.keyword +
+      WEIGHTS.category    * components.category +
+      WEIGHTS.typeMatch   * components.typeMatch +
+      WEIGHTS.dataQuality * components.dataQuality +
+      WEIGHTS.budgetFit   * components.budgetFit +
+      WEIGHTS.value       * components.value +
+      WEIGHTS.brand       * components.brand;
 
     return { ...c, score, keywordHits: hits, components };
   });

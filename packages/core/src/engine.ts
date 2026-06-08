@@ -63,7 +63,7 @@ function toResultItem(c: ScoredCandidate, isBest: boolean): ResultItem {
 }
 
 /** Minimum quality score to be shown as an alternative (but not to filter out the best). */
-const MIN_ALT_SCORE = 0.10;
+const MIN_ALT_SCORE = 0.15;
 
 /**
  * The reasoning recommendation engine.

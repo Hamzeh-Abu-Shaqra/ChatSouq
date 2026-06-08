@@ -83,6 +83,8 @@ export interface ResultPlace {
   lat: number | null;
   lng: number | null;
   sourceUrl: string | null;
+  /** Google Maps / Talabat rating 0-5; null when not available. */
+  rating: number | null;
 }
 
 export interface PlaceResultItem {
@@ -182,6 +184,8 @@ export interface PlaceCandidate {
   lng: number | null;
   sourceUrl: string | null;
   searchText: string | null;
+  /** Google Maps / Talabat rating 0-5; null for OSM or when not available. */
+  rating: number | null;
   vecSim: number;
   txtSim: number;
 }

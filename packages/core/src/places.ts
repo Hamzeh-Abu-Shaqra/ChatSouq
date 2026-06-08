@@ -541,6 +541,7 @@ async function searchPlaces(
     lng: r.lng === null || r.lng === undefined ? null : Number(r.lng),
     sourceUrl: (r.sourceUrl as string) ?? null,
     searchText: (r.searchText as string) ?? null,
+    rating: null, // OSM places table does not have a rating column
     vecSim: Number(r.vecSim ?? 0),
     txtSim: Number(r.txtSim ?? 0),
   }));
@@ -601,8 +602,6 @@ async function fetchScrapedCandidates(
       `)) as unknown as Record<string, unknown>[];
 
       for (const r of rows) {
-        // Encode Google Maps rating (0-5) as a tiny vecSim bonus (max 0.08).
-        const ratingBonus = r.rating ? (Number(r.rating) / 5) * 0.08 : 0;
         all.push({
           id: Number(r.id),
           name: String(r.name),
@@ -619,7 +618,8 @@ async function fetchScrapedCandidates(
           lng: null,
           sourceUrl: null,
           searchText: (r.searchText as string) ?? null,
-          vecSim: Math.min(1, Number(r.vecSim ?? 0) + ratingBonus),
+          rating: r.rating !== null && r.rating !== undefined ? Number(r.rating) : null,
+          vecSim: Number(r.vecSim ?? 0),
           txtSim: Number(r.txtSim ?? 0),
         });
       }
@@ -649,7 +649,6 @@ async function fetchScrapedCandidates(
       `)) as unknown as Record<string, unknown>[];
 
       for (const r of rows) {
-        const ratingBonus = r.rating ? (Number(r.rating) / 5) * 0.10 : 0;
         const delivery = r.deliveryTime ? `Delivery: ${r.deliveryTime}` : null;
         all.push({
           id: Number(r.id),
@@ -667,7 +666,8 @@ async function fetchScrapedCandidates(
           lng: null,
           sourceUrl: (r.url as string) ?? null,
           searchText: (r.searchText as string) ?? null,
-          vecSim: Math.min(1, Number(r.vecSim ?? 0) + ratingBonus),
+          rating: r.rating !== null && r.rating !== undefined ? Number(r.rating) : null,
+          vecSim: Number(r.vecSim ?? 0),
           txtSim: Number(r.txtSim ?? 0),
         });
       }
@@ -721,6 +721,7 @@ async function fetchScrapedCandidates(
           lng: null,
           sourceUrl: null,
           searchText: (r.searchText as string) ?? null,
+          rating: null,
           vecSim: Number(r.vecSim ?? 0),
           txtSim: Number(r.txtSim ?? 0),
         });
@@ -757,10 +758,55 @@ interface ScoredPlace extends PlaceCandidate {
   keywordHits: number;
 }
 
-const PLACE_WEIGHTS = { vec: 0.5, txt: 0.15, keyword: 0.2, category: 0.1, geo: 0.05 };
+// vec reduced (was 0.50) — less dominant so quality + location can discriminate
+// txt reduced (was 0.15) — trigram on raw query is noisy for place names
+// geo doubled (was 0.05) — location is a core feature of place recommendations
+// rating + completeness are new first-class signals
+const PLACE_WEIGHTS = {
+  vec:          0.38,
+  txt:          0.07,
+  keyword:      0.22,
+  category:     0.13,
+  geo:          0.10,
+  rating:       0.06,  // Google Maps / Talabat 0-5 score
+  completeness: 0.04,  // phone + address + hours + coords + website
+};
 
 function rescaleVec(cos: number): number {
   return Math.max(0, Math.min(1, (cos - 0.15) / 0.5));
+}
+
+/**
+ * Data completeness score [0..1] — rewards places that have the information
+ * a user actually needs: a number to call, an address to navigate to, opening
+ * hours so they know when to go, coordinates for the map, and a website.
+ *
+ * Points (max 8):
+ *   phone present        +2  (most actionable — can call right away)
+ *   address present      +2  (can navigate there)
+ *   website present      +1  (can research / book online)
+ *   openingHours present +1  (know when it's open)
+ *   lat + lng present    +1  (mappable)
+ *   sourceUrl present    +1  (verified external source)
+ */
+function placeCompletenessScore(c: PlaceCandidate): number {
+  let pts = 0;
+  if (c.phone)                           pts += 2;
+  if (c.address)                         pts += 2;
+  if (c.website)                         pts += 1;
+  if (c.openingHours)                    pts += 1;
+  if (c.lat !== null && c.lng !== null)  pts += 1;
+  if (c.sourceUrl)                       pts += 1;
+  return pts / 8;
+}
+
+/**
+ * Normalize a 0-5 star rating to [0..1].
+ * Returns 0 when no rating is available (not a penalty — just neutral).
+ */
+function placeRatingScore(c: PlaceCandidate): number {
+  if (c.rating === null || c.rating === undefined) return 0;
+  return Math.max(0, Math.min(1, c.rating / 5));
 }
 
 function rankPlaces(candidates: PlaceCandidate[], intent: PlaceIntent): ScoredPlace[] {
@@ -774,11 +820,13 @@ function rankPlaces(candidates: PlaceCandidate[], intent: PlaceIntent): ScoredPl
     const geo =
       intent.governorate && c.governorate && c.governorate === intent.governorate ? 1 : 0;
     const score =
-      PLACE_WEIGHTS.vec * rescaleVec(c.vecSim) +
-      PLACE_WEIGHTS.txt * Math.max(0, Math.min(1, c.txtSim)) +
-      PLACE_WEIGHTS.keyword * keyword +
-      PLACE_WEIGHTS.category * category +
-      PLACE_WEIGHTS.geo * geo;
+      PLACE_WEIGHTS.vec          * rescaleVec(c.vecSim) +
+      PLACE_WEIGHTS.txt          * Math.max(0, Math.min(1, c.txtSim)) +
+      PLACE_WEIGHTS.keyword      * keyword +
+      PLACE_WEIGHTS.category     * category +
+      PLACE_WEIGHTS.geo          * geo +
+      PLACE_WEIGHTS.rating       * placeRatingScore(c) +
+      PLACE_WEIGHTS.completeness * placeCompletenessScore(c);
     return { ...c, score, keywordHits: hits };
   });
   scored.sort((a, b) => b.score - a.score || b.vecSim - a.vecSim);
@@ -801,6 +849,7 @@ function toResultPlace(c: PlaceCandidate): ResultPlace {
     lat: c.lat,
     lng: c.lng,
     sourceUrl: c.sourceUrl,
+    rating: c.rating ?? null,
   };
 }
 
@@ -823,6 +872,11 @@ function placePros(c: ScoredPlace, intent: PlaceIntent, lang: "en" | "ar"): stri
     pros.push(lang === "ar" ? `موجود في ${c.governorate}` : `Located in ${c.governorate}`);
   } else if (loc) {
     pros.push(lang === "ar" ? `موجود في ${loc}` : `Located in ${loc}`);
+  }
+  // Show rating prominently when present (Google Maps / Talabat)
+  if (c.rating !== null && c.rating !== undefined && c.rating >= 3.5) {
+    const stars = c.rating.toFixed(1);
+    pros.push(lang === "ar" ? `تقييم ${stars}/5` : `Rated ${stars}/5`);
   }
   if (c.keywordHits > 0 || rescaleVec(c.vecSim) >= 0.6) {
     pros.push(lang === "ar" ? "يطابق ما بحثت عنه" : "Closely matches what you asked for");

@@ -64,7 +64,7 @@ export default function ScraperDashboard() {
 
   const fetchStats = async () => {
     try {
-      const res = await fetch("/api/scraper-stats");
+      const res = await fetch(`/api/scraper-stats?t=${Date.now()}`, { cache: "no-store" });
       const json = await res.json();
       setStats(json);
     } finally {
@@ -75,7 +75,7 @@ export default function ScraperDashboard() {
   const fetchData = async (tab: string, p: number) => {
     setLoadingData(true);
     try {
-      const res = await fetch(`/api/scraper-data?table=${tab}&page=${p}`);
+      const res = await fetch(`/api/scraper-data?table=${tab}&page=${p}&t=${Date.now()}`, { cache: "no-store" });
       const json = await res.json();
       setData(json.data ?? []);
       setTotal(json.total ?? 0);

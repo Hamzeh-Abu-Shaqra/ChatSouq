@@ -588,7 +588,6 @@ export function NewspaperFront({ cards }: { cards: InfoCard[] }) {
   const news        = cards.filter((c) => c.section === "news");
   const restaurants = cards.filter((c) => c.section === "restaurant");
   const places      = cards.filter((c) => c.section === "place");
-  const pros        = cards.filter((c) => c.section === "pro");
 
   const today  = new Date();
   const dateEn = today.toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
@@ -648,14 +647,6 @@ export function NewspaperFront({ cards }: { cards: InfoCard[] }) {
           </div>
         )}
 
-        {pros.length > 0 && (
-          <div>
-            <SectionDivider color="#0891b2" label="Featured Professionals" />
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {pros.slice(0, 2).map((item, i) => <ProTile key={i} item={item} />)}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

@@ -544,22 +544,9 @@ export async function recommendPlaces(
 
   const queryLang: "en" | "ar" = /[؀-ۿ]/.test(input.query) ? "ar" : "en";
 
-  // Places table not yet populated — return a clear "not ready" message rather
-  // than falling through to the product search and returning irrelevant results.
-  if (categories.length === 0) {
-    return {
-      kind: "places",
-      query: input.query,
-      intent: { rawQuery: input.query, categories: [], governorate: detectGovernorate(input.query), city: null, keywords: [] },
-      summary: queryLang === "ar"
-        ? "لا تزال قاعدة بيانات الأماكن قيد البناء — حاول مجدداً قريباً."
-        : "I'm still building my knowledge of Jordan's places and services — check back shortly.",
-      best: null,
-      alternatives: [],
-      meta: { provider: provider.name, embedder: embedder.name, candidateCount: 0, tookMs: Date.now() - started, relaxedCategory: false, relaxedGovernorate: false },
-    };
-  }
-
+  // Use static hint categories when the OSM places table is still empty —
+  // this lets scraped sources (jordan_places, jordan_restaurants) serve results
+  // immediately without waiting for the full OSM ingest to complete.
   const intent = parsePlaceIntent(input.query, categories);
 
   const embedText = [input.query, ...intent.categories, ...intent.keywords].filter(Boolean).join(" ");

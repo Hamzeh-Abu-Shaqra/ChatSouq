@@ -64,11 +64,11 @@ export async function retrieve(
     conditions.push(sql`l.category IN (${cats})`);
   }
   // Keyword filter — AND mode requires ALL keywords, OR mode requires at least one.
-  // We search in: lower(name) || ' ' || lower(coalesce(search_text,''))
-  // Searching both name AND search_text ensures we catch items whose name is the
-  // canonical product title and search_text contains supplementary attributes.
+  // We search in: lower(name) || ' ' || lower(coalesce(search_text,'')) || ' ' || lower(coalesce(description,''))
+  // Including description ensures products whose key feature is in the description
+  // (e.g. "wireless" in the description but not the product name) are still matched.
   if (constraints.keywords.length > 0) {
-    const haystack = sql`(lower(l.name) || ' ' || lower(coalesce(l.search_text, '')))`;
+    const haystack = sql`(lower(l.name) || ' ' || lower(coalesce(l.search_text, '')) || ' ' || lower(coalesce(l.description, '')))`;
     const kwConds = constraints.keywords.map(
       (k) => sql`(${haystack} LIKE ${"%" + k.toLowerCase() + "%"})`
     );

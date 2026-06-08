@@ -26,8 +26,12 @@ function resolveFollowUp(query: string, history?: ConvMessage[]): string {
   if (!history?.length) return query;
   const trimmed = query.trim();
   // A pure location refinement: starts with a preposition and is short (≤ 6 words)
-  if (!/^(in|near|around|at|close to|by)\s+\S/i.test(trimmed)) return query;
-  if (trimmed.split(/\s+/).length > 6) return query; // too long — has own intent
+  // Supports both English and Arabic prepositions: في، قرب، بالقرب من، حول، عند
+  if (
+    !/^(in|near|around|at|close to|by)\s+\S/i.test(trimmed) &&
+    !/^(في|قرب|بالقرب من|حول|عند|بجانب|ب)\s*\S/.test(trimmed)
+  ) return query;
+  if (trimmed.split(/\s+/).length > 8) return query; // too long — has own intent
   const lastUser = [...history].reverse().find((m) => m.role === "user");
   if (!lastUser) return query;
   return `${lastUser.content} ${trimmed}`;
@@ -84,8 +88,10 @@ export async function assist(input: RecommendInput, deps: Deps = {}): Promise<As
   // from being misrouted to the product catalogue.
   if (prodSig >= 3 && prodSig > pSig) return recommend(effectiveInput, deps);
 
-  // Strong place signal → go places (threshold lowered to 2 when clearly stronger than product)
-  if (pSig >= 2 && pSig > prodSig) return recommendPlaces(effectiveInput, deps);
+  // Strong place signal → go places.
+  // On a tie (prodSig === pSig) we favour places — "best cafes in Abdoun" is a
+  // place query even though it technically has product-category keywords.
+  if (pSig >= 2 && pSig >= prodSig) return recommendPlaces(effectiveInput, deps);
 
   // General queries (today digest, news, rental, tourism, etc.) win over weak product signals.
   // Only a genuinely product-specific signal (prodSig ≥ 3, e.g. "buy NEUHAUS chocolate") overrides.

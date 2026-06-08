@@ -62,8 +62,9 @@ const AMMAN_DISTRICTS = [
   "jabal amman", "jabal hussein", "jabal webdeh", "jabal luweibdeh", "jabal nuzha",
   "jabal",       // generic — still a place signal
   // Upscale west Amman
-  "abdoun", "sweifieh", "shmeisani", "khalda", "dabouq", "deir ghbar",
+  "abdoun", "sweifieh", "sweifiyeh", "shmeisani", "khalda", "dabouq", "deir ghbar",
   "um uthaina", "umm uthaina", "um utheina", "tla' ali", "tlaa ali",
+  "rabia", "rabieh", "al rabieh", "gardens", "al gardens",
   // Circles (landmark references)
   "1st circle", "2nd circle", "3rd circle", "4th circle",
   "5th circle", "6th circle", "7th circle", "8th circle",
@@ -72,11 +73,30 @@ const AMMAN_DISTRICTS = [
   // Central / commercial
   "downtown amman", "downtown", "city centre", "rainbow street",
   "rainbow", "garden street", "mecca street", "wasfi tal", "wasfi el tal",
+  "weibdeh", "luweibdeh",
   // East Amman / other
   "zarqa road", "sports city", "sport city", "jubeiha", "sweileh",
   "bayader wadi seer", "wadi seer", "nakheel", "marj el hamam", "sahab",
+  "muqabalein", "marka", "ader", "abu nsair", "abu nseir", "naour",
   // Aqaba districts
   "aqaba marina", "aqaba port", "tala bay",
+  // ── Arabic district names ─────────────────────────────────────────────────
+  // Jabal areas
+  "جبل عمان", "جبل الحسين", "جبل اللويبدة", "جبل النزهة", "جبل",
+  // West Amman
+  "الصويفية", "صويفية", "عبدون", "الشميساني", "شميساني",
+  "خلدا", "دابوق", "دير غبار", "أم أذينة", "ام اذينة", "تلاع العلي",
+  "الرابية", "رابية", "الحدائق",
+  // Circles
+  "الدوار الأول", "الدوار الثاني", "الدوار الثالث", "الدوار الرابع",
+  "الدوار الخامس", "الدوار السادس", "الدوار السابع", "الدوار الثامن",
+  "دوار الأول", "دوار ثاني", "دوار ثالث", "دوار رابع",
+  // Central
+  "وسط البلد", "البلد", "شارع الرينبو", "شارع المدينة", "وسط عمان",
+  "اللويبدة", "ويبدة",
+  // East Amman / other
+  "الجبيهة", "جبيهة", "السويلح", "سويلح", "ماركا", "النزهة",
+  "الرصيفة", "أبو نصير", "ناعور", "المقابلين", "الصحاب", "صحاب",
 ];
 
 /**
@@ -289,6 +309,137 @@ const PLACE_HINTS: Record<string, string[]> = {
   "زهرات":          ["Florist"],
   "باقة ورد":       ["Florist"],
   "محل ورود":       ["Florist"],
+
+  // ── Entertainment ──────────────────────────────────────────────────────────
+  cinema:           ["Cinema", "Movie Theater"],
+  cinemas:          ["Cinema", "Movie Theater"],
+  movie:            ["Cinema", "Movie Theater"],
+  movies:           ["Cinema", "Movie Theater"],
+  theater:          ["Theater", "Cinema"],
+  theatre:          ["Theater", "Cinema"],
+  "movie theater":  ["Cinema", "Movie Theater"],
+  "سينما":          ["Cinema", "Movie Theater"],
+  "سينمات":         ["Cinema", "Movie Theater"],
+  "أفلام":          ["Cinema", "Movie Theater"],
+  "مسرح":          ["Theater"],
+  "ترفيه":          ["Cinema", "Entertainment"],
+
+  // ── Laundry & Dry Cleaning ──────────────────────────────────────────────────
+  laundry:          ["Laundry", "Dry Cleaning"],
+  "dry cleaning":   ["Dry Cleaning", "Laundry"],
+  "dry cleaner":    ["Dry Cleaning", "Laundry"],
+  "مغسلة":          ["Laundry", "Dry Cleaning"],
+  "تنظيف ملابس":    ["Laundry", "Dry Cleaning"],
+  "كوي":            ["Laundry"],
+  "تنظيف جاف":      ["Dry Cleaning"],
+
+  // ── Nursery & Childcare ────────────────────────────────────────────────────
+  nursery:          ["Nursery", "Daycare", "Kindergarten"],
+  daycare:          ["Nursery", "Daycare"],
+  kindergarten:     ["Kindergarten", "Nursery"],
+  "child care":     ["Nursery", "Daycare"],
+  "حضانة":          ["Nursery", "Daycare"],
+  "حضانات":         ["Nursery", "Daycare"],
+  "روضة":           ["Kindergarten"],
+  "رياض أطفال":     ["Kindergarten", "Nursery"],
+  "رياض اطفال":     ["Kindergarten", "Nursery"],
+
+  // ── Car Rental ─────────────────────────────────────────────────────────────
+  "car rental":     ["Car Rental"],
+  "rent a car":     ["Car Rental"],
+  "car hire":       ["Car Rental"],
+  "تأجير سيارة":    ["Car Rental"],
+  "تأجير سيارات":   ["Car Rental"],
+  "إيجار سيارة":    ["Car Rental"],
+  "ايجار سيارة":    ["Car Rental"],
+
+  // ── Embassy & Consulate ────────────────────────────────────────────────────
+  embassy:          ["Embassy", "Consulate"],
+  consulate:        ["Consulate", "Embassy"],
+  embassies:        ["Embassy", "Consulate"],
+  visa:             ["Embassy", "Consulate"],
+  "سفارة":          ["Embassy", "Consulate"],
+  "سفارات":         ["Embassy", "Consulate"],
+  "قنصلية":         ["Consulate", "Embassy"],
+  "تأشيرة":         ["Embassy", "Consulate"],
+
+  // ── Co-working & Office ────────────────────────────────────────────────────
+  "co-working":     ["Coworking Space"],
+  coworking:        ["Coworking Space"],
+  "co working":     ["Coworking Space"],
+  "shared office":  ["Coworking Space"],
+  "business center":["Business Center", "Coworking Space"],
+  "مساحة عمل":      ["Coworking Space"],
+  "مكتب مشترك":     ["Coworking Space"],
+  "بيزنس سنتر":     ["Business Center"],
+
+  // ── Event Venue ────────────────────────────────────────────────────────────
+  "event venue":    ["Event Venue", "Wedding Hall"],
+  "wedding hall":   ["Wedding Hall", "Event Venue"],
+  "banquet hall":   ["Wedding Hall", "Event Venue"],
+  "function hall":  ["Event Venue", "Wedding Hall"],
+  events:           ["Event Venue"],
+  "قاعة مناسبات":   ["Event Venue", "Wedding Hall"],
+  "قاعة أفراح":     ["Wedding Hall", "Event Venue"],
+  "قاعة افراح":     ["Wedding Hall", "Event Venue"],
+  "قاعة حفلات":     ["Wedding Hall", "Event Venue"],
+  "قاعة":           ["Event Venue", "Wedding Hall"],
+  "أعراس":          ["Wedding Hall"],
+  "حفل زفاف":       ["Wedding Hall"],
+
+  // ── Tailor & Alterations ───────────────────────────────────────────────────
+  tailor:           ["Tailor"],
+  tailoring:        ["Tailor"],
+  alterations:      ["Tailor"],
+  "خياط":           ["Tailor"],
+  "خياطة":          ["Tailor"],
+  "تعديل ملابس":    ["Tailor"],
+
+  // ── Parking ────────────────────────────────────────────────────────────────
+  parking:          ["Parking"],
+  "car park":       ["Parking"],
+  "parking lot":    ["Parking"],
+  "موقف سيارات":    ["Parking"],
+  "موقف":           ["Parking"],
+  "باركينج":        ["Parking"],
+
+  // ── Real Estate ────────────────────────────────────────────────────────────
+  "real estate":    ["Real Estate"],
+  "property":       ["Real Estate"],
+  "estate agent":   ["Real Estate"],
+  realtor:          ["Real Estate"],
+  "عقارات":         ["Real Estate"],
+  "عقار":           ["Real Estate"],
+  "وكيل عقاري":     ["Real Estate"],
+  "مكتب عقاري":     ["Real Estate"],
+
+  // ── Travel Agency ──────────────────────────────────────────────────────────
+  "travel agency":  ["Travel Agency"],
+  "travel agent":   ["Travel Agency"],
+  "tour operator":  ["Travel Agency", "Tour Operator"],
+  "وكالة سفر":      ["Travel Agency"],
+  "وكالة سياحية":   ["Travel Agency", "Tour Operator"],
+  "حجز تذاكر":      ["Travel Agency"],
+  "سفريات":         ["Travel Agency"],
+
+  // ── Printing & Stationery ──────────────────────────────────────────────────
+  printing:         ["Printing"],
+  "print shop":     ["Printing"],
+  stationery:       ["Stationery"],
+  "طباعة":          ["Printing"],
+  "طابعة":          ["Printing"],
+  "قرطاسية":        ["Stationery"],
+  "مكتبة قرطاسية":  ["Stationery"],
+
+  // ── Electronics Repair ────────────────────────────────────────────────────
+  "phone repair":   ["Electronics Repair"],
+  "mobile repair":  ["Electronics Repair"],
+  "laptop repair":  ["Electronics Repair"],
+  "electronics repair": ["Electronics Repair"],
+  "تصليح هاتف":     ["Electronics Repair"],
+  "تصليح موبايل":   ["Electronics Repair"],
+  "تصليح لابتوب":   ["Electronics Repair"],
+  "تصليح إلكترونيات": ["Electronics Repair"],
 };
 
 let categoryCache: { at: number; values: string[] } | null = null;
@@ -405,7 +556,11 @@ function detectDistrict(q: string): string | null {
   const sorted = [...AMMAN_DISTRICTS].sort((a, b) => b.length - a.length);
   for (const d of sorted) {
     const escaped = d.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    if (new RegExp(`\\b${escaped}\\b`).test(lower)) return d;
+    // Arabic terms don't use \b word boundaries — use whitespace anchors instead
+    const pattern = containsArabicChar(d)
+      ? new RegExp(`(?:^|\\s)${escaped}(?:\\s|$)`)
+      : new RegExp(`\\b${escaped}\\b`);
+    if (pattern.test(lower)) return d;
   }
   return null;
 }
@@ -581,7 +736,11 @@ async function fetchScrapedCandidates(
     /مطعم|مطاعم|كافيه|مقهى|قهوة|أكل|اكل|وجبة|فطور|غداء|عشاء|توصيل طعام|بيتزا|برغر|شاورما|فلافل|بوفيه/.test(intent.rawQuery);
   const wantPeople = PEOPLE_RE.test(intent.rawQuery) ||
     intent.categories.some((c) => /doctor|dentist|lawyer|accountant|architect|engineer|pharmacist/i.test(c));
-  const wantPlace = !wantRestaurant || intent.categories.length === 0;
+  // Always query jordan_places (Google Maps) — it has higher-quality data for many
+  // categories including malls, cinemas, gyms, and even restaurants.
+  // Previously this was disabled for food+category queries, which silently blocked
+  // Google Maps data for the most popular query type.
+  const wantPlace = true;
 
   // ── jordan_places (Google Maps) ──────────────────────────────────────────
   if (wantPlace) {
@@ -1064,10 +1223,11 @@ export async function recommendPlaces(
   // Direct name lookup + vector embedding run in parallel — zero added latency.
   // The name search finds specific places by ILIKE even when vector similarity is
   // weak (e.g. "taj mall" → exact name match beats all semantic alternatives).
-  const queryWords = input.query.trim().split(/\s+/).length;
+  // Run unconditionally — even long queries like "best brunch near city mall amman"
+  // contain named places that should always surface at the top.
   const [queryVecResult, nameMatches] = await Promise.all([
     embedder.embed([embedText]),
-    queryWords <= 5 ? directNameSearch(input.query, 4) : Promise.resolve([]),
+    directNameSearch(input.query, 4),
   ]);
   const [queryVec] = queryVecResult;
   if (!queryVec) throw new Error("Failed to embed the query.");

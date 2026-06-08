@@ -605,9 +605,15 @@ function renderInline(text: string) {
 }
 
 function ChatText({ text, rtl }: { text: string; rtl?: boolean }) {
-  const paragraphs = text.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
+  // Split on double-newlines first (markdown paragraphs), then single newlines
+  // within a paragraph become line breaks. Filter empty lines.
+  const paragraphs = text
+    .split(/\n{2,}/)
+    .flatMap((block) => block.split(/\n/))
+    .map((p) => p.trim())
+    .filter(Boolean);
   return (
-    <div dir={rtl ? "rtl" : "ltr"} className="space-y-3">
+    <div dir={rtl ? "rtl" : "ltr"} className="space-y-2">
       {paragraphs.map((p, i) => (
         <p key={i} className="text-[15px] leading-[1.75] text-ink-800">
           {renderInline(p)}

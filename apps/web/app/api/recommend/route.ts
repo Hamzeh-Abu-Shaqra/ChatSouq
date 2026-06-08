@@ -109,7 +109,7 @@ export async function POST(req: Request) {
           .catch(() => {}),
     ]).catch(() => {});
 
-    return NextResponse.json({ ...result, sessionId });
+    return NextResponse.json({ ...result, sessionId, conversationId: thread.conversationId ?? null });
   } catch (err) {
     console.error("[recommend] error:", err);
     return NextResponse.json({ error: "Recommendation failed" }, { status: 500 });

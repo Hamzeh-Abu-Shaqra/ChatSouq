@@ -29,11 +29,25 @@ export async function GET(request: Request) {
 
     // ── NEWS ────────────────────────────────────────────────────────────────
     if (table === "news") {
-      data = await safeQuery(
-        sql`SELECT id, title, url, source, scraped_at FROM jordan_news ORDER BY scraped_at DESC LIMIT ${limit} OFFSET ${offset}`
-      );
-      const c = await safeQuery(sql`SELECT COUNT(*) as count FROM jordan_news`);
-      total = Number(c[0]?.count ?? 0);
+      const nsources = await safeQuery(sql`SELECT DISTINCT source as val FROM jordan_news WHERE source IS NOT NULL ORDER BY source`);
+      categories = nsources.map((r: any) => r.val);
+      if (category && search) {
+        data = await safeQuery(sql`SELECT id, title, url, source, language, published_at, scraped_at FROM jordan_news WHERE source = ${category} AND title ILIKE ${'%' + search + '%'} ORDER BY COALESCE(published_at, scraped_at) DESC LIMIT ${limit} OFFSET ${offset}`);
+        const c = await safeQuery(sql`SELECT COUNT(*) as count FROM jordan_news WHERE source = ${category} AND title ILIKE ${'%' + search + '%'}`);
+        total = Number(c[0]?.count ?? 0);
+      } else if (category) {
+        data = await safeQuery(sql`SELECT id, title, url, source, language, published_at, scraped_at FROM jordan_news WHERE source = ${category} ORDER BY COALESCE(published_at, scraped_at) DESC LIMIT ${limit} OFFSET ${offset}`);
+        const c = await safeQuery(sql`SELECT COUNT(*) as count FROM jordan_news WHERE source = ${category}`);
+        total = Number(c[0]?.count ?? 0);
+      } else if (search) {
+        data = await safeQuery(sql`SELECT id, title, url, source, language, published_at, scraped_at FROM jordan_news WHERE title ILIKE ${'%' + search + '%'} ORDER BY COALESCE(published_at, scraped_at) DESC LIMIT ${limit} OFFSET ${offset}`);
+        const c = await safeQuery(sql`SELECT COUNT(*) as count FROM jordan_news WHERE title ILIKE ${'%' + search + '%'}`);
+        total = Number(c[0]?.count ?? 0);
+      } else {
+        data = await safeQuery(sql`SELECT id, title, url, source, language, published_at, scraped_at FROM jordan_news ORDER BY COALESCE(published_at, scraped_at) DESC LIMIT ${limit} OFFSET ${offset}`);
+        const c = await safeQuery(sql`SELECT COUNT(*) as count FROM jordan_news`);
+        total = Number(c[0]?.count ?? 0);
+      }
 
     // ── FOOD & DRINK (Places + Talabat UNION) ───────────────────────────────
     } else if (table === "food") {

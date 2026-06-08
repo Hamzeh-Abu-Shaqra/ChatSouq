@@ -33,7 +33,7 @@ const TABS = [
 ];
 
 const COLUMNS: Record<string, string[]> = {
-  news:        ["title", "source", "scraped_at"],
+  news:        ["title", "source", "language", "published_at"],
   food:        ["name", "subcategory", "rating", "address", "delivery_time", "source"],
   health:      ["name", "subcategory", "address", "rating", "phone"],
   shopping:    ["name", "subcategory", "address", "rating"],
@@ -42,7 +42,7 @@ const COLUMNS: Record<string, string[]> = {
   hospitality: ["name", "address", "rating"],
   religion:    ["name", "address"],
   people:      ["name", "title", "subcategory", "specialty", "organization", "phone"],
-  listings:    ["title", "price", "location", "category"],
+  listings:    ["title", "category", "price", "location"],
 };
 
 function timeAgo(date: string | null): string {
@@ -55,9 +55,11 @@ function timeAgo(date: string | null): string {
 }
 
 function formatValue(key: string, value: any): string {
-  if (!value) return "—";
-  if (key === "scraped_at") return timeAgo(value);
+  if (value === null || value === undefined || value === "") return "—";
+  if (key === "scraped_at" || key === "published_at") return timeAgo(value);
   if (key === "url") return "🔗";
+  if (key === "is_open") return value ? "✅ Open" : "❌ Closed";
+  if (key === "language") return value === "ar" ? "🇯🇴 AR" : "🇬🇧 EN";
   if (typeof value === "number") return value.toLocaleString();
   const str = String(value);
   return str.length > 60 ? str.slice(0, 60) + "..." : str;

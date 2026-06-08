@@ -11,14 +11,14 @@ type ThemeKey =
   | "attraction" | "generic";
 
 interface Theme {
-  accent:   string;
-  bg:       string;
-  fg:       string;
-  badge:    string;
-  badgeFg:  string;
-  icon:     string;
-  label:    string;
-  ringColor:string;
+  accent:    string;
+  bg:        string;
+  fg:        string;
+  badge:     string;
+  badgeFg:   string;
+  icon:      string;
+  label:     string;
+  ringColor: string;
 }
 
 const THEMES: Record<ThemeKey, Theme> = {
@@ -67,6 +67,30 @@ function isProfessionalTheme(k: ThemeKey) {
   return k === "pro-health" || k === "pro-legal" || k === "pro-service";
 }
 
+// ── Content-quality filters ───────────────────────────────────────────────────
+// Strip AI-generated filler so we never show "Top pick: a cafe in عمان."
+
+const TRIVIAL_WHY = /^(top pick|alternative|a (cafe|restaurant|hotel|place|doctor|shop|gym|store|clinic)|top result|best result|located in|a \w+ in )/i;
+
+function isGoodWhy(why: string | undefined | null): boolean {
+  if (!why || why.trim().length < 30) return false;
+  if (TRIVIAL_WHY.test(why.trim())) return false;
+  return true;
+}
+
+function cleanPros(pros: string[]): string[] {
+  return pros.filter(
+    (p) => !/^(located in|in amman|in jordan|available in|found in)/i.test(p.trim())
+  );
+}
+
+// Cons about missing data are data gaps — don't expose them to users
+function cleanCons(cons: string[]): string[] {
+  return cons.filter(
+    (c) => !/(not listed|not available|no phone|no website|no address|not provided|missing|unknown)/i.test(c)
+  );
+}
+
 // ── Shared primitives ─────────────────────────────────────────────────────────
 
 function Tag({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
@@ -88,18 +112,19 @@ function Chip({ children }: { children: React.ReactNode }) {
   );
 }
 
-function ProsCons({ pros, cons, small = false }: { pros: string[]; cons: string[]; small?: boolean }) {
-  if (!pros.length && !cons.length) return null;
-  const textCls = small ? "text-[11px]" : "text-xs";
+function ProsCons({ pros, cons }: { pros: string[]; cons: string[] }) {
+  const goodPros = cleanPros(pros);
+  const goodCons = cleanCons(cons);
+  if (!goodPros.length && !goodCons.length) return null;
   return (
     <div className="flex flex-wrap gap-1.5">
-      {pros.map((p, i) => (
-        <span key={`p${i}`} className={`inline-flex items-center gap-1 rounded-full bg-souq-50 px-2.5 py-0.5 ${textCls} font-medium text-souq-700`}>
+      {goodPros.map((p, i) => (
+        <span key={`p${i}`} className="inline-flex items-center gap-1 rounded-full bg-souq-50 px-2.5 py-0.5 text-xs font-medium text-souq-700">
           <CheckDot /> {p}
         </span>
       ))}
-      {cons.map((c, i) => (
-        <span key={`c${i}`} className={`inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 ${textCls} font-medium text-amber-700`}>
+      {goodCons.map((c, i) => (
+        <span key={`c${i}`} className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">
           <MinusDot /> {c}
         </span>
       ))}
@@ -153,61 +178,45 @@ function ProductThumb({ item }: { item: ResultItem }) {
 
 export function BestCard({ item }: { item: ResultItem }) {
   const { listing } = item;
+  const goodWhy = isGoodWhy(item.why);
+
   return (
-    <div
-      className="animate-fade-up overflow-hidden rounded-2xl bg-white shadow-best ring-1 ring-black/[0.06]"
-      style={{ borderLeft: "4px solid #059669" }}
-    >
-      {/* Accent bar */}
-      <div className="h-[2px] bg-gradient-to-r from-souq-500 to-souq-700" />
-
-      <div className="p-5 sm:p-6">
-        {/* Badge row */}
-        <div className="mb-4 flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-souq-600 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white">
-            <StarIcon /> Best Match
-          </span>
-          {listing.category && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-sand-100 px-2.5 py-0.5 text-[11px] font-medium text-ink-600">
-              {listing.category}
-            </span>
-          )}
+    <div className="animate-fade-up overflow-hidden rounded-2xl bg-white shadow-best">
+      {/* Top accent + category band */}
+      <div className="flex items-center justify-between bg-souq-50 px-5 py-3.5">
+        <div className="flex items-center gap-2">
+          <span className="text-xl">🛍</span>
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-souq-700">
+              {listing.category ?? "Product"}
+            </p>
+            {listing.brand && (
+              <p className="text-[11px] font-semibold text-ink-500 mt-px">{listing.brand}</p>
+            )}
+          </div>
         </div>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-souq-600 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-white">
+          <StarIcon /> #1 Match
+        </span>
+      </div>
 
-        <div className="flex flex-col gap-5 sm:flex-row">
+      <div className="p-5">
+        <div className="flex flex-col gap-4 sm:flex-row">
           {/* Thumbnail */}
-          <div className="h-44 w-full overflow-hidden rounded-xl bg-sand-50 shadow-sm sm:h-32 sm:w-32 shrink-0">
+          <div className="h-44 w-full overflow-hidden rounded-xl bg-sand-50 sm:h-28 sm:w-28 shrink-0">
             <ProductThumb item={item} />
           </div>
-
           <div className="min-w-0 flex-1">
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                {listing.brand && (
-                  <p className="mb-0.5 text-[10px] font-black uppercase tracking-widest text-souq-600">
-                    {listing.brand}
-                  </p>
-                )}
-                <h3 className="text-[17px] font-bold leading-snug text-ink-900">{listing.name}</h3>
-              </div>
-              <div className="shrink-0 text-right">
-                <p className="text-[24px] font-black text-ink-900 tabular-nums leading-tight">
-                  {formatJOD(listing.price)}
-                </p>
-                {listing.price != null && (
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-400">JOD</p>
-                )}
-              </div>
-            </div>
-
-            <p className="mt-2 text-[13px] leading-relaxed text-ink-600">{item.why}</p>
-
-            {(item.pros.length > 0 || item.cons.length > 0) && (
-              <div className="mt-3">
-                <ProsCons pros={item.pros} cons={item.cons} />
-              </div>
+            <h3 className="text-[19px] font-bold leading-snug text-ink-900">{listing.name}</h3>
+            <p className="mt-1 text-[26px] font-black text-ink-900 tabular-nums leading-tight">
+              {formatJOD(listing.price)}
+            </p>
+            {goodWhy && (
+              <p className="mt-2 text-[13px] leading-relaxed text-ink-600">{item.why}</p>
             )}
-
+            <div className="mt-3">
+              <ProsCons pros={item.pros} cons={item.cons} />
+            </div>
             <div className="mt-4 flex flex-wrap items-center gap-2.5">
               {listing.sourceUrl && (
                 <ActionBtn href={listing.sourceUrl}>
@@ -236,189 +245,190 @@ export function BestCard({ item }: { item: ResultItem }) {
 
 export function AltCard({ item, rank }: { item: ResultItem; rank: number }) {
   const { listing } = item;
+  const goodWhy = isGoodWhy(item.why);
   return (
-    <div className="card-hover animate-fade-up overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-black/[0.07] hover:shadow-card hover:ring-souq-400/20">
-      <div className="flex gap-4 p-4">
-        {/* Thumb */}
-        <div className="relative h-[68px] w-[68px] shrink-0 overflow-hidden rounded-xl bg-sand-50">
-          <ProductThumb item={item} />
-          <span className="absolute left-1.5 top-1.5 rounded-full bg-white/90 px-1.5 py-0.5 text-[10px] font-black text-ink-700 shadow-sm">
-            #{rank}
-          </span>
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              {listing.brand && (
-                <p className="truncate text-[10px] font-black uppercase tracking-widest text-souq-600">
-                  {listing.brand}
-                </p>
-              )}
-              <h4 className="truncate text-sm font-bold text-ink-900">{listing.name}</h4>
-            </div>
-            <p className="shrink-0 text-sm font-black text-ink-900 tabular-nums">{formatJOD(listing.price)}</p>
+    <div
+      className="card-hover animate-fade-up flex flex-col overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-black/[0.07] hover:shadow-card"
+      style={{ animationDelay: `${(rank - 2) * 55}ms` }}
+    >
+      <div className="h-1" style={{ background: "#059669" }} />
+      <div className="flex flex-1 flex-col gap-3 p-4">
+        <div className="flex items-start gap-3">
+          <div className="relative h-[60px] w-[60px] shrink-0 overflow-hidden rounded-xl bg-sand-50">
+            <ProductThumb item={item} />
+            <span className="absolute left-1 top-1 rounded-full bg-white/90 px-1.5 py-0.5 text-[10px] font-black text-ink-700 shadow-sm">
+              #{rank}
+            </span>
           </div>
-
-          <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-ink-500">{item.why}</p>
-
-          <div className="mt-1.5 flex flex-wrap gap-x-3">
-            {item.pros.slice(0, 1).map((p, i) => (
-              <span key={i} className="inline-flex items-center gap-1 text-[11px] text-souq-700"><CheckDot /> {p}</span>
-            ))}
-            {item.cons.slice(0, 1).map((c, i) => (
-              <span key={i} className="inline-flex items-center gap-1 text-[11px] text-amber-700"><MinusDot /> {c}</span>
-            ))}
+          <div className="min-w-0 flex-1">
+            {listing.brand && (
+              <p className="text-[10px] font-black uppercase tracking-widest text-souq-600">{listing.brand}</p>
+            )}
+            <h4 className="text-sm font-bold text-ink-900 leading-snug">{listing.name}</h4>
+            <p className="text-sm font-black text-ink-900 tabular-nums mt-0.5">{formatJOD(listing.price)}</p>
           </div>
-
-          {listing.sourceUrl && (
-            <a href={listing.sourceUrl} target="_blank" rel="noopener noreferrer"
-              className="mt-1.5 inline-flex items-center gap-1 text-xs font-bold text-souq-600 hover:underline">
-              View product <ArrowIcon />
-            </a>
-          )}
         </div>
+        {goodWhy && (
+          <p className="text-xs leading-relaxed text-ink-500 line-clamp-2">{item.why}</p>
+        )}
+        <div className="flex-1" />
+        <div className="flex gap-x-3 pt-2 border-t border-ink-100">
+          {cleanPros(item.pros).slice(0, 1).map((p, i) => (
+            <span key={i} className="inline-flex items-center gap-1 text-[11px] text-souq-700"><CheckDot /> {p}</span>
+          ))}
+        </div>
+        {listing.sourceUrl && (
+          <a href={listing.sourceUrl} target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs font-bold text-souq-600 hover:underline">
+            View product <ArrowIcon />
+          </a>
+        )}
       </div>
     </div>
   );
 }
 
-// ── Place cards (context-aware) ───────────────────────────────────────────────
+// ── Place cards ───────────────────────────────────────────────────────────────
 
 const ARABIC_RE = /[؀-ۿ]/;
 
-function CategoryIcon({ theme, size = 20 }: { theme: Theme; size?: number }) {
-  return (
-    <div
-      className="flex items-center justify-center rounded-xl text-lg"
-      style={{ width: size * 2.2, height: size * 2.2, background: theme.bg, fontSize: size }}
-    >
-      {theme.icon}
-    </div>
-  );
-}
-
-function ProfessionalAvatar({ name, theme, size = 52 }: { name: string; theme: Theme; size?: number }) {
-  return (
-    <div
-      className="flex shrink-0 items-center justify-center rounded-full font-black text-white"
-      style={{ width: size, height: size, background: theme.accent, fontSize: size * 0.36, letterSpacing: "-0.02em" }}
-    >
-      {initials(name)}
-    </div>
-  );
-}
-
-function PlaceContactRow({ place }: { place: PlaceResultItem["place"] }) {
-  const site      = safeUrl(place.website);
-  const nameIsAr  = ARABIC_RE.test(place.name);
-  const mapQuery  = nameIsAr ? `${place.category} ${place.city ?? place.governorate ?? "Jordan"}` : place.name;
-  const map       = mapsUrl(place.lat, place.lng, mapQuery);
-
-  if (!map && !place.phone && !site) return null;
-
-  return (
-    <div className="mt-4 flex flex-wrap items-center gap-2">
-      {map && (
-        <ActionBtn href={map}>
-          <PinIcon size={12} /> Directions
-        </ActionBtn>
-      )}
-      {place.phone && (
-        <ActionBtn href={`tel:${place.phone.replace(/\s+/g, "")}`} variant="secondary">
-          <PhoneIcon /> Call
-        </ActionBtn>
-      )}
-      {site && (
-        <ActionBtn href={site} variant="secondary">
-          <GlobeIcon /> {hostOf(place.website) ?? "Website"}
-        </ActionBtn>
-      )}
-    </div>
-  );
-}
-
 export function PlaceBestCard({ item }: { item: PlaceResultItem }) {
   const { place } = item;
-  const themeKey  = detectTheme(place.category);
-  const theme     = THEMES[themeKey];
-  const isPro     = isProfessionalTheme(themeKey);
-  const where     = [place.city, place.governorate].filter(Boolean).join(", ");
-  const nameIsAr  = ARABIC_RE.test(place.name);
-  const altName   = nameIsAr && place.nameAr && !ARABIC_RE.test(place.nameAr)
+  const themeKey = detectTheme(place.category);
+  const theme    = THEMES[themeKey];
+  const isPro    = isProfessionalTheme(themeKey);
+  const where    = [place.city, place.governorate].filter(Boolean).join(", ");
+  const nameIsAr = ARABIC_RE.test(place.name);
+  const altName  = nameIsAr && place.nameAr && !ARABIC_RE.test(place.nameAr)
     ? place.nameAr
     : !nameIsAr ? (place.nameAr ?? null) : null;
+  const site     = safeUrl(place.website);
+  const mapQuery = nameIsAr ? `${place.category} ${place.city ?? place.governorate ?? "Jordan"}` : place.name;
+  const map      = mapsUrl(place.lat, place.lng, mapQuery);
+  const goodWhy  = isGoodWhy(item.why);
+  const goodPros = cleanPros(item.pros);
 
   return (
-    <div
-      className="animate-fade-up overflow-hidden rounded-2xl bg-white shadow-best ring-1 ring-black/[0.06]"
-      style={{ borderLeft: `4px solid ${theme.accent}` }}
-    >
-      <div className="p-5 sm:p-6">
-        {/* Header row */}
-        <div className="mb-4 flex flex-wrap items-center gap-2">
-          <Tag style={{ background: theme.badge, color: theme.badgeFg }}>
-            {theme.icon} {theme.label !== place.category ? theme.label : place.category}
-          </Tag>
-          {theme.label !== place.category && place.category !== "Place" && (
-            <Tag style={{ background: theme.bg, color: theme.fg }}>{place.category}</Tag>
-          )}
-          {where && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-sand-50 px-2.5 py-0.5 text-[11px] font-medium text-ink-500">
-              <PinIcon size={10} /> {where}
-            </span>
-          )}
-          <span className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-souq-600 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white">
-            <StarIcon /> Best match
+    <div className="animate-fade-up overflow-hidden rounded-2xl bg-white shadow-best">
+
+      {/* ── Gradient header ── */}
+      <div
+        className="px-5 pt-5 pb-5"
+        style={{ background: `linear-gradient(135deg, ${theme.bg} 0%, #ffffff 70%)` }}
+      >
+        {/* Icon row */}
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3">
+            {isPro ? (
+              <div
+                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-[17px] font-black text-white shadow-sm"
+                style={{ background: theme.accent }}
+              >
+                {initials(place.name)}
+              </div>
+            ) : (
+              <div
+                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-[28px] shadow-sm"
+                style={{ background: theme.badge }}
+              >
+                {theme.icon}
+              </div>
+            )}
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.22em]" style={{ color: theme.accent }}>
+                {theme.label}
+              </p>
+              {theme.label !== place.category && place.category !== "Place" && (
+                <p className="text-[12px] font-medium text-ink-500 mt-0.5">{place.category}</p>
+              )}
+              {isPro && place.subcategory && (
+                <p className="text-[12px] font-semibold mt-0.5" style={{ color: theme.fg }}>{place.subcategory}</p>
+              )}
+            </div>
+          </div>
+
+          <span className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-souq-600 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-white shadow-sm">
+            <StarIcon /> #1 Pick
           </span>
         </div>
 
-        {/* Body */}
-        <div className="flex gap-4">
-          {isPro ? (
-            <ProfessionalAvatar name={place.name} theme={theme} size={56} />
-          ) : (
-            <CategoryIcon theme={theme} size={22} />
-          )}
-
-          <div className="min-w-0 flex-1">
-            <h3 dir={nameIsAr ? "rtl" : "ltr"} className="text-[18px] font-bold leading-snug text-ink-900">
-              {place.name}
-            </h3>
-            {altName && (
-              <p className="mt-0.5 text-sm text-ink-400" dir={ARABIC_RE.test(altName) ? "rtl" : "ltr"}>
-                {altName}
-              </p>
-            )}
-            {isPro && place.subcategory && (
-              <p className="mt-0.5 text-[13px] font-semibold" style={{ color: theme.accent }}>
-                {place.subcategory}
-              </p>
-            )}
-            <p className="mt-2 text-[13px] leading-relaxed text-ink-600">{item.why}</p>
-            {isPro && place.openingHours && (
-              <div className="mt-2 flex items-center gap-1.5">
-                <span className="text-[11px]">🏢</span>
-                <span className="text-[12px] font-medium text-ink-600">{place.openingHours}</span>
-              </div>
-            )}
-            {place.address && (
-              <div className="mt-1.5 flex items-center gap-1.5 text-[12px] text-ink-400">
-                <PinIcon size={11} />
-                <span className="truncate">{place.address}</span>
-              </div>
-            )}
-            {!isPro && place.openingHours && (
-              <div className="mt-1.5 flex items-center gap-1.5 text-[12px] text-ink-400">
-                <ClockIcon />
-                <span>{place.openingHours}</span>
-              </div>
-            )}
-            <div className="mt-3">
-              <ProsCons pros={item.pros} cons={item.cons} />
-            </div>
-            <PlaceContactRow place={place} />
+        {/* Place name */}
+        <h3
+          dir={nameIsAr ? "rtl" : "ltr"}
+          className="text-[22px] sm:text-[26px] font-black leading-tight text-ink-900"
+        >
+          {place.name}
+        </h3>
+        {altName && (
+          <p
+            className="mt-0.5 text-[14px] font-medium text-ink-400"
+            dir={ARABIC_RE.test(altName) ? "rtl" : "ltr"}
+          >
+            {altName}
+          </p>
+        )}
+        {where && (
+          <div className="mt-1.5 flex items-center gap-1.5 text-[12px] font-medium text-ink-500">
+            <PinIcon size={11} /> {where}
           </div>
+        )}
+      </div>
+
+      {/* ── Body ── */}
+      <div className="px-5 pb-5 pt-4">
+        {/* Org / clinic name for professionals */}
+        {isPro && place.openingHours && (
+          <div className="flex items-center gap-2 mb-3 rounded-lg bg-sand-50 px-3 py-2">
+            <span className="text-base">🏢</span>
+            <span className="text-[13px] font-semibold text-ink-700">{place.openingHours}</span>
+          </div>
+        )}
+
+        {/* Address */}
+        {place.address && (
+          <div className="flex items-center gap-1.5 text-[12px] text-ink-400 mb-3">
+            <PinIcon size={11} />
+            <span className="truncate">{place.address}</span>
+          </div>
+        )}
+
+        {/* Opening hours for non-professionals */}
+        {!isPro && place.openingHours && (
+          <div className="flex items-center gap-1.5 text-[12px] text-ink-400 mb-3">
+            <ClockIcon />
+            <span>{place.openingHours}</span>
+          </div>
+        )}
+
+        {/* Why — only if the AI gave a real description */}
+        {goodWhy && (
+          <p className="text-[13px] leading-relaxed text-ink-600 mb-3">{item.why}</p>
+        )}
+
+        {/* Pros — filtered, no "Located in" noise */}
+        {goodPros.length > 0 && (
+          <div className="mb-4">
+            <ProsCons pros={goodPros} cons={[]} />
+          </div>
+        )}
+
+        {/* Action buttons */}
+        <div className="flex flex-wrap gap-2 mt-1">
+          {map && (
+            <ActionBtn href={map}>
+              <PinIcon size={12} /> Get directions
+            </ActionBtn>
+          )}
+          {place.phone && (
+            <ActionBtn href={`tel:${place.phone.replace(/\s+/g, "")}`} variant="secondary">
+              <PhoneIcon /> Call
+            </ActionBtn>
+          )}
+          {site && (
+            <ActionBtn href={site} variant="secondary">
+              <GlobeIcon /> {hostOf(place.website) ?? "Website"}
+            </ActionBtn>
+          )}
         </div>
       </div>
     </div>
@@ -427,74 +437,106 @@ export function PlaceBestCard({ item }: { item: PlaceResultItem }) {
 
 export function PlaceAltCard({ item, rank }: { item: PlaceResultItem; rank: number }) {
   const { place } = item;
-  const themeKey  = detectTheme(place.category);
-  const theme     = THEMES[themeKey];
-  const isPro     = isProfessionalTheme(themeKey);
-  const where     = [place.city, place.governorate].filter(Boolean).join(", ");
-  const map       = mapsUrl(place.lat, place.lng, ARABIC_RE.test(place.name) ? `${place.category} ${place.city ?? "Amman"}` : place.name);
-  const site      = safeUrl(place.website);
-  const nameIsAr  = ARABIC_RE.test(place.name);
+  const themeKey = detectTheme(place.category);
+  const theme    = THEMES[themeKey];
+  const isPro    = isProfessionalTheme(themeKey);
+  const where    = [place.city, place.governorate].filter(Boolean).join(", ");
+  const map      = mapsUrl(
+    place.lat, place.lng,
+    ARABIC_RE.test(place.name) ? `${place.category} ${place.city ?? "Amman"}` : place.name
+  );
+  const site     = safeUrl(place.website);
+  const nameIsAr = ARABIC_RE.test(place.name);
+  const goodWhy  = isGoodWhy(item.why);
 
   return (
     <div
-      className="card-hover animate-fade-up overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-black/[0.07] hover:shadow-card"
-      style={{ borderLeft: `3px solid ${theme.accent}` }}
+      className="card-hover animate-fade-up flex flex-col overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-black/[0.07] hover:shadow-card hover:-translate-y-0.5 transition-all"
+      style={{ animationDelay: `${(rank - 2) * 60}ms` }}
     >
-      <div className="flex gap-3.5 p-4">
-        <div className="shrink-0">
-          {isPro ? (
-            <ProfessionalAvatar name={place.name} theme={theme} size={44} />
-          ) : (
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl text-base" style={{ background: theme.bg }}>
-              {theme.icon}
-            </div>
-          )}
-        </div>
+      {/* Colored top strip */}
+      <div className="h-1.5 shrink-0" style={{ background: theme.accent }} />
 
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-1">
-            <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: theme.accent }}>
+      <div className="flex flex-1 flex-col p-4">
+        {/* Header: icon + category + rank */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2.5">
+            {isPro ? (
+              <div
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[13px] font-black text-white"
+                style={{ background: theme.accent }}
+              >
+                {initials(place.name).charAt(0)}
+              </div>
+            ) : (
+              <div
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xl"
+                style={{ background: theme.bg }}
+              >
+                {theme.icon}
+              </div>
+            )}
+            <span className="text-[10px] font-black uppercase tracking-wider" style={{ color: theme.accent }}>
               {place.category}
             </span>
-            <span className="rounded-full bg-sand-100 px-1.5 py-0.5 text-[10px] font-black text-ink-500">
-              #{rank}
-            </span>
           </div>
-          <h4 dir={nameIsAr ? "rtl" : "ltr"} className="mt-0.5 truncate text-sm font-bold text-ink-900">
-            {place.name}
-          </h4>
-          {isPro && place.subcategory && (
-            <p className="text-[11px] font-semibold" style={{ color: theme.fg }}>{place.subcategory}</p>
-          )}
-          {where && <p className="mt-0.5 text-[11px] text-ink-400">{where}</p>}
-          {isPro && place.openingHours && (
-            <p className="mt-0.5 text-[11px] text-ink-400">🏢 {place.openingHours}</p>
-          )}
-          <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-ink-500">{item.why}</p>
+          <span
+            className="rounded-full px-2 py-0.5 text-[10px] font-black text-white"
+            style={{ background: theme.accent }}
+          >
+            #{rank}
+          </span>
+        </div>
 
-          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
-            {map && (
-              <a href={map} target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-[11px] font-bold hover:underline"
-                style={{ color: theme.accent }}>
-                <PinIcon size={10} /> Directions
-              </a>
-            )}
-            {place.phone && (
-              <a href={`tel:${place.phone.replace(/\s+/g, "")}`}
-                className="inline-flex items-center gap-1 text-[11px] font-bold hover:underline"
-                style={{ color: theme.accent }}>
-                <PhoneIcon /> Call
-              </a>
-            )}
-            {site && (
-              <a href={site} target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-[11px] font-bold hover:underline"
-                style={{ color: theme.accent }}>
-                <GlobeIcon /> Site
-              </a>
-            )}
-          </div>
+        {/* Name */}
+        <h4
+          dir={nameIsAr ? "rtl" : "ltr"}
+          className="text-[14px] font-bold leading-snug text-ink-900 mb-0.5"
+        >
+          {place.name}
+        </h4>
+
+        {isPro && place.subcategory && (
+          <p className="text-[11px] font-semibold mb-0.5" style={{ color: theme.fg }}>
+            {place.subcategory}
+          </p>
+        )}
+
+        {where && <p className="text-[11px] text-ink-400 mb-1">{where}</p>}
+
+        {isPro && place.openingHours && (
+          <p className="text-[11px] text-ink-400 mb-1">🏢 {place.openingHours}</p>
+        )}
+
+        {goodWhy && (
+          <p className="text-[12px] text-ink-500 leading-relaxed line-clamp-2 mb-2">{item.why}</p>
+        )}
+
+        <div className="flex-1" />
+
+        {/* Bottom action row */}
+        <div className="flex flex-wrap gap-x-4 gap-y-1 pt-3 mt-2 border-t border-ink-100">
+          {map && (
+            <a href={map} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-[11px] font-bold hover:underline"
+              style={{ color: theme.accent }}>
+              <PinIcon size={10} /> Directions
+            </a>
+          )}
+          {place.phone && (
+            <a href={`tel:${place.phone.replace(/\s+/g, "")}`}
+              className="inline-flex items-center gap-1 text-[11px] font-bold hover:underline"
+              style={{ color: theme.accent }}>
+              <PhoneIcon /> Call
+            </a>
+          )}
+          {site && (
+            <a href={site} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-[11px] font-bold hover:underline"
+              style={{ color: theme.accent }}>
+              <GlobeIcon /> Site
+            </a>
+          )}
         </div>
       </div>
     </div>
@@ -516,60 +558,48 @@ export function NeighborhoodBestCard({ item }: { item: NeighborhoodCard }) {
   const mapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.name + " " + item.city + " Jordan")}`;
 
   return (
-    <div
-      className="animate-fade-up overflow-hidden rounded-2xl bg-white shadow-rental ring-1 ring-black/[0.06]"
-      style={{ borderLeft: `4px solid ${tier.accentColor}` }}
-    >
-      <div className="p-5 sm:p-6">
-        <div className="mb-5 flex flex-wrap items-center gap-2">
-          <span
-            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white"
-            style={{ background: tier.accentColor }}
-          >
-            <StarIcon /> Best area
-          </span>
-          <Tag style={{ background: tier.badgeBg, color: tier.badgeFg }}>
-            {tier.emoji} {tier.label}
-          </Tag>
-          <span className="inline-flex items-center gap-1 rounded-full bg-sand-50 px-2.5 py-0.5 text-[11px] text-ink-500">
-            <PinIcon size={10} /> {item.city}
-          </span>
-        </div>
-
-        <div className="flex items-start justify-between gap-4 mb-4">
-          <div>
-            <h3 className="text-[22px] font-black text-ink-900 leading-tight">{item.name}</h3>
-            {item.nameAr && (
-              <p className="text-sm text-ink-400 mt-0.5" dir="rtl">{item.nameAr}</p>
-            )}
+    <div className="animate-fade-up overflow-hidden rounded-2xl bg-white shadow-rental">
+      {/* Header band */}
+      <div
+        className="px-5 pt-5 pb-5"
+        style={{ background: `linear-gradient(135deg, ${tier.badgeBg}66 0%, #ffffff 70%)` }}
+      >
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <span className="text-[28px]">{tier.emoji}</span>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: tier.accentColor }}>
+                {tier.label} · {item.city}
+              </p>
+              <p className="text-[10px] font-black uppercase tracking-wider text-souq-600 mt-px">Best area</p>
+            </div>
           </div>
-          <div className="shrink-0 text-right">
+          <div className="text-right">
             <p className="text-[26px] font-black tabular-nums leading-tight" style={{ color: tier.accentColor }}>
               {item.avgRentMin}–{item.avgRentMax}
             </p>
             <p className="text-[10px] font-black uppercase tracking-wider text-ink-400">JOD / month</p>
           </div>
         </div>
+        <h3 className="text-[22px] font-black text-ink-900 leading-tight">{item.name}</h3>
+        {item.nameAr && <p className="text-sm text-ink-400 mt-0.5" dir="rtl">{item.nameAr}</p>}
+      </div>
 
+      <div className="px-5 pb-5 pt-3">
         {item.characteristics.length > 0 && (
-          <div className="mb-4 flex flex-wrap gap-1.5">
+          <div className="mb-3 flex flex-wrap gap-1.5">
             {item.characteristics.map((c, i) => <Chip key={i}>{c}</Chip>)}
           </div>
         )}
-
-        <div className="mb-4">
+        <div className="mb-3">
           <ProsCons pros={item.pros} cons={item.cons} />
         </div>
-
         {item.bestFor.length > 0 && (
           <p className="mb-4 text-[12px] text-ink-400">
             Best for: <span className="font-semibold text-ink-600">{item.bestFor.join(", ")}</span>
           </p>
         )}
-
-        <ActionBtn href={mapsLink}>
-          <PinIcon size={12} /> View on map
-        </ActionBtn>
+        <ActionBtn href={mapsLink}><PinIcon size={12} /> View on map</ActionBtn>
       </div>
     </div>
   );
@@ -581,9 +611,10 @@ export function NeighborhoodAltCard({ item, rank }: { item: NeighborhoodCard; ra
 
   return (
     <div
-      className="card-hover animate-fade-up overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-black/[0.07] hover:shadow-card"
-      style={{ borderLeft: `3px solid ${tier.accentColor}` }}
+      className="card-hover animate-fade-up flex flex-col overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-black/[0.07] hover:shadow-card"
+      style={{ animationDelay: `${(rank - 2) * 55}ms` }}
     >
+      <div className="h-1.5" style={{ background: tier.accentColor }} />
       <div className="p-4">
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="min-w-0">
@@ -594,9 +625,7 @@ export function NeighborhoodAltCard({ item, rank }: { item: NeighborhoodCard; ra
               <span className="rounded-full bg-sand-100 px-1.5 py-0.5 text-[10px] font-black text-ink-500">#{rank}</span>
             </div>
             <h4 className="text-[15px] font-bold text-ink-900">{item.name}</h4>
-            {item.nameAr && (
-              <p className="text-[11px] text-ink-400" dir="rtl">{item.nameAr}</p>
-            )}
+            {item.nameAr && <p className="text-[11px] text-ink-400" dir="rtl">{item.nameAr}</p>}
           </div>
           <div className="shrink-0 text-right">
             <p className="text-[17px] font-black tabular-nums" style={{ color: tier.accentColor }}>
@@ -605,7 +634,6 @@ export function NeighborhoodAltCard({ item, rank }: { item: NeighborhoodCard; ra
             <p className="text-[10px] font-black text-ink-400 uppercase tracking-wider">JOD/mo</p>
           </div>
         </div>
-
         {item.characteristics.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-2">
             {item.characteristics.slice(0, 3).map((c, i) => (
@@ -613,18 +641,13 @@ export function NeighborhoodAltCard({ item, rank }: { item: NeighborhoodCard; ra
             ))}
           </div>
         )}
-
-        <div className="flex flex-wrap gap-x-3">
-          {item.pros.slice(0, 1).map((p, i) => (
+        <div className="flex flex-wrap gap-x-3 mb-2">
+          {cleanPros(item.pros).slice(0, 1).map((p, i) => (
             <span key={i} className="inline-flex items-center gap-1 text-[11px] text-souq-700"><CheckDot /> {p}</span>
           ))}
-          {item.cons.slice(0, 1).map((c, i) => (
-            <span key={i} className="inline-flex items-center gap-1 text-[11px] text-amber-700"><MinusDot /> {c}</span>
-          ))}
         </div>
-
         <a href={mapsLink} target="_blank" rel="noopener noreferrer"
-          className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold hover:underline"
+          className="inline-flex items-center gap-1 text-[11px] font-bold hover:underline"
           style={{ color: tier.accentColor }}>
           <PinIcon size={10} /> View on map
         </a>
@@ -646,17 +669,13 @@ export function NewspaperFront({ cards }: { cards: InfoCard[] }) {
   const dateAr = today.toLocaleDateString("ar-JO", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
 
   return (
-    <div className="space-y-0 rounded-2xl overflow-hidden bg-white ring-1 ring-black/[0.06] shadow-card">
-      {/* ── Masthead ── */}
+    <div className="overflow-hidden rounded-2xl bg-white ring-1 ring-black/[0.06] shadow-card">
+      {/* Masthead */}
       <div className="px-4 pt-4 pb-3 sm:px-5">
-        {/* Top rule */}
         <div className="h-[2.5px] bg-ink-900 mb-3" />
-
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.25em] text-ink-400 leading-none mb-1">
-              Amman Morning Brief
-            </p>
+            <p className="text-[9px] font-black uppercase tracking-[0.25em] text-ink-400 leading-none mb-1">Amman Morning Brief</p>
             <p className="text-[11px] font-medium text-ink-500">{dateEn}</p>
           </div>
           <div className="text-right shrink-0">
@@ -670,58 +689,44 @@ export function NewspaperFront({ cards }: { cards: InfoCard[] }) {
             </div>
           </div>
         </div>
-
         <div className="h-px bg-ink-200 mt-3" />
       </div>
 
       <div className="px-4 pb-4 sm:px-5 space-y-5">
-        {/* ── Hero story ── */}
         {news[0] && <HeroNewsStory item={news[0]} />}
 
-        {/* ── Top stories grid ── */}
         {news.length > 1 && (
           <div>
             <SectionDivider color="#e11d48" label="Top Stories" />
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {news.slice(1, 5).map((item, i) => (
-                <NewsGridItem key={i} item={item} />
-              ))}
+              {news.slice(1, 5).map((item, i) => <NewsGridItem key={i} item={item} />)}
             </div>
           </div>
         )}
 
-        {/* ── Restaurants ── */}
         {restaurants.length > 0 && (
           <div>
             <SectionDivider color="#f59e0b" label="On The Table" badge="via Talabat" />
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-              {restaurants.slice(0, 3).map((item, i) => (
-                <RestaurantTile key={i} item={item} />
-              ))}
+              {restaurants.slice(0, 3).map((item, i) => <RestaurantTile key={i} item={item} />)}
             </div>
           </div>
         )}
 
-        {/* ── Places ── */}
         {places.length > 0 && (
           <div>
             <SectionDivider color="#059669" label="Around Amman" />
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {places.slice(0, 6).map((item, i) => (
-                <PlaceTile key={i} item={item} />
-              ))}
+              {places.slice(0, 6).map((item, i) => <PlaceTile key={i} item={item} />)}
             </div>
           </div>
         )}
 
-        {/* ── Professionals ── */}
         {pros.length > 0 && (
           <div>
             <SectionDivider color="#0891b2" label="Featured Professionals" />
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {pros.slice(0, 2).map((item, i) => (
-                <ProTile key={i} item={item} />
-              ))}
+              {pros.slice(0, 2).map((item, i) => <ProTile key={i} item={item} />)}
             </div>
           </div>
         )}
@@ -733,10 +738,7 @@ export function NewspaperFront({ cards }: { cards: InfoCard[] }) {
 function SectionDivider({ color, label, badge }: { color: string; label: string; badge?: string }) {
   return (
     <div className="flex items-center gap-2 mb-3">
-      <span
-        className="text-[9px] font-black uppercase tracking-[0.22em] shrink-0"
-        style={{ color }}
-      >
+      <span className="text-[9px] font-black uppercase tracking-[0.22em] shrink-0" style={{ color }}>
         {label}
       </span>
       <div className="flex-1 h-px" style={{ background: color, opacity: 0.25 }} />
@@ -759,11 +761,7 @@ function HeroNewsStory({ item }: { item: InfoCard }) {
         <h2 className="text-[16px] sm:text-[19px] font-black leading-snug text-ink-900 group-hover:text-rose-700 transition-colors">
           {item.title}
         </h2>
-        {item.url && (
-          <p className="mt-2 text-[11px] text-rose-600 font-bold flex items-center gap-1">
-            Read full story →
-          </p>
-        )}
+        {item.url && <p className="mt-2 text-[11px] text-rose-600 font-bold">Read full story →</p>}
       </div>
     </div>
   );
@@ -797,11 +795,7 @@ function RestaurantTile({ item }: { item: InfoCard }) {
       <p className="text-[13px] font-bold text-ink-900 group-hover:text-amber-700 transition-colors leading-snug">
         {item.title}
       </p>
-      {item.url && (
-        <p className="mt-1.5 text-[10px] font-bold text-amber-600 flex items-center gap-1">
-          Order on Talabat →
-        </p>
-      )}
+      {item.url && <p className="mt-1.5 text-[10px] font-bold text-amber-600">Order on Talabat →</p>}
     </div>
   );
   if (item.url) return <a href={item.url} target="_blank" rel="noopener noreferrer" className="block">{inner}</a>;
@@ -864,9 +858,7 @@ export function NewsInfoCard({ item, index }: { item: InfoCard; index: number })
           {item.title}
         </p>
         <p className="mt-0.5 text-[11px] leading-relaxed text-ink-400">{item.body}</p>
-        {item.url && (
-          <p className="mt-1 text-[10px] font-black text-rose-600">Read →</p>
-        )}
+        {item.url && <p className="mt-1 text-[10px] font-black text-rose-600">Read →</p>}
       </div>
     </div>
   );
@@ -874,7 +866,7 @@ export function NewsInfoCard({ item, index }: { item: InfoCard; index: number })
   return inner;
 }
 
-// ── General info cards ────────────────────────────────────────────────────────
+// ── General & company info cards ──────────────────────────────────────────────
 
 const INFO_ICON_MAP: Record<string, string> = {
   info: "ℹ️", map: "📍", star: "⭐", building: "🏢", calendar: "📅", phone: "📞",
@@ -882,11 +874,9 @@ const INFO_ICON_MAP: Record<string, string> = {
 
 export function GeneralInfoCard({ item }: { item: InfoCard }) {
   return (
-    <div
-      className="animate-fade-up rounded-xl bg-white p-4 shadow-sm ring-1 ring-black/[0.07]"
-      style={{ borderLeft: "3px solid #059669" }}
-    >
-      <div className="flex items-start gap-3">
+    <div className="animate-fade-up overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-black/[0.07]">
+      <div className="h-1 bg-souq-500" />
+      <div className="flex items-start gap-3 p-4">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-souq-50 text-lg">
           {INFO_ICON_MAP[item.icon] ?? "ℹ️"}
         </div>
@@ -899,26 +889,24 @@ export function GeneralInfoCard({ item }: { item: InfoCard }) {
   );
 }
 
-// ── Company info cards ────────────────────────────────────────────────────────
-
 export function CompanyInfoCard({ item, index }: { item: InfoCard; index: number }) {
   const emoji = INFO_ICON_MAP[item.icon] ?? "🏢";
   return (
     <div
-      className="animate-fade-up rounded-xl bg-white p-4 ring-1 ring-black/[0.07]"
-      style={{ animationDelay: `${index * 55}ms`, borderLeft: "3px solid #4f46e5" }}
+      className="animate-fade-up overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-black/[0.07]"
+      style={{ animationDelay: `${index * 55}ms` }}
     >
-      <div className="mb-2.5 flex items-center gap-2">
-        <span
-          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-sm"
-          style={{ background: "#eef2ff" }}
-        >
-          {emoji}
-        </span>
-        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-600">Business</span>
+      <div className="h-1 bg-indigo-600" />
+      <div className="p-4">
+        <div className="mb-2.5 flex items-center gap-2">
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-sm" style={{ background: "#eef2ff" }}>
+            {emoji}
+          </span>
+          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-600">Business</span>
+        </div>
+        <p className="text-[13px] font-bold leading-snug text-ink-900">{item.title}</p>
+        <p className="mt-1 text-xs leading-relaxed text-ink-500">{item.body}</p>
       </div>
-      <p className="text-[13px] font-bold leading-snug text-ink-900">{item.title}</p>
-      <p className="mt-1 text-xs leading-relaxed text-ink-500">{item.body}</p>
     </div>
   );
 }
@@ -928,24 +916,20 @@ export function CompanyInfoCard({ item, index }: { item: InfoCard; index: number
 export function SkeletonCard() {
   return (
     <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.07]">
-      <div className="shimmer h-[3px] w-full rounded-none" />
+      <div className="shimmer h-16 w-full rounded-none" />
       <div className="p-5">
-        <div className="mb-4 flex gap-2">
-          <div className="shimmer h-6 w-24 rounded-full" />
-          <div className="shimmer h-6 w-16 rounded-full" />
+        <div className="mb-3 flex gap-2">
+          <div className="shimmer h-5 w-32 rounded" />
+          <div className="shimmer h-5 w-20 rounded" />
         </div>
-        <div className="flex gap-4">
-          <div className="shimmer h-14 w-14 shrink-0 rounded-xl" />
-          <div className="flex-1 space-y-2.5 pt-1">
-            <div className="shimmer h-3 w-16 rounded" />
-            <div className="shimmer h-5 w-2/3 rounded" />
-            <div className="shimmer h-3 w-full rounded" />
-            <div className="shimmer h-3 w-4/5 rounded" />
-            <div className="mt-3 flex gap-2">
-              <div className="shimmer h-8 w-24 rounded-xl" />
-              <div className="shimmer h-8 w-16 rounded-xl" />
-            </div>
-          </div>
+        <div className="shimmer h-7 w-2/3 rounded mb-3" />
+        <div className="space-y-2">
+          <div className="shimmer h-3 w-full rounded" />
+          <div className="shimmer h-3 w-4/5 rounded" />
+        </div>
+        <div className="mt-4 flex gap-2">
+          <div className="shimmer h-9 w-28 rounded-xl" />
+          <div className="shimmer h-9 w-20 rounded-xl" />
         </div>
       </div>
     </div>
@@ -1023,5 +1007,4 @@ function MinusDot() {
   );
 }
 
-// suppress unused warnings
 void PROFESSIONAL_ROLES;

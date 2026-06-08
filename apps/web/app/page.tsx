@@ -633,7 +633,7 @@ function ResponseView({ res }: { res: AssistResponse }) {
             {nbCards.length > 1 && (
               <>
                 <SectionLabel className="mt-6">Also worth considering</SectionLabel>
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-3 sm:grid-cols-3">
                   {nbCards.slice(1).map((nb, i) => (
                     <NeighborhoodAltCard key={nb.name} item={nb} rank={i + 2} />
                   ))}
@@ -704,7 +704,7 @@ function ResponseView({ res }: { res: AssistResponse }) {
         {res.alternatives.length > 0 && (
           <>
             <SectionLabel className="mt-6">Other options</SectionLabel>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-3">
               {res.alternatives.map((a, i) => (
                 <PlaceAltCard key={a.place.id} item={a} rank={i + 2} />
               ))}

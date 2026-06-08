@@ -254,7 +254,7 @@ export function AltCard({ item, rank }: { item: ResultItem; rank: number }) {
   const goodWhy = isGoodWhy(item.why);
   return (
     <div
-      className="animate-fade-up pt-3 px-3 first:pl-0 flex flex-col"
+      className="animate-fade-up py-3 px-4 first:pl-0 flex flex-col"
       style={{ animationDelay: `${(rank - 2) * 55}ms` }}
     >
       {/* Accent top rule */}
@@ -418,7 +418,7 @@ export function PlaceAltCard({ item, rank }: { item: PlaceResultItem; rank: numb
 
   return (
     <div
-      className="animate-fade-up pt-3 px-3 first:pl-0 flex flex-col"
+      className="animate-fade-up py-3 px-4 first:pl-0 flex flex-col"
       style={{ animationDelay: `${(rank - 2) * 60}ms` }}
     >
       {/* Accent top rule */}
@@ -544,7 +544,7 @@ export function NeighborhoodAltCard({ item, rank }: { item: NeighborhoodCard; ra
 
   return (
     <div
-      className="animate-fade-up pt-3 px-3 first:pl-0 flex flex-col"
+      className="animate-fade-up py-3 px-4 first:pl-0 flex flex-col"
       style={{ animationDelay: `${(rank - 2) * 55}ms` }}
     >
       <div style={{ borderTop: `2px solid ${tier.accentColor}` }} className="mb-2" />
@@ -764,18 +764,18 @@ function ProTile({ item }: { item: InfoCard }) {
 export function NewsInfoCard({ item, index }: { item: InfoCard; index: number }) {
   const inner = (
     <div
-      className="animate-fade-up group flex items-start gap-3 rounded-xl bg-white px-4 py-3.5 ring-1 ring-black/[0.06] transition hover:ring-rose-200"
-      style={{ animationDelay: `${index * 55}ms`, borderLeft: "3px solid #e11d48" }}
+      className="animate-fade-up group py-3 border-b border-[#e8e3da] last:border-0"
+      style={{ animationDelay: `${index * 55}ms` }}
     >
-      <div className="mt-px flex h-7 w-7 shrink-0 items-center justify-center rounded-lg" style={{ background: "#fff1f2" }}>
-        <span className="text-sm">📰</span>
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="font-serif text-[13px] font-bold leading-snug text-ink-900 group-hover:text-rose-700 transition-colors">
-          {item.title}
-        </p>
-        <p className="mt-0.5 text-[11px] leading-relaxed text-ink-400">{item.body}</p>
-        {item.url && <p className="mt-1 text-[10px] font-black text-rose-600">Read →</p>}
+      <div className="flex items-start gap-3">
+        <div className="mt-1 h-1 w-5 shrink-0" style={{ background: "#e11d48" }} />
+        <div className="min-w-0 flex-1">
+          <p className="font-serif text-[13px] font-bold leading-snug text-ink-900 group-hover:text-rose-700 transition-colors">
+            {item.title}
+          </p>
+          {item.body && <p className="mt-0.5 text-[11px] leading-relaxed text-ink-400">{item.body}</p>}
+          {item.url && <p className="mt-1 text-[10px] font-black text-rose-600">Read →</p>}
+        </div>
       </div>
     </div>
   );
@@ -791,12 +791,9 @@ const INFO_ICON_MAP: Record<string, string> = {
 
 export function GeneralInfoCard({ item }: { item: InfoCard }) {
   return (
-    <div className="animate-fade-up overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-black/[0.07]">
-      <div className="h-1 bg-souq-500" />
-      <div className="flex items-start gap-3 p-4">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-souq-50 text-lg">
-          {INFO_ICON_MAP[item.icon] ?? "ℹ️"}
-        </div>
+    <div className="animate-fade-up py-3 border-b border-[#e8e3da] last:border-0">
+      <div className="flex items-start gap-3">
+        <span className="mt-0.5 shrink-0 text-base">{INFO_ICON_MAP[item.icon] ?? "ℹ️"}</span>
         <div>
           <p className="font-serif text-[13px] font-bold text-ink-900">{item.title}</p>
           <p className="mt-0.5 text-xs leading-relaxed text-ink-500">{item.body}</p>
@@ -810,19 +807,16 @@ export function CompanyInfoCard({ item, index }: { item: InfoCard; index: number
   const emoji = INFO_ICON_MAP[item.icon] ?? "🏢";
   return (
     <div
-      className="animate-fade-up overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-black/[0.07]"
+      className="animate-fade-up py-3 border-b border-[#e8e3da] last:border-0"
       style={{ animationDelay: `${index * 55}ms` }}
     >
-      <div className="h-1 bg-indigo-600" />
-      <div className="p-4">
-        <div className="mb-2.5 flex items-center gap-2">
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-sm" style={{ background: "#eef2ff" }}>
-            {emoji}
-          </span>
-          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-600">Business</span>
+      <div className="flex items-start gap-3">
+        <span className="mt-0.5 shrink-0 text-base">{emoji}</span>
+        <div>
+          <p className="text-[9px] font-black uppercase tracking-[0.18em] text-indigo-600 mb-0.5">Business</p>
+          <p className="font-serif text-[13px] font-bold leading-snug text-ink-900">{item.title}</p>
+          <p className="mt-0.5 text-xs leading-relaxed text-ink-500">{item.body}</p>
         </div>
-        <p className="font-serif text-[13px] font-bold leading-snug text-ink-900">{item.title}</p>
-        <p className="mt-1 text-xs leading-relaxed text-ink-500">{item.body}</p>
       </div>
     </div>
   );

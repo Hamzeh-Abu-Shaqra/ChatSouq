@@ -642,7 +642,7 @@ function ResponseView({ res }: { res: AssistResponse }) {
           <div className="space-y-3">
             <NeighborhoodBestCard item={nbCards[0]!} />
             {nbCards.length > 1 && (
-              <div className="grid gap-3 sm:grid-cols-3">
+              <div className="grid sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[#e8e3da]">
                 {nbCards.slice(1).map((nb, i) => (
                   <NeighborhoodAltCard key={nb.name} item={nb} rank={i + 2} />
                 ))}
@@ -652,9 +652,9 @@ function ResponseView({ res }: { res: AssistResponse }) {
         )}
 
         {isNews && infoCards.length > 0 && (
-          <div className="space-y-2">
+          <div>
             <SectionLabelWithPulse>Latest from Jordan</SectionLabelWithPulse>
-            <div className="space-y-2">
+            <div className="mt-2">
               {infoCards.map((card, i) => (
                 <NewsInfoCard key={i} item={card} index={i} />
               ))}
@@ -663,7 +663,7 @@ function ResponseView({ res }: { res: AssistResponse }) {
         )}
 
         {isCompanies && infoCards.length > 0 && (
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div>
             {infoCards.map((card, i) => (
               <CompanyInfoCard key={i} item={card} index={i} />
             ))}
@@ -671,7 +671,7 @@ function ResponseView({ res }: { res: AssistResponse }) {
         )}
 
         {!isRental && !isNews && !isCompanies && infoCards.length > 0 && (
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div>
             {infoCards.map((card, i) => (
               <GeneralInfoCard key={i} item={card} />
             ))}
@@ -700,7 +700,7 @@ function ResponseView({ res }: { res: AssistResponse }) {
         <ChatText text={res.summary} rtl={isRtl} />
         <PlaceBestCard item={res.best} />
         {res.alternatives.length > 0 && (
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[#e8e3da]">
             {res.alternatives.map((a, i) => (
               <PlaceAltCard key={a.place.id} item={a} rank={i + 2} />
             ))}
@@ -717,7 +717,7 @@ function ResponseView({ res }: { res: AssistResponse }) {
       <ChatText text={res.summary} rtl={isRtl} />
       <BestCard item={res.best} />
       {res.alternatives.length > 0 && (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-[#e8e3da]">
           {res.alternatives.map((a, i) => (
             <AltCard key={a.listing.id} item={a} rank={i + 2} />
           ))}

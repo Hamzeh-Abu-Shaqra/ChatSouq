@@ -6,11 +6,8 @@ import {
   AltCard, BestCard,
   PlaceAltCard, PlaceBestCard,
   NeighborhoodBestCard, NeighborhoodAltCard,
-  GeneralInfoCard,
-  NewsInfoCard,
-  CompanyInfoCard,
-  NewspaperFront,
-  SkeletonCard,
+  GeneralInfoCard, NewsInfoCard, CompanyInfoCard,
+  NewspaperFront, SkeletonCard,
 } from "../components/cards";
 
 const SESSION_KEY = "chatsouq_session_id";
@@ -34,40 +31,78 @@ interface Turn {
   feedback?: 1 | -1;
 }
 
-// ── Example queries covering all 10 data categories ──────────────────────────
+// ── Category grid data ────────────────────────────────────────────────────────
 
-interface Example {
-  label: string;
-  tag: string;
-  icon: string;
-}
+const CATEGORIES = [
+  { label: "Today",    icon: "📰", q: "What's happening in Amman today?" },
+  { label: "Food",     icon: "🍽", q: "Best restaurants in Amman"        },
+  { label: "Doctors",  icon: "🏥", q: "Find a doctor in Amman"           },
+  { label: "Hotels",   icon: "🏨", q: "Hotels in Amman"                  },
+  { label: "Rent",     icon: "🏡", q: "Rent an apartment in Amman"       },
+  { label: "Gym",      icon: "💪", q: "Best gym in Amman"                },
+  { label: "News",     icon: "📡", q: "Latest news from Jordan"          },
+  { label: "Shopping", icon: "🛍", q: "Shopping malls in Amman"         },
+] as const;
+
+// ── Example queries ───────────────────────────────────────────────────────────
+
+interface Example { label: string; tag: string; icon: string }
 
 const EXAMPLES: Example[] = [
-  { label: "What's happening in Amman today?",                  tag: "Today",    icon: "📰" },
-  { label: "Best coffee in Jabal Amman",                        tag: "Food",     icon: "🍽" },
-  { label: "Find a cardiologist in Amman",                      tag: "Health",   icon: "🏥" },
-  { label: "Hotels near 4th Circle under 60 JOD",              tag: "Hotels",   icon: "🏨" },
-  { label: "Rent an apartment in Sweifieh",                     tag: "Rentals",  icon: "🏡" },
-  { label: "Best gym in Abdoun",                                tag: "Fitness",  icon: "💪" },
+  {
+    label: "What's happening in Amman today? Full rundown — news, new openings, events, and the best thing to do tonight.",
+    tag: "Today", icon: "📰",
+  },
+  {
+    label: "New restaurants and cafes that opened in Amman this month — anything worth trying?",
+    tag: "New", icon: "✨",
+  },
+  {
+    label: "إيش في عمّان اليوم؟ فعاليات، أماكن جديدة، وأحسن وجهة للمساء",
+    tag: "الليلة", icon: "🌙",
+  },
+  {
+    label: "Best deals and offers running in Amman right now — food, shops, and services.",
+    tag: "Deals", icon: "🏷",
+  },
+  {
+    label: "What's trending in Weibdeh and Rainbow Street this week? New cafes, pop-ups, and shops to check out.",
+    tag: "Trending", icon: "🔥",
+  },
+  {
+    label: "Plan my Friday in Amman — best family activities, indoor and outdoor, for this weekend.",
+    tag: "Friday", icon: "🎉",
+  },
+  {
+    label: "New boutiques and concept stores just opened in Amman — fashion, home decor, and gifts.",
+    tag: "New Shops", icon: "🛍",
+  },
+  {
+    label: "I have guests visiting Amman this weekend — best spots for food, culture, and shopping.",
+    tag: "Guide", icon: "🗺",
+  },
 ];
 
 const TAG_COLORS: Record<string, { bg: string; text: string }> = {
-  Today:     { bg: "#fff1f2", text: "#be123c" },
-  News:      { bg: "#fff1f2", text: "#be123c" },
-  Food:      { bg: "#fffbeb", text: "#92400e" },
-  Health:    { bg: "#ecfdf5", text: "#065f46" },
-  Shopping:  { bg: "#fff7ed", text: "#9a3412" },
-  Hotels:    { bg: "#f0fdfa", text: "#134e4a" },
-  Education: { bg: "#eef2ff", text: "#3730a3" },
-  Services:  { bg: "#f5f3ff", text: "#5b21b6" },
-  Rentals:   { bg: "#eff6ff", text: "#1d4ed8" },
-  Fitness:   { bg: "#ecfdf5", text: "#065f46" },
-  Tourism:   { bg: "#faf5ff", text: "#6b21a8" },
-  Companies: { bg: "#eef2ff", text: "#3730a3" },
-  Places:    { bg: "#fffbeb", text: "#92400e" },
+  Today:      { bg: "#fff1f2", text: "#be123c" },
+  New:        { bg: "#ecfdf5", text: "#047857" },
+  "الليلة":  { bg: "#eef2ff", text: "#4338ca" },
+  Deals:      { bg: "#fffbeb", text: "#92400e" },
+  Trending:   { bg: "#fff7ed", text: "#c2410c" },
+  Friday:     { bg: "#fdf4ff", text: "#86198f" },
+  "New Shops":{ bg: "#fff7ed", text: "#9a3412" },
+  Guide:      { bg: "#f5f3ff", text: "#6d28d9" },
 };
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
+const DATA_STATS = [
+  { emoji: "📍", label: "1,142 places" },
+  { emoji: "👩‍⚕️", label: "88 professionals" },
+  { emoji: "🍽",  label: "Restaurants"      },
+  { emoji: "📰",  label: "Live news"        },
+  { emoji: "🛍",  label: "30k+ products"   },
+];
+
+// ── Context helpers ───────────────────────────────────────────────────────────
 
 function buildAssistantContext(res: AssistResponse): string {
   const lines: string[] = [res.summary];
@@ -77,28 +112,24 @@ function buildAssistantContext(res: AssistResponse): string {
     const brand = b.listing.brand ? `${b.listing.brand} ` : "";
     lines.push(`Top pick: ${brand}${b.listing.name}${price} from ${b.listing.vendor.name}.`);
     if (b.why) lines.push(`Why: ${b.why}`);
-    if (res.alternatives.length > 0) {
+    if (res.alternatives.length > 0)
       lines.push(`Also shown: ${res.alternatives.map((a) => `${a.listing.name}${a.listing.price != null ? ` (${a.listing.price} JOD)` : ""}`).join(", ")}`);
-    }
   } else if (res.kind === "places" && res.best) {
     const b = res.best;
     const loc = b.place.city || b.place.governorate || "Jordan";
     lines.push(`Top place: ${b.place.name} in ${loc} (${b.place.category}).`);
     if (b.why) lines.push(`Why: ${b.why}`);
-    if (res.alternatives.length > 0) {
+    if (res.alternatives.length > 0)
       lines.push(`Also shown: ${res.alternatives.map((a) => a.place.name).join(", ")}`);
-    }
   } else if (res.kind === "general" && res.cards.length > 0) {
     if (res.intentType === "rental" || res.intentType === "lifestyle") {
-      const nbCards = res.cards as NeighborhoodCard[];
-      const areas = nbCards.map((nb) => {
+      const areas = (res.cards as NeighborhoodCard[]).map((nb) => {
         const rent = nb.avgRentMin && nb.avgRentMax ? ` (${nb.avgRentMin}–${nb.avgRentMax} JOD/month)` : "";
         return `${nb.name}${rent}`;
       }).join("; ");
       lines.push(`Areas: ${areas}`);
     } else if (res.intentType === "today") {
-      const cards = res.cards as InfoCard[];
-      const newsCards = cards.filter((c) => c.section === "news").slice(0, 3);
+      const newsCards = (res.cards as InfoCard[]).filter((c) => c.section === "news").slice(0, 3);
       if (newsCards.length > 0) lines.push(`Headlines: ${newsCards.map((c) => c.title).join("; ")}`);
     } else {
       lines.push(`Topics: ${(res.cards as InfoCard[]).map((c) => c.title).join(", ")}`);
@@ -111,24 +142,25 @@ function buildHistory(currentTurns: Turn[]): ConvMessage[] {
   return currentTurns
     .filter((t) => t.status === "done" && t.response)
     .flatMap((t) => [
-      { role: "user" as const, content: t.query },
+      { role: "user" as const,      content: t.query },
       { role: "assistant" as const, content: buildAssistantContext(t.response!) },
     ])
     .slice(-10);
 }
 
-// ── Page ─────────────────────────────────────────────────────────────────────
+// ── Page root ─────────────────────────────────────────────────────────────────
 
 export default function Page() {
-  const [input, setInput]         = useState("");
-  const [turns, setTurns]         = useState<Turn[]>([]);
-  const [busy, setBusy]           = useState(false);
+  const [input, setInput]                 = useState("");
+  const [turns, setTurns]                 = useState<Turn[]>([]);
+  const [busy, setBusy]                   = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [memoryActive, setMemoryActive]   = useState(false);
-  const sessionIdRef     = useRef<string>("");
+  const sessionIdRef      = useRef<string>("");
   const conversationIdRef = useRef<string | null>(null);
-  const bottomRef        = useRef<HTMLDivElement>(null);
+  const bottomRef         = useRef<HTMLDivElement>(null);
 
+  /* Restore session --------------------------------------------------------- */
   useEffect(() => {
     const sid = getOrCreateSessionId();
     sessionIdRef.current = sid;
@@ -147,12 +179,9 @@ export default function Page() {
                 query: uMsg.content,
                 status: "done",
                 response: {
-                  kind: "general",
-                  query: uMsg.content,
-                  intentType: "general",
-                  summary: aMsg.content,
-                  cards: [],
-                  meta: { provider: "restored", tookMs: 0 },
+                  kind: "general", query: uMsg.content,
+                  intentType: "general", summary: aMsg.content,
+                  cards: [], meta: { provider: "restored", tookMs: 0 },
                 } as AssistResponse,
               });
             }
@@ -169,6 +198,7 @@ export default function Page() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [turns]);
 
+  /* Feedback --------------------------------------------------------------- */
   const sendFeedback = useCallback((query: string, res: AssistResponse, rating: 1 | -1, clickedId?: number) => {
     const shownIds =
       res.kind === "products"
@@ -183,6 +213,7 @@ export default function Page() {
     }).catch(() => {});
   }, []);
 
+  /* Ask -------------------------------------------------------------------- */
   async function ask(query: string) {
     const q = query.trim();
     if (!q || busy) return;
@@ -198,9 +229,8 @@ export default function Page() {
       });
       if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error ?? "Request failed");
       const data = (await res.json()) as AssistResponse & { sessionId?: string };
-      if ((data as { conversationId?: string }).conversationId) {
+      if ((data as { conversationId?: string }).conversationId)
         conversationIdRef.current = (data as { conversationId?: string }).conversationId ?? null;
-      }
       setMemoryActive(true);
       setTurns((t) => t.map((x) => (x.id === id ? { ...x, status: "done", response: data } : x)));
     } catch (e) {
@@ -224,7 +254,6 @@ export default function Page() {
   return (
     <div className="mx-auto flex min-h-screen max-w-3xl flex-col px-4">
       <Header memoryActive={memoryActive} onNewConversation={newConversation} />
-
       <main className="flex-1 pb-52">
         {empty ? (
           <Hero onPick={ask} />
@@ -246,58 +275,76 @@ export default function Page() {
           </div>
         )}
       </main>
-
       <Composer input={input} setInput={setInput} onSubmit={() => ask(input)} busy={busy} compact={!empty} />
     </div>
   );
 }
 
-// ── Header ────────────────────────────────────────────────────────────────────
+// ── Header — newspaper masthead ───────────────────────────────────────────────
 
 function Header({ memoryActive, onNewConversation }: { memoryActive: boolean; onNewConversation: () => void }) {
   return (
-    <header className="flex items-center justify-between py-4 border-b border-black/[0.06]">
-      <div className="flex items-center gap-2.5">
-        <ChatSouqLogo />
-        <span className="text-[15px] font-bold tracking-tight text-ink-900">
-          Chat<span className="text-souq-600">Souq</span>
-        </span>
-        <span className="hidden sm:inline text-[11px] text-ink-400 font-medium">Jordan&apos;s AI</span>
-      </div>
-      <div className="flex items-center gap-3">
-        {memoryActive && (
-          <div className="hidden sm:flex items-center gap-1 rounded-full bg-violet-50 px-2.5 py-1 ring-1 ring-violet-200/60">
-            <span className="text-[10px]">🧠</span>
-            <span className="text-[10px] font-semibold text-violet-600 tracking-wide">Personalised</span>
+    <header>
+      {/* Thick top rule — newspaper edition bar */}
+      <div className="h-[3px] bg-ink-900" />
+
+      <div className="flex items-center justify-between py-3.5">
+        {/* Wordmark */}
+        <div className="flex items-center gap-2.5">
+          <LogoMark />
+          <div className="leading-tight">
+            <p className="text-[16px] font-black tracking-tight text-ink-900 leading-none">
+              Chat<span className="text-souq-600">Souq</span>
+            </p>
+            <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-ink-400 mt-0.5 leading-none">
+              Amman&apos;s AI
+            </p>
           </div>
-        )}
-        <button
-          onClick={onNewConversation}
-          title="New conversation"
-          className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold text-ink-500 ring-1 ring-black/[0.08] transition hover:bg-sand-50 hover:text-ink-800"
-        >
-          <svg width="10" height="10" viewBox="0 0 16 16" fill="none">
-            <path d="M8 1v14M1 8h14" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/>
-          </svg>
-          New
-        </button>
-        <div className="flex items-center gap-1.5">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-souq-400 opacity-60" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-souq-500" />
-          </span>
-          <span className="text-[11px] font-medium text-ink-400">Live</span>
+        </div>
+
+        {/* Center edition label */}
+        <p className="hidden sm:block text-[10px] font-bold uppercase tracking-[0.22em] text-ink-400">
+          Amman · Jordan
+        </p>
+
+        {/* Right status + actions */}
+        <div className="flex items-center gap-3">
+          {memoryActive && (
+            <div className="hidden sm:flex items-center gap-1 rounded-full bg-violet-50 px-2.5 py-1 ring-1 ring-violet-200/50">
+              <span className="text-[9px]">🧠</span>
+              <span className="text-[9px] font-black uppercase tracking-wider text-violet-600">Memory on</span>
+            </div>
+          )}
+          <div className="flex items-center gap-1.5">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-souq-400 opacity-60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-souq-500" />
+            </span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-ink-400">Live</span>
+          </div>
+          <button
+            onClick={onNewConversation}
+            title="Start a new conversation"
+            className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[10px] font-black uppercase tracking-wider text-ink-500 ring-1 ring-black/[0.08] transition hover:bg-sand-50 hover:text-ink-900 active:scale-95"
+          >
+            <svg width="9" height="9" viewBox="0 0 16 16" fill="none">
+              <path d="M8 1v14M1 8h14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+            </svg>
+            New
+          </button>
         </div>
       </div>
+
+      {/* Thin bottom rule */}
+      <div className="masthead-rule-thin" />
     </header>
   );
 }
 
-function ChatSouqLogo({ size = 30 }: { size?: number }) {
+function LogoMark() {
   return (
-    <div style={{ width: size, height: size }}
-      className="flex items-center justify-center rounded-xl bg-ink-900 text-white shadow-sm">
-      <svg width={size * 0.58} height={size * 0.58} viewBox="0 0 20 20" fill="none">
+    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-ink-900 shadow-sm">
+      <svg width="17" height="17" viewBox="0 0 20 20" fill="none">
         <path d="M3 6.5C3 5.67 3.67 5 4.5 5h11c.83 0 1.5.67 1.5 1.5v1H3v-1z" fill="white" fillOpacity="0.9"/>
         <path d="M3 7.5h14l-1.3 7.6a1.5 1.5 0 01-1.48 1.24H5.78A1.5 1.5 0 014.3 15.1L3 7.5z" fill="white" fillOpacity="0.7"/>
         <circle cx="7.5" cy="11.5" r="1" fill="white" fillOpacity="0.5"/>
@@ -318,91 +365,94 @@ function MiniLogo() {
   );
 }
 
-// ── Hero ──────────────────────────────────────────────────────────────────────
-
-const DATA_STATS = [
-  { emoji: "📍", label: "1,142 places" },
-  { emoji: "👩‍⚕️", label: "88 professionals" },
-  { emoji: "🍽", label: "Talabat restaurants" },
-  { emoji: "📰", label: "Live news" },
-  { emoji: "🛍", label: "30k+ products" },
-];
+// ── Hero — newspaper front page ───────────────────────────────────────────────
 
 function Hero({ onPick }: { onPick: (q: string) => void }) {
+  const now    = new Date();
+  const dateEn = now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).toUpperCase();
+  const dateAr = now.toLocaleDateString("ar-JO", { weekday: "long", day: "numeric", month: "long" });
+
   return (
-    <div className="flex flex-col items-center pt-10 sm:pt-16 text-center">
-      {/* Live data stats strip */}
-      <div className="mb-8 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5">
-        {DATA_STATS.map((s, i) => (
-          <span key={s.label} className="flex items-center gap-1.5">
-            {i > 0 && <span className="text-ink-200 text-xs select-none">·</span>}
-            <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-ink-600 ring-1 ring-black/[0.07] shadow-sm">
-              <span>{s.emoji}</span>{s.label}
-            </span>
-          </span>
-        ))}
+    <section className="pt-8 sm:pt-12">
+
+      {/* Edition / date strip */}
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-ink-400">{dateEn}</p>
+        <p className="text-[11px] text-ink-400" dir="rtl" lang="ar">{dateAr}</p>
       </div>
 
-      {/* Main headline */}
-      <h1 className="text-[52px] sm:text-[72px] font-black tracking-[-0.035em] leading-[0.9] text-ink-900">
-        Ask anything
-        <br />
-        <span className="text-souq-600">about Amman.</span>
+      {/* Thick masthead rule */}
+      <hr className="masthead-rule mb-5" />
+
+      {/* HEADLINE — giant serif */}
+      <h1 className="font-serif text-[62px] sm:text-[88px] font-black leading-[0.88] tracking-[-0.02em] text-ink-900">
+        Know<br />Amman.
       </h1>
 
-      <p className="mt-4 text-[15px] font-medium text-ink-400 tracking-wide" dir="rtl" lang="ar">
-        استفسر عن أي شيء في عمّان
-      </p>
+      {/* Thin rule */}
+      <hr className="masthead-rule-thin mt-5 mb-4" />
 
-      {/* TODAY button — prominently featured */}
+      {/* Tagline row */}
+      <div className="flex items-center justify-between mb-7">
+        <p className="text-[13px] font-medium text-ink-500 tracking-wide">
+          Your city&apos;s AI — real places, real answers, updated daily.
+        </p>
+        <p className="shrink-0 text-[13px] text-ink-400 ml-4" dir="rtl" lang="ar">اعرف عمّان</p>
+      </div>
+
+      {/* TODAY — featured CTA */}
       <button
         onClick={() => onPick("What's happening in Amman today?")}
-        className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-ink-900 px-5 py-3 text-[13px] font-bold text-white shadow-float transition-all hover:bg-ink-800 hover:-translate-y-0.5 active:scale-95"
+        className="mb-5 flex w-full items-center justify-center gap-2.5 rounded-2xl bg-ink-900 px-5 py-4 text-[13px] font-black uppercase tracking-wider text-white shadow-float transition-all hover:bg-ink-800 hover:-translate-y-0.5 active:scale-[0.98]"
       >
-        <span className="relative flex h-2 w-2">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-70" />
-          <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500" />
+        <span className="relative flex h-2.5 w-2.5">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75" />
+          <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-rose-500" />
         </span>
         Today in Amman
-        <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[10px] font-bold tracking-wider">LIVE</span>
+        <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-black tracking-widest">LIVE</span>
       </button>
 
-      {/* Quick action pills */}
-      <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-        {[
-          { label: "🍽 Food", q: "Best restaurants in Amman" },
-          { label: "🏥 Doctors", q: "Find a doctor in Amman" },
-          { label: "🏨 Hotels", q: "Hotels in Amman" },
-          { label: "🏡 Rent", q: "Rent an apartment in Amman" },
-          { label: "📰 News", q: "Latest news from Jordan" },
-        ].map((p) => (
+      {/* Category grid — 4 × 2 */}
+      <div className="grid grid-cols-4 gap-2 mb-7">
+        {CATEGORIES.map((cat) => (
           <button
-            key={p.label}
-            onClick={() => onPick(p.q)}
-            className="rounded-full bg-white px-3 py-1.5 text-[12px] font-medium text-ink-600 ring-1 ring-black/[0.08] shadow-sm transition hover:bg-souq-50 hover:ring-souq-300 hover:text-souq-700"
+            key={cat.label}
+            onClick={() => onPick(cat.q)}
+            className="group flex flex-col items-center gap-1.5 rounded-xl bg-white py-3.5 px-1 ring-1 ring-black/[0.07] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-card hover:ring-black/[0.12] active:scale-95"
           >
-            {p.label}
+            <span className="text-[20px] leading-none">{cat.icon}</span>
+            <span className="text-[10px] font-black uppercase tracking-wide text-ink-600 group-hover:text-ink-900 transition-colors">
+              {cat.label}
+            </span>
           </button>
         ))}
       </div>
 
-      {/* Example queries grid */}
-      <div className="mt-8 w-full max-w-2xl grid grid-cols-1 gap-2 sm:grid-cols-2">
+      {/* "Try an example" divider */}
+      <div className="mb-4 flex items-center gap-3">
+        <div className="flex-1 masthead-rule-thin" />
+        <span className="shrink-0 text-[9px] font-black uppercase tracking-[0.25em] text-ink-300">Try an example</span>
+        <div className="flex-1 masthead-rule-thin" />
+      </div>
+
+      {/* Example query cards — 2-col grid */}
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 mb-8">
         {EXAMPLES.map((ex) => {
           const colors = TAG_COLORS[ex.tag] ?? { bg: "#f3ede2", text: "#374151" };
           return (
             <button
               key={ex.label}
               onClick={() => onPick(ex.label)}
-              className="group flex items-start gap-3 rounded-xl bg-white px-4 py-3.5 text-left shadow-sm ring-1 ring-black/[0.07] transition-all duration-150 hover:-translate-y-px hover:shadow-card hover:ring-black/[0.12]"
+              className="group flex items-start gap-3 rounded-xl bg-white px-4 py-3.5 text-left shadow-sm ring-1 ring-black/[0.07] transition-all hover:-translate-y-px hover:shadow-card hover:ring-black/[0.12] active:scale-[0.99]"
             >
               <span
-                className="mt-0.5 shrink-0 rounded-lg px-2 py-1 text-[11px] font-bold uppercase tracking-wider leading-none"
+                className="mt-0.5 shrink-0 rounded-lg px-2 py-1 text-[11px] font-black uppercase tracking-wider leading-none"
                 style={{ background: colors.bg, color: colors.text }}
               >
                 {ex.icon}
               </span>
-              <span className="text-[13px] text-ink-700 group-hover:text-ink-900 transition-colors leading-snug">
+              <span className="text-[13px] text-ink-600 group-hover:text-ink-900 transition-colors leading-snug">
                 {ex.label}
               </span>
             </button>
@@ -410,25 +460,36 @@ function Hero({ onPick }: { onPick: (q: string) => void }) {
         })}
       </div>
 
-      <p className="mt-8 text-[11px] text-ink-300 font-medium tracking-wide">
-        Real Amman data · No hallucinations · Updates daily
+      {/* Data-coverage stats */}
+      <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5">
+        {DATA_STATS.map((s, i) => (
+          <span key={s.label} className="flex items-center gap-1.5">
+            {i > 0 && <span className="text-ink-200 select-none text-xs">·</span>}
+            <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[10px] font-semibold text-ink-500 ring-1 ring-black/[0.06] shadow-sm">
+              {s.emoji} {s.label}
+            </span>
+          </span>
+        ))}
+      </div>
+
+      <p className="mt-4 text-center text-[10px] text-ink-300 font-medium tracking-wide">
+        Real Amman data · No hallucinations · Updated daily
       </p>
-    </div>
+    </section>
   );
 }
 
-// ── Turn (one Q&A) ────────────────────────────────────────────────────────────
+// ── TurnView — one Q&A exchange ───────────────────────────────────────────────
 
 function TurnView({ turn, onFeedback }: { turn: Turn; onFeedback: (rating: 1 | -1, clickedId?: number) => void }) {
   const isRtl = /[؀-ۿ]/.test(turn.query);
-
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 animate-fade-up">
       {/* User bubble */}
       <div className="flex justify-end">
         <div
           dir={isRtl ? "rtl" : "ltr"}
-          className="max-w-[80%] rounded-2xl rounded-br-sm bg-ink-900 px-4 py-3 text-[14px] leading-relaxed text-white shadow-sm"
+          className="max-w-[78%] rounded-2xl rounded-br-sm bg-ink-900 px-4 py-3 text-[14px] leading-relaxed text-white shadow-sm"
         >
           {turn.query}
         </div>
@@ -436,7 +497,7 @@ function TurnView({ turn, onFeedback }: { turn: Turn; onFeedback: (rating: 1 | -
 
       {/* AI response */}
       <div className="flex items-start gap-3">
-        <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-souq-600 shadow-sm">
+        <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-souq-600 shadow-sm">
           <MiniLogo />
         </div>
         <div className="min-w-0 flex-1">
@@ -450,13 +511,11 @@ function TurnView({ turn, onFeedback }: { turn: Turn; onFeedback: (rating: 1 | -
               <SkeletonCard />
             </div>
           )}
-
           {turn.status === "error" && (
-            <div className="rounded-xl bg-red-50 px-4 py-3 text-[13px] text-red-700 ring-1 ring-red-100">
+            <div className="rounded-xl bg-rose-50 px-4 py-3 text-[13px] text-rose-700 ring-1 ring-rose-100">
               {turn.error ?? "Something went wrong — please try again."}
             </div>
           )}
-
           {turn.status === "done" && turn.response && (
             <>
               <ResponseView res={turn.response} />
@@ -473,9 +532,13 @@ function TurnView({ turn, onFeedback }: { turn: Turn; onFeedback: (rating: 1 | -
   );
 }
 
-// ── Feedback row ──────────────────────────────────────────────────────────────
+// ── FeedbackRow ───────────────────────────────────────────────────────────────
 
-function FeedbackRow({ feedback, onThumbUp, onThumbDown }: { feedback?: 1 | -1; onThumbUp: () => void; onThumbDown: () => void }) {
+function FeedbackRow({ feedback, onThumbUp, onThumbDown }: {
+  feedback?: 1 | -1;
+  onThumbUp: () => void;
+  onThumbDown: () => void;
+}) {
   if (feedback !== undefined) {
     return (
       <p className="mt-2 text-[10px] text-ink-300">
@@ -484,7 +547,7 @@ function FeedbackRow({ feedback, onThumbUp, onThumbDown }: { feedback?: 1 | -1; 
     );
   }
   return (
-    <div className="mt-2.5 flex items-center gap-2">
+    <div className="mt-3 flex items-center gap-2">
       <span className="text-[10px] text-ink-300">Helpful?</span>
       <button onClick={onThumbUp} title="Good answer"
         className="rounded-md p-1 text-ink-300 transition hover:bg-souq-50 hover:text-souq-600">
@@ -494,7 +557,7 @@ function FeedbackRow({ feedback, onThumbUp, onThumbDown }: { feedback?: 1 | -1; 
         </svg>
       </button>
       <button onClick={onThumbDown} title="Not helpful"
-        className="rounded-md p-1 text-ink-300 transition hover:bg-red-50 hover:text-red-500">
+        className="rounded-md p-1 text-ink-300 transition hover:bg-rose-50 hover:text-rose-500">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <path d="M10 15v4a3 3 0 003 3l4-9V2H5.72a2 2 0 00-2 1.7l-1.38 9a2 2 0 002 2.3H10z"/>
           <path d="M17 2h2.67A2.31 2.31 0 0122 4v7a2.31 2.31 0 01-2.33 2H17"/>
@@ -504,14 +567,13 @@ function FeedbackRow({ feedback, onThumbUp, onThumbDown }: { feedback?: 1 | -1; 
   );
 }
 
-// ── Source line ───────────────────────────────────────────────────────────────
+// ── SourceLine ────────────────────────────────────────────────────────────────
 
 function SourceLine({ res }: { res: AssistResponse }) {
   let text: string;
   if (res.kind === "products") {
     text = "🛍 Jordan product catalog · Live";
   } else if (res.kind === "places") {
-    // Detect if professionals are in the results
     const hasPro = res.best && /^(doctor|dentist|physician|lawyer|attorney|accountant|architect|engineer|pharmacist|specialist|professional)/i.test(res.best.place.category);
     text = hasPro
       ? "👩‍⚕️ Professional directory · Google Maps · Live"
@@ -527,10 +589,10 @@ function SourceLine({ res }: { res: AssistResponse }) {
       default:          text = "🌐 Web search · Jordan knowledge · Live"; break;
     }
   }
-  return <p className="mt-2 text-[10px] text-ink-300">{text}</p>;
+  return <p className="mt-2 text-[10px] text-ink-300 font-medium">{text}</p>;
 }
 
-// ── Response dispatcher ───────────────────────────────────────────────────────
+// ── ResponseView — dispatch by response kind ──────────────────────────────────
 
 function ResponseView({ res }: { res: AssistResponse }) {
   const isRtl = /[؀-ۿ]/.test(res.summary);
@@ -540,7 +602,7 @@ function ResponseView({ res }: { res: AssistResponse }) {
     </p>
   );
 
-  // ── General ──
+  /* General answers */
   if (res.kind === "general") {
     const isToday     = res.intentType === "today";
     const isRental    = res.intentType === "rental" || res.intentType === "lifestyle";
@@ -549,7 +611,7 @@ function ResponseView({ res }: { res: AssistResponse }) {
     const nbCards     = res.cards as NeighborhoodCard[];
     const infoCards   = res.cards as InfoCard[];
 
-    // Newspaper front page layout for today digest
+    /* Newspaper front — today digest */
     if (isToday) {
       return (
         <div className="space-y-4">
@@ -566,11 +628,11 @@ function ResponseView({ res }: { res: AssistResponse }) {
 
         {isRental && nbCards.length > 0 && (
           <div className="space-y-3">
-            <SectionLabel>{nbCards.length} area{nbCards.length > 1 ? "s" : ""} that fit your budget</SectionLabel>
+            <SectionLabel>{nbCards.length} area{nbCards.length > 1 ? "s" : ""} matching your budget</SectionLabel>
             <NeighborhoodBestCard item={nbCards[0]!} />
             {nbCards.length > 1 && (
               <>
-                <SectionLabel className="mt-6">Other areas to consider</SectionLabel>
+                <SectionLabel className="mt-6">Also worth considering</SectionLabel>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {nbCards.slice(1).map((nb, i) => (
                     <NeighborhoodAltCard key={nb.name} item={nb} rank={i + 2} />
@@ -616,7 +678,7 @@ function ResponseView({ res }: { res: AssistResponse }) {
     );
   }
 
-  // ── No results ──
+  /* No result */
   if (!res.best) {
     return (
       <div className="space-y-1">
@@ -626,14 +688,12 @@ function ResponseView({ res }: { res: AssistResponse }) {
     );
   }
 
-  // ── Places (context-aware cards) ──
+  /* Places */
   if (res.kind === "places") {
-    const bestLabel = /^(doctor|dentist|physician|lawyer|attorney|accountant|architect|engineer|pharmacist|specialist)/i.test(res.best.place.category)
-      ? "Top professional"
-      : /^(hotel|hostel|guest.house)/i.test(res.best.place.category)
-      ? "Top hotel"
-      : /^(restaurant|cafe|coffee|food)/i.test(res.best.place.category)
-      ? "Top pick"
+    const bestLabel =
+      /^(doctor|dentist|physician|lawyer|attorney|accountant|architect|engineer|pharmacist|specialist)/i.test(res.best.place.category) ? "Top professional"
+      : /^(hotel|hostel|guest.house)/i.test(res.best.place.category) ? "Top hotel"
+      : /^(restaurant|cafe|coffee|food)/i.test(res.best.place.category) ? "Top pick"
       : "Best match";
 
     return (
@@ -656,7 +716,7 @@ function ResponseView({ res }: { res: AssistResponse }) {
     );
   }
 
-  // ── Products ──
+  /* Products */
   return (
     <div className="space-y-4">
       {summaryEl}
@@ -681,7 +741,7 @@ function ResponseView({ res }: { res: AssistResponse }) {
 
 function SectionLabel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <p className={`text-[11px] font-bold uppercase tracking-widest text-ink-400 ${className}`}>
+    <p className={`text-[10px] font-black uppercase tracking-[0.22em] text-ink-400 ${className}`}>
       {children}
     </p>
   );
@@ -691,15 +751,15 @@ function SectionLabelWithPulse({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-2">
       <span className="relative flex h-1.5 w-1.5">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" style={{ backgroundColor: "#f43f5e" }} />
-        <span className="relative inline-flex h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "#e11d48" }} />
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-500 opacity-60" />
+        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-rose-600" />
       </span>
-      <p className="text-[11px] font-bold uppercase tracking-widest text-ink-400">{children}</p>
+      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-ink-400">{children}</p>
     </div>
   );
 }
 
-// ── Composer ──────────────────────────────────────────────────────────────────
+// ── Composer — fixed bottom bar ───────────────────────────────────────────────
 
 function Composer({ input, setInput, onSubmit, busy, compact }: {
   input: string;
@@ -740,7 +800,7 @@ function Composer({ input, setInput, onSubmit, busy, compact }: {
               {busy ? <Spinner /> : <SendIcon />}
             </button>
           </form>
-          <p className="mt-2 text-center text-[10px] text-ink-300">
+          <p className="mt-2 text-center text-[10px] text-ink-300 font-medium">
             ChatSouq uses real Jordan data — it never makes up facts.
           </p>
         </div>
@@ -749,7 +809,7 @@ function Composer({ input, setInput, onSubmit, busy, compact }: {
   );
 }
 
-// ── Micro icons ───────────────────────────────────────────────────────────────
+// ── Icons ─────────────────────────────────────────────────────────────────────
 
 function Spinner() {
   return (

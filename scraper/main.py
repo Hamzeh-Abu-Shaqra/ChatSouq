@@ -1,5 +1,15 @@
+import os
 import schedule
 import time
+from dotenv import load_dotenv
+load_dotenv()
+
+# Debug env vars on startup
+print("ENV CHECK:")
+print(f"  DATABASE_URL set: {bool(os.getenv('DATABASE_URL'))}")
+print(f"  GOOGLE_MAPS_API_KEY set: {bool(os.getenv('GOOGLE_MAPS_API_KEY'))}")
+print(f"  ANTHROPIC_API_KEY set: {bool(os.getenv('ANTHROPIC_API_KEY'))}")
+
 from scrapers.jordan_news import run as run_news
 from scrapers.google_maps import run as run_maps
 from scrapers.talabat import run as run_talabat

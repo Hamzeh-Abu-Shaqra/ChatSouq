@@ -649,6 +649,21 @@ export async function generalAnswer(
           ? `With a ${budget} JOD monthly budget in ${cityDisplay}, you have great options. Here are the best neighborhoods that fit your budget, from most premium to most affordable.`
           : `${cityDisplay} offers a wide range of neighborhoods for every lifestyle and budget. Here are the most popular areas to consider.`;
       }
+    } else if (intentType === "news") {
+      // In mock mode still fetch and show live news headlines from the DB
+      const newsItems = await fetchRecentNews(8);
+      if (newsItems.length > 0) {
+        answer = arabic
+          ? `إليك آخر الأخبار من الأردن (مصدر: Roya News).`
+          : `Here are the latest headlines from Jordan (source: Roya News).`;
+        cards = newsItems.map((n) => ({
+          title: n.title,
+          body: `${n.source}${n.scraped_at ? ` · ${new Date(n.scraped_at).toLocaleDateString()}` : ""}`,
+          icon: "calendar",
+        })) as InfoCard[];
+      } else {
+        answer = arabic ? `لا تتوفر أخبار حديثة حالياً.` : `No recent news available right now.`;
+      }
     } else {
       answer = arabic
         ? `يمكن لـ ChatSouq الإجابة على الأسئلة العامة حول الأردن عند الاتصال بمحرك الذكاء الاصطناعي. جرّب السؤال عن منتج للشراء أو مكان لزيارته.`

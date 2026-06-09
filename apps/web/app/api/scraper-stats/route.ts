@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
-import { db } from "@chatsouq/db";
-import { sql } from "drizzle-orm";
+import { db, sql } from "@chatsouq/db";
 
 export const dynamic = "force-dynamic";
 
-async function safeCount(query: Promise<{ rows: Record<string, unknown>[] }>) {
+async function safeCount(query: Promise<any>): Promise<Record<string, unknown>> {
   try {
     const result = await query;
-    return result.rows[0] ?? { count: 0, last_scraped: null };
+    return result[0] ?? { count: 0, last_scraped: null };
   } catch {
     return { count: 0, last_scraped: null };
   }

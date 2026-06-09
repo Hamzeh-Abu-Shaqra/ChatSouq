@@ -1,6 +1,10 @@
 import { drizzle } from "drizzle-orm/postgres-js";
+import { sql } from "drizzle-orm";
 import postgres from "postgres";
 import * as schema from "./schema";
+
+// Re-export sql so callers can do: import { db, sql } from "@chatsouq/db"
+export { sql };
 
 // postgres-js creates connections lazily — the pool is safe to create without a
 // live server. Queries will fail at runtime with a clear network error.

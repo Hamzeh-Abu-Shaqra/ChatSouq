@@ -53,9 +53,15 @@ function productSignal(query: string, productCategories: string[]): number {
 
   // Occasion-based shopping (birthday, Eid, Valentine, graduation…) — people
   // buying something for an occasion, not looking for a place to celebrate.
+  // EXCEPTION: "ramadan" alone is usually a schedule/general query ("Ramadan timings",
+  // "what's open during Ramadan") — only boost prodSig when paired with a shopping keyword.
   if (
-    /\b(birthday|anniversary|valentine|valentines|eid|graduation|wedding|ramadan|christmas|mother.?s\s+day|father.?s\s+day|new\s+year)\b/i.test(query) ||
-    /\b(عيد|رمضان|خطوبة|زفاف|تخرج|الفلانتاين)\b/.test(query)
+    /\b(birthday|anniversary|valentine|valentines|eid|graduation|wedding|christmas|mother.?s\s+day|father.?s\s+day|new\s+year)\b/i.test(query) ||
+    /\b(عيد|خطوبة|زفاف|تخرج|الفلانتاين)\b/.test(query)
+  ) s += 2;
+  if (
+    (/\b(ramadan)\b/i.test(query) || /رمضان/.test(query)) &&
+    /\b(gift|buy|shop|price|cheap|offer|discount|special|deal|هدية|هدايا|تسوق|اشتري|عروض|تخفيض|خاص)\b/i.test(query)
   ) s += 2;
 
   // Explicit purchase / browse intent: +1
@@ -64,12 +70,51 @@ function productSignal(query: string, productCategories: string[]): number {
   if (c.brands.length) s += 1;
   if (c.keywords.length >= 2) s += 1;
 
-  // Service-verb + body-part patterns are place queries, not product purchases.
-  // "cut my hair", "trim my beard", "do my nails" → reduce product signal so
-  // the router falls through to places instead of the product catalogue.
+  // ── Service-intent deductions ─────────────────────────────────────────────
+  // All of the patterns below describe wanting a SERVICE at a PLACE, not buying
+  // a physical product. Each match subtracts 3 so the router falls through to
+  // places/general instead of the product catalogue.
+
+  // Grooming — "cut my hair", "trim my beard", "do my nails"
   if (
     /\b(cut|trim|wash|dry|style|dye|color|do|get|fix|wax)\s+(my\s+|a\s+)?(hair|beard|nails|brows|eyebrows|lashes)\b/i.test(query) ||
     /\b(haircut|hair\s+cut|blowout|blow\s+dry|manicure|pedicure)\b/i.test(query)
+  ) s -= 3;
+
+  // Food/drink consumption → restaurant/café, not a product to buy
+  if (
+    /\b(eat\s+out|go\s+out\s+to\s+eat|grab\s+(a\s+)?(coffee|bite|food|drink|snack)|have\s+(a\s+)?(meal|bite|coffee|tea|juice|dessert|sweets?|lunch|dinner|breakfast|brunch)|i\s+want\s+to\s+(eat|drink)|dine\s+out|order\s+food)\b/i.test(query) ||
+    /\b(أريد\s+(آكل|أكل|أشرب)|بدي\s+(آكل|أكل|أشرب)|حابب\s+(آكل|أشرب))\b/.test(query)
+  ) s -= 3;
+
+  // Fitness service → gym/studio, not a product to buy
+  if (
+    /\b(join\s+(a\s+)?(gym|fitness|yoga|pilates|crossfit|club)|sign\s+up\s+(for|to)\s+\w+\s*class(es)?|go\s+(to\s+the\s+)?(gym|swim(ming)?|yoga|pilates|boxing)|take\s+a\s+(yoga|pilates|spin|boxing|fitness|zumba)\s+class(es)?|book\s+a\s+(class|session|training\s+session))\b/i.test(query) ||
+    /\b(بدي\s+روح\s+جيم|أريد\s+أروح\s+جيم|نادي\s+رياضي)\b/.test(query)
+  ) s -= 3;
+
+  // Car service → garage/car wash, not a product to buy
+  if (
+    /\b(fix\s+(my\s+)?car|repair\s+(my\s+)?car|wash\s+(my\s+)?car|service\s+(my\s+)?car|oil\s+change|change\s+(the\s+|my\s+)?oil|change\s+(my\s+)?tires?|rotate\s+tires?|wheel\s+alignment|car\s+maintenance|my\s+car\s+(needs?|broke|is\s+broken|won'?t\s+start))\b/i.test(query) ||
+    /\b(أصلح\s+سيارة|غسيل\s+سيارة|صيانة\s+سيارة|تغيير\s+زيت)\b/.test(query)
+  ) s -= 3;
+
+  // Medical service → clinic/doctor, not a product to buy
+  if (
+    /\b(see\s+a\s+(doctor|dentist|specialist|physician|therapist|psychiatrist|dermatologist|cardiologist)|visit\s+a?\s*(doctor|clinic|hospital|dentist)|book\s+(a\s+)?(doctor|appointment|medical\s+appointment|check.?up)|need\s+a\s+(doctor|dentist|check.?up)|consult\s+(a\s+)?(doctor|specialist)|go\s+to\s+(the\s+)?(doctor|clinic|hospital|dentist|pharmacy))\b/i.test(query) ||
+    /\b(أريد\s+أروح\s+دكتور|أريد\s+دكتور|بدي\s+دكتور|زيارة\s+طبيب)\b/.test(query)
+  ) s -= 3;
+
+  // Entertainment venue → cinema/activity, not a product to buy
+  if (
+    /\b(watch\s+a?\s*(movie|film|show)(\s+in\s+a?\s*cinema|\s+at\s+the\s+cinema)?|go\s+(bowling|karting|kart\s+racing|paintball|laser\s*tag|skating|ice\s+skating|to\s+an?\s+escape\s+room)|play\s+(bowling|billiards|pool|snooker)|catch\s+a\s+movie)\b/i.test(query) ||
+    /\b(أريد\s+أشوف\s+فيلم|مشاهدة\s+فيلم|روح\s+سينما|بدي\s+ألعب)\b/.test(query)
+  ) s -= 3;
+
+  // Massage/spa/beauty treatment → beauty place, not a product to buy
+  if (
+    /\b(get\s+a?\s*(massage|facial|wax(ing)?|threading|spa\s+treatment|body\s+scrub)|book\s+a?\s*(massage|facial|spa|beauty\s+treatment|salon\s+appointment))\b/i.test(query) ||
+    /\b(أريد\s+مساج|بدي\s+مساج|حجز\s+مساج)\b/.test(query)
   ) s -= 3;
 
   return Math.max(0, s);

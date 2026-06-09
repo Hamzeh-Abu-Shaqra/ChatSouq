@@ -41,6 +41,18 @@ const NEWS_AR = /أخبار|عاجل|آخر\s+الأخبار|مستجدات/;
 const COMPANY_AR = /شركة|شركات|أعمال|مؤسسة|توظيف|وظائف/;
 const GENERAL_INFO_AR = /ما\s+هي|ما\s+هو|كيف|ماذا|لماذا|أخبرني|اشرح/;
 
+// Exchange rate / currency queries
+const EXCHANGE_RATE_EN = /\b(exchange\s+rate|currency\s+(rate|price|value)|jod\s+to\s+(usd|eur|gbp|ils|egp)|usd\s+to\s+jod|dollar\s+to\s+dinar|dinar\s+to\s+dollar|how\s+much\s+is\s+the\s+(dinar|jod|dollar|dollar\s+worth))\b/i;
+const EXCHANGE_RATE_AR = /سعر\s+الصرف|صرف\s+العملة|الدينار\s+مقابل|دولار\s+إلى\s+دينار|دينار\s+إلى\s+دولار|سعر\s+الدولار/;
+
+// Public transport / getting around queries
+const TRANSPORT_EN = /\b(bus\s+route|bus\s+(to|from|number)|public\s+transport(ation)?|taxi|careem|uber|bolt|how\s+to\s+get\s+to|public\s+transit|commute\s+from|getting\s+around\s+amman|minibus|service\s+taxi)\b/i;
+const TRANSPORT_AR = /مواصلات\s+عامة|باص\s+(إلى|من|رقم)|تاكسي|كريم|أوبر|بولت|كيف\s+أوصل\s+إلى|طريق\s+إلى|سرفيس/;
+
+// Cost of living / expenses queries
+const COST_OF_LIVING_EN = /\b(cost\s+of\s+living|monthly\s+expenses?|living\s+(cost|costs|expenses?)|how\s+expensive\s+is\s+(jordan|amman|living)|price\s+of\s+life|average\s+(salary|wage|income)\s+in\s+jordan|expenses?\s+in\s+(jordan|amman))\b/i;
+const COST_OF_LIVING_AR = /تكاليف\s+المعيشة|مصاريف\s+الحياة|غلاء\s+المعيشة|معدل\s+الأجور|متوسط\s+الراتب\s+في\s+الأردن|كم\s+تكلف\s+المعيشة/;
+
 const RENTAL_RE     = (q: string) => RENTAL_EN.test(q)     || RENTAL_AR.test(q);
 const TOURISM_RE    = (q: string) => TOURISM_EN.test(q)    || TOURISM_AR.test(q);
 const LIFESTYLE_RE  = (q: string) => LIFESTYLE_EN.test(q)  || LIFESTYLE_AR.test(q);
@@ -51,20 +63,27 @@ const NEWS_RE       = (q: string) => NEWS_EN.test(q)       || NEWS_AR.test(q);
 const COMPANY_RE    = (q: string) => COMPANY_EN.test(q)    || COMPANY_AR.test(q);
 const GENERAL_INFO_RE = (q: string) => GENERAL_INFO_EN.test(q) || GENERAL_INFO_AR.test(q);
 const TODAY_RE      = (q: string) => TODAY_EN.test(q)      || TODAY_AR.test(q);
+const EXCHANGE_RATE_RE  = (q: string) => EXCHANGE_RATE_EN.test(q)  || EXCHANGE_RATE_AR.test(q);
+const TRANSPORT_RE2     = (q: string) => TRANSPORT_EN.test(q)      || TRANSPORT_AR.test(q);
+const COST_OF_LIVING_RE = (q: string) => COST_OF_LIVING_EN.test(q) || COST_OF_LIVING_AR.test(q);
 
 export type GeneralIntentType = "rental" | "tourism" | "lifestyle" | "weather" | "government" | "history" | "news" | "companies" | "general" | "today";
 
 export function detectGeneralIntent(query: string): GeneralIntentType {
   // Check "today" FIRST — it overlaps with news keywords
-  if (TODAY_RE(query))      return "today";
-  if (RENTAL_RE(query))     return "rental";
-  if (LIFESTYLE_RE(query))  return "lifestyle";
-  if (TOURISM_RE(query))    return "tourism";
-  if (WEATHER_RE(query))    return "weather";
-  if (GOVERNMENT_RE(query)) return "government";
-  if (HISTORY_RE(query))    return "history";
-  if (NEWS_RE(query))       return "news";
-  if (COMPANY_RE(query))    return "companies";
+  if (TODAY_RE(query))            return "today";
+  if (RENTAL_RE(query))           return "rental";
+  if (LIFESTYLE_RE(query))        return "lifestyle";
+  if (TOURISM_RE(query))          return "tourism";
+  if (WEATHER_RE(query))          return "weather";
+  if (GOVERNMENT_RE(query))       return "government";
+  if (HISTORY_RE(query))          return "history";
+  if (NEWS_RE(query))             return "news";
+  if (COMPANY_RE(query))          return "companies";
+  // Additional general-knowledge buckets
+  if (EXCHANGE_RATE_RE(query))    return "general";
+  if (TRANSPORT_RE2(query))       return "general";
+  if (COST_OF_LIVING_RE(query))   return "general";
   return "general";
 }
 
@@ -80,7 +99,10 @@ export function isGeneralQuery(query: string): boolean {
     HISTORY_RE(query) ||
     NEWS_RE(query) ||
     COMPANY_RE(query) ||
-    GENERAL_INFO_RE(query)
+    GENERAL_INFO_RE(query) ||
+    EXCHANGE_RATE_RE(query) ||
+    TRANSPORT_RE2(query) ||
+    COST_OF_LIVING_RE(query)
   );
 }
 

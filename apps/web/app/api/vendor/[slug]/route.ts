@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@chatsouq/db";
-import { sql } from "drizzle-orm";
+import { db, sql } from "@chatsouq/db";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 10;
@@ -29,7 +28,7 @@ export async function GET(
 
     const prefixMatch = slug.match(/^(place|restaurant|person)-(\d+)$/);
     if (prefixMatch) {
-      source = prefixMatch[1] as typeof source;
+      source = prefixMatch[1] as "place" | "restaurant" | "person";
       numericId = parseInt(prefixMatch[2]!, 10);
     } else if (/^\d+$/.test(slug)) {
       numericId = parseInt(slug, 10);
@@ -49,7 +48,7 @@ export async function GET(
           WHERE id = ${numericId}
           LIMIT 1
         `);
-        if (rows.rows.length > 0) return NextResponse.json(rows.rows[0]);
+        if (rows.length > 0) return NextResponse.json(rows[0]);
       }
 
       if (!source || source === "restaurant") {
@@ -72,7 +71,7 @@ export async function GET(
           WHERE id = ${numericId}
           LIMIT 1
         `);
-        if (rows.rows.length > 0) return NextResponse.json(rows.rows[0]);
+        if (rows.length > 0) return NextResponse.json(rows[0]);
       }
 
       if (!source || source === "person") {
@@ -93,7 +92,7 @@ export async function GET(
           WHERE id = ${numericId}
           LIMIT 1
         `);
-        if (rows.rows.length > 0) return NextResponse.json(rows.rows[0]);
+        if (rows.length > 0) return NextResponse.json(rows[0]);
       }
 
       return NextResponse.json({ error: "Vendor not found" }, { status: 404 });
@@ -111,7 +110,7 @@ export async function GET(
       ORDER BY rating DESC NULLS LAST
       LIMIT 1
     `);
-    if (rows.rows.length > 0) return NextResponse.json(rows.rows[0]);
+    if (rows.length > 0) return NextResponse.json(rows[0]);
 
     // Prefix match fallback
     const prefix = slug.slice(0, 40);
@@ -126,7 +125,7 @@ export async function GET(
       ORDER BY rating DESC NULLS LAST
       LIMIT 1
     `);
-    if (fallback.rows.length > 0) return NextResponse.json(fallback.rows[0]);
+    if (fallback.length > 0) return NextResponse.json(fallback[0]);
 
     return NextResponse.json({ error: "Vendor not found" }, { status: 404 });
   } catch (err) {

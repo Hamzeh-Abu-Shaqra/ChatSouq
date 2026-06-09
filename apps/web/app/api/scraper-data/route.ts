@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
-import { db } from "@chatsouq/db";
-import { sql } from "drizzle-orm";
+import { db, sql } from "@chatsouq/db";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
-async function safeQuery(query: Promise<{ rows: Record<string, unknown>[] }>) {
+async function safeQuery(query: Promise<any>): Promise<any[]> {
   try {
     const result = await query;
-    return result.rows as any[];
+    return Array.from(result);
   } catch {
     return [];
   }

@@ -188,8 +188,8 @@ export default function ProfilePage() {
             {[
               { label: "About ChatSouq",   href: "/about"   },
               { label: "For businesses",   href: "/vendors"  },
-              { label: "Privacy policy",   href: "#"         },
-              { label: "Terms of service", href: "#"         },
+              { label: "Privacy policy",   href: "/privacy"  },
+              { label: "Terms of service", href: "/terms"    },
             ].map((link, i, arr) => (
               <button
                 key={link.label}

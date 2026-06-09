@@ -140,7 +140,7 @@ export default function AboutPage() {
           <p className="text-[14px] text-[#374151]">
             For business listings:{" "}
             <a href="/vendors" className="underline" style={{ color: "#C9A84C" }}>
-              chatsouq.com/vendors
+              Get listed on ChatSouq
             </a>
           </p>
         </div>

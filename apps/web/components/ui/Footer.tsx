@@ -20,7 +20,7 @@ export function Footer() {
             </p>
             <div className="flex items-center gap-3 pt-1">
               <a
-                href="https://instagram.com"
+                href="https://instagram.com/chatsouq"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[#9ca3af] hover:text-[#1A1A1A] transition-colors"
@@ -29,11 +29,11 @@ export function Footer() {
                 <InstagramIcon />
               </a>
               <a
-                href="https://twitter.com"
+                href="https://x.com/chatsouq"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[#9ca3af] hover:text-[#1A1A1A] transition-colors"
-                aria-label="Twitter"
+                aria-label="X (Twitter)"
               >
                 <TwitterIcon />
               </a>
@@ -51,7 +51,7 @@ export function Footer() {
                 { label: "Gifts", href: "/gifts" },
                 { label: "Gyms", href: "/gyms" },
                 { label: "Experiences", href: "/experiences" },
-                { label: "New openings", href: "/chat?q=new+openings+in+Amman" },
+                { label: "New openings", href: "/chat?q=New%20restaurant%20and%20cafe%20openings%20in%20Amman%20this%20week" },
               ].map((item) => (
                 <li key={item.href}>
                   <Link

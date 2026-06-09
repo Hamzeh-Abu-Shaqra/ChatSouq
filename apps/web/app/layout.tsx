@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "ChatSouq — Ask anything about Jordan",
     description: "Jordan's AI recommendation engine for Amman and beyond.",
-    url: "https://chatsouq.ai",
+    url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://chatsouq.ai",
     siteName: "ChatSouq",
     locale: "en_JO",
     type: "website",

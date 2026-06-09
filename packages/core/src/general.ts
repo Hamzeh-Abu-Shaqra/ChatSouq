@@ -709,14 +709,15 @@ async function callClaude(
     ? "IMPORTANT: Respond in Arabic. All text in the 'answer' field and all string values in cards must be in Arabic. Use Arabic city names (e.g. عمان not Amman)."
     : "Respond in English.";
 
-  // Prior conversation context for contrast & refinement
+  // Prior conversation context for contrast & refinement.
+  // Include BOTH user questions and assistant answers so Claude knows what was
+  // asked before AND what it already recommended — enabling proper contrast/follow-up.
   const priorRentalContext = history.length > 0
     ? `\nPrior conversation (use to contrast, refine, or continue the recommendation):\n${
         history
-          .filter((m) => m.role === "assistant")
-          .map((m) => m.content)
+          .slice(-6)
+          .map((m) => `${m.role === "user" ? "User" : "ChatSouq"}: ${m.content.slice(0, 400)}`)
           .join("\n")
-          .slice(0, 1500)
       }`
     : "";
 
@@ -834,8 +835,9 @@ ${langNote}
 ${newsBlock || ""}
 ${webBlock}
 ${(!newsBlock && !webBlock) ? "No live data available right now — answer from your training knowledge of Jordan." : ""}
+${history.length > 0 ? `\nConversation context (the user may be following up on a prior news topic):\n${history.slice(-4).map((m) => `${m.role === "user" ? "User" : "ChatSouq"}: ${m.content.slice(0, 300)}`).join("\n")}` : ""}
 
-Summarize what is happening in Jordan based on the data above. Be specific. If you have both scraped headlines and web results, combine them — don't duplicate.
+Summarize what is happening in Jordan based on the data above. Be specific. If you have both scraped headlines and web results, combine them — don't duplicate. If following up on a prior topic, acknowledge continuity.
 
 Return ONLY valid JSON (no markdown fences):
 {
@@ -855,8 +857,9 @@ Limit to 5 cards.`
 ${langNote}
 ${companiesBlock || ""}
 ${webBlock}
+${history.length > 0 ? `\nConversation context:\n${history.slice(-4).map((m) => `${m.role === "user" ? "User" : "ChatSouq"}: ${m.content.slice(0, 300)}`).join("\n")}` : ""}
 
-Answer the user's question about Jordan businesses and companies. Use both data sources — be specific about company names, industries, locations, and what they do.
+Answer the user's question about Jordan businesses and companies. Use both data sources — be specific about company names, industries, locations, and what they do. If following up, build on prior context.
 
 Return ONLY valid JSON (no markdown fences):
 {
@@ -879,7 +882,7 @@ Limit to 5 cards.`
 ${langNote}
 ${memoryBlock}
 ${webBlock}
-${history.length > 0 ? "\nConversation history (use for context and continuity — don't repeat what was already said):\n" + history.filter(m => m.role === "user").map(m => `User: ${m.content}`).join("\n") : ""}
+${history.length > 0 ? "\nConversation context (full prior exchange — build on it, don't repeat it):\n" + history.slice(-6).map(m => `${m.role === "user" ? "User" : "ChatSouq"}: ${m.content.slice(0, 400)}`).join("\n") : ""}
 
 Rules:
 - Prioritize the live web results and DB data above your training data when they conflict
@@ -937,8 +940,33 @@ export async function generalAnswer(
 ): Promise<GeneralAnswerResponse> {
   const started = Date.now();
   const provider = deps.provider ?? getProvider();
-  const intentType = detectGeneralIntent(input.query);
   const history = input.history ?? [];
+
+  // Intent detection with follow-up inheritance.
+  // A short follow-up query ("what about safety?", "and schools?") often won't match
+  // any intent pattern on its own, but it clearly continues the prior topic.
+  // Detect the current query first; if it falls back to "general" and we have prior
+  // history, check whether the last assistant turn was from a specific intent —
+  // and if the current query looks like a follow-up, inherit that intent.
+  let intentType = detectGeneralIntent(input.query);
+  if (intentType === "general" && history.length >= 2) {
+    const isFollowUp =
+      input.query.trim().split(/\s+/).length <= 8 ||
+      /\b(what about|and|but|also|there|that area|those|same|similar|cheaper|more|less|another|how about|أيضا|وماذا|ماذا عن|نفس|هناك|وكمان)\b/i.test(input.query);
+    if (isFollowUp) {
+      // Look at recent user turns and re-detect intent from combined context
+      const recentUserQueries = history
+        .filter((m) => m.role === "user")
+        .slice(-3)
+        .map((m) => m.content)
+        .join(" ");
+      const inheritedIntent = detectGeneralIntent(recentUserQueries);
+      if (inheritedIntent !== "general") {
+        intentType = inheritedIntent;
+      }
+    }
+  }
+
   // Budget resolution: use current query first, fall back to conversation history
   const budget = resolveBudget(input.query, history);
   const city = detectCity(input.query);

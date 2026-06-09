@@ -1261,7 +1261,39 @@ export async function recommendPlaces(
   // immediately without waiting for the full OSM ingest to complete.
   const intent = parsePlaceIntent(input.query, categories);
   // Enrich with 7-dimension rich intent (budget, occasion, recipient, etc.)
-  const richIntent = extractRichIntent(intent, input.query);
+  // Pass conversation history so follow-up queries inherit prior location/occasion context.
+  const richIntent = extractRichIntent(intent, input.query, input.history);
+
+  // ── Tier 1: inject client context location when query doesn't specify one ──
+  // GPS > IP geolocation > history-inferred neighbourhood.
+  // Only inject when the query itself has no explicit neighbourhood signal.
+  if (input.context?.location) {
+    const ctxLoc = input.context.location;
+    if (!richIntent.location.neighborhood && ctxLoc.neighborhood) {
+      richIntent.location.neighborhood = ctxLoc.neighborhood;
+      richIntent.location.explicit = false; // context-derived, not query-stated
+    }
+    if (!richIntent.location.governorate && ctxLoc.governorate) {
+      richIntent.location.governorate = ctxLoc.governorate;
+      (richIntent as { governorate?: string | null }).governorate = ctxLoc.governorate;
+    }
+  }
+
+  // ── Tier 2: inject learned preferences from memory when nothing else sets them ──
+  // Memory is a soft signal — never overrides user-stated or GPS-derived location.
+  if (input.memoryBlock && !richIntent.location.neighborhood) {
+    const areaMatch = input.memoryBlock.match(/Preferred area:\s*([^\n]+)/i);
+    if (areaMatch) {
+      const preferredArea = (areaMatch[1] ?? "").trim();
+      const canonical =
+        NEIGHBORHOOD_CANONICAL[preferredArea.toLowerCase()] ?? null;
+      if (canonical) {
+        richIntent.location.neighborhood = canonical;
+        richIntent.location.raw = preferredArea.toLowerCase();
+        // explicit stays false — memory is a soft preference, not a hard constraint
+      }
+    }
+  }
 
   const embedText = [input.query, ...intent.categories, ...intent.keywords].filter(Boolean).join(" ");
 
@@ -1387,7 +1419,14 @@ export async function recommendPlaces(
       const reqCtx = richIntent.requirements.length > 0
         ? ` Requirements: ${richIntent.requirements.join(", ")}.`
         : "";
-      const contextLine = [occasionCtx, recipientCtx, budgetCtx, neighborhoodCtx, reqCtx]
+      // Temporal context from client (Jordan timezone, Ramadan, holidays)
+      const t = input.context?.temporal;
+      const _dayNames = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+      const temporalCtx = t
+        ? ` Time: ${_dayNames[t.localDay] ?? "today"} ${t.timeOfDay}${t.isRamadan ? " — Ramadan" : ""}${t.isEid ? " — Eid" : ""}${t.isFriday ? " (Friday)" : ""}${t.holiday ? ` (${t.holiday})` : ""}.`
+        : "";
+
+      const contextLine = [occasionCtx, recipientCtx, budgetCtx, neighborhoodCtx, reqCtx, temporalCtx]
         .filter(Boolean).join("") || "";
 
       const placeRes = await provider.complete({

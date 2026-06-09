@@ -52,9 +52,19 @@ function keywordRatio(c: PlaceCandidate, keywords: string[]): { ratio: number; h
   if (!keywords.length) return { ratio: 0, hits: 0 };
   const hay = ((c.searchText ?? "") + " " + c.name + " " + (c.address ?? "")).toLowerCase();
   let hits = 0;
-  for (const k of keywords) if (hay.includes(k.toLowerCase())) hits++;
+  for (const k of keywords) {
+    const kl = k.toLowerCase();
+    if (kl.length < 5) {
+      // Word-boundary check: surround haystack and keyword with spaces
+      // to prevent "fan" matching "fanatic"
+      const hayNorm = hay.replace(/[^\p{L}\p{N}]+/gu, " ");
+      if ((" " + hayNorm + " ").includes(" " + kl + " ")) hits++;
+    } else if (hay.includes(kl)) {
+      hits++;
+    }
+  }
   const raw = hits / keywords.length;
-  const boosted = keywords.length <= 1 ? raw : Math.pow(raw, 1.4);
+  const boosted = keywords.length <= 1 ? raw : Math.pow(raw, 1.5);
   return { ratio: boosted, hits };
 }
 

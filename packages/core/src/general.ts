@@ -2,6 +2,7 @@ import { getProvider, type AIProvider } from "@chatsouq/ai";
 import { sql } from "drizzle-orm";
 import { db } from "@chatsouq/db";
 import { webSearch, formatWebResults } from "./web-search";
+import { NEIGHBORHOOD_CANONICAL } from "./placeIntent";
 import type { GeneralAnswerResponse, NeighborhoodCard, InfoCard, RecommendInput, ConvMessage } from "./types";
 
 // ── Language detection ────────────────────────────────────────────────────────
@@ -733,7 +734,12 @@ async function callClaude(
     : "";
 
   // ── Parallel data fetching — DB + web search run at the same time ─────────
-  const budgetKeywords = query.toLowerCase().match(/\b(abdoun|jabal|khalda|sweifieh|mecca|gardens|jubaiha|zarqa|irbid|aqaba)\b/g) ?? [];
+  // Detect all neighbourhood mentions using the canonical map (covers 40+ spellings/aliases)
+  // rather than the old 10-entry hardcoded list.
+  const queryLc = query.toLowerCase();
+  const budgetKeywords: string[] = Object.keys(NEIGHBORHOOD_CANONICAL).filter(
+    (alias) => queryLc.includes(alias)
+  ).map((alias) => NEIGHBORHOOD_CANONICAL[alias]!.toLowerCase());
   const companyKeywords = query.toLowerCase().match(/\b\w{4,}\b/g)?.filter(w =>
     !["what","where","which","best","good","find","show","tell","about","jordan"].includes(w)
   ) ?? [];

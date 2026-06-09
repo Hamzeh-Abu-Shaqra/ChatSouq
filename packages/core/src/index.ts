@@ -2,6 +2,8 @@ export * from "./types";
 export { recommend } from "./engine";
 export { assist } from "./assist";
 export { recommendPlaces, getPlaceCategories, parsePlaceIntent } from "./places";
+export { NEIGHBORHOOD_CANONICAL, NEIGHBORHOOD_ADJACENCY, extractRichIntent } from "./placeIntent";
+export type { RichPlaceIntent, BudgetSignal, LocationSignal, OccasionSignal, RecipientSignal } from "./placeIntent";
 export { generalAnswer, isGeneralQuery, detectGeneralIntent } from "./general";
 export { parseConstraints, applyProfile } from "./intent";
 export { getCategories } from "./retrieve";

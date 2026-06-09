@@ -362,8 +362,12 @@ export async function getCtrBoosts(
     `)) as unknown as { result_id: number; ctr: number; clicks: number }[];
 
     for (const r of rows) {
-      // Scale CTR (0-1) to a max boost of 0.15 — meaningful but never overrides relevance
-      boosts.set(r.result_id, Math.min(0.15, r.ctr * 0.15));
+      // Scale CTR (0-1) to a max boost of 0.15.
+      // Old formula: ctr * 0.15 meant max boost of 0.15 only at 100% CTR — too weak.
+      // New formula: sqrt(ctr) gives sqrt(0.3)=0.55 → boost 0.083; sqrt(0.7)=0.84 → boost 0.126.
+      // Also weight by click volume so 2 clicks at 100% CTR doesn't beat 200 clicks at 40%.
+      const volumeFactor = Math.min(1, Math.log10(r.clicks + 1) / Math.log10(50 + 1));
+      boosts.set(r.result_id, Math.min(0.15, Math.sqrt(r.ctr) * 0.18 * volumeFactor));
     }
   } catch {
     // Best-effort

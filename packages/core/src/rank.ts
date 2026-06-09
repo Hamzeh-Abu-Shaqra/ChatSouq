@@ -171,15 +171,28 @@ export function rankCandidates(
     const { ratio: keyword, hits } = keywordHitRatio(c, constraints.keywords);
     const typeMatch = typeMatchScore(c, constraints.keywords);
 
-    // Budget fit: 1.0 = in range, 0.0 = out of range, 0.25 = price unknown when budget specified.
+    // Budget fit: 1.0 = in range, 0.0 = well over budget, 0.25 = price unknown when budget specified.
+    // Soft boundary: slightly over budget still scores rather than hard-zero.
     const budgetRequested = constraints.budgetMax !== null || constraints.budgetMin !== null;
     let budgetFit = 0.5;
     if (c.price === null) {
       budgetFit = budgetRequested ? 0.25 : 0.5;
     } else {
-      const underMax = constraints.budgetMax === null || c.price <= constraints.budgetMax;
-      const overMin  = constraints.budgetMin === null || c.price >= constraints.budgetMin;
-      budgetFit = underMax && overMin ? 1 : 0;
+      const overMin = constraints.budgetMin === null || c.price >= constraints.budgetMin;
+      if (!overMin) {
+        // Under minimum: hard zero — wrong tier entirely
+        budgetFit = 0;
+      } else if (constraints.budgetMax === null) {
+        budgetFit = 1.0;
+      } else if (c.price <= constraints.budgetMax) {
+        budgetFit = 1.0;                                           // in range
+      } else if (c.price <= constraints.budgetMax * 1.10) {
+        budgetFit = 0.5;                                           // within 10% over — acceptable
+      } else if (c.price <= constraints.budgetMax * 1.30) {
+        budgetFit = 0.2;                                           // within 30% over — stretch
+      } else {
+        budgetFit = 0;                                             // way over budget
+      }
     }
 
     // Cheaper-within-pool = better value (gentle nudge, never overrides relevance).

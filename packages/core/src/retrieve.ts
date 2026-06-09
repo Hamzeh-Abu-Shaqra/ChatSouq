@@ -71,9 +71,16 @@ export async function retrieve(
   // (e.g. "wireless" in the description but not the product name) are still matched.
   if (constraints.keywords.length > 0) {
     const haystack = sql`(lower(l.name) || ' ' || lower(coalesce(l.search_text, '')) || ' ' || lower(coalesce(l.description, '')))`;
-    const kwConds = constraints.keywords.map(
-      (k) => sql`(${haystack} LIKE ${"%" + k.toLowerCase() + "%"})`
-    );
+    const kwConds = constraints.keywords.map((k) => {
+      const kl = k.toLowerCase();
+      // Short keywords need word boundaries (e.g. "fan" must not match "fanatic")
+      // PostgreSQL: \m = word start, \M = word end (POSIX regex via ~*)
+      if (kl.length < 5) {
+        const escaped = kl.replace(/\\/g, "\\\\").replace(/[.*+?^${}()|[\]]/g, "\\$&");
+        return sql`(${haystack} ~* ${"\\m" + escaped + "\\M"})`;
+      }
+      return sql`(${haystack} LIKE ${"%" + kl + "%"})`;
+    });
     if (opts.useStrictKeywords) {
       // ALL keywords must match
       conditions.push(sql`(${sql.join(kwConds, sql` AND `)})`);

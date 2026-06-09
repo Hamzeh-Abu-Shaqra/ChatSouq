@@ -1,5 +1,5 @@
 import type { AIProvider } from "@chatsouq/ai";
-import type { Constraints, UserProfileInput } from "./types";
+import type { Constraints, ConvMessage, UserProfileInput } from "./types";
 
 const CURRENCY_WORDS = /\b(jod|jd|dinars?|دينار|دنانير|د\.?ا)\b/i;
 
@@ -649,11 +649,21 @@ export function applyProfile(c: Constraints, profile?: UserProfileInput): Constr
 export async function enrichWithLLM(
   c: Constraints,
   provider: AIProvider,
-  dbCategories: string[]
+  dbCategories: string[],
+  history?: ConvMessage[]
 ): Promise<Constraints> {
   if (provider.isMock) return c;
   try {
     const alreadyMapped = c.categories.join(", ");
+
+    // Build user message — prepend last 2 user turns from history as prior context
+    const priorUserTurns = (history ?? [])
+      .filter((m) => m.role === "user")
+      .slice(-2);
+    const userContent = priorUserTurns.length > 0
+      ? `Prior context:\n${priorUserTurns.map((m) => `- "${m.content}"`).join("\n")}\n\nCurrent query: ${c.rawQuery}\nAlready mapped to: ${alreadyMapped || "none"}\nAvailable categories: ${dbCategories.join(", ")}`
+      : `Query: ${c.rawQuery}\nAlready mapped to: ${alreadyMapped || "none"}\nAvailable categories: ${dbCategories.join(", ")}`;
+
     const res = await provider.complete({
       system:
         "You map a shopping query to specific product categories in a Jordan e-commerce catalogue. " +
@@ -665,11 +675,12 @@ export async function enrichWithLLM(
         "(e.g. 'Audio & Headphones'). Broad categories are only valid when no specific one fits.\n" +
         "3. Add at most 1-2 categories. Do NOT include prices, numbers, or brand names in keywords.\n" +
         "4. For audio queries: 'headphones' → 'Audio & Headphones'; 'speakers' → 'Speakers'.\n" +
-        "5. Keywords must be product-type terms, NOT attribute adjectives (e.g. add 'headphones' not 'wireless').",
+        "5. Keywords must be product-type terms, NOT attribute adjectives (e.g. add 'headphones' not 'wireless').\n" +
+        "If the current query is a follow-up (uses pronouns like 'it', 'this', 'that', 'one', 'there', 'cheaper', 'better', 'similar'), use the prior context to resolve what it refers to and produce more specific categories + keywords.",
       messages: [
         {
           role: "user",
-          content: `Query: ${c.rawQuery}\nAlready mapped to: ${alreadyMapped || "none"}\nAvailable categories: ${dbCategories.join(", ")}`,
+          content: userContent,
         },
       ],
       json: true,

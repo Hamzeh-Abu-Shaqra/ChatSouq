@@ -68,7 +68,7 @@ export async function recommend(
   const categories = await getCategories();
   let constraints = parseConstraints(input.query, categories);
   constraints = applyProfile(constraints, input.profile);
-  constraints = await enrichWithLLM(constraints, provider, categories);
+  constraints = await enrichWithLLM(constraints, provider, categories, input.history);
 
   // Build a rich embed text: query + categories + keywords (deduplicated)
   const embedText = [...new Set([
@@ -177,7 +177,7 @@ export async function recommend(
     .slice(0, limit);
 
   const explainResult = await explainItems(
-    provider, input.query, ranked, constraints, input.memoryBlock
+    provider, input.query, ranked, constraints, input.memoryBlock, input.context
   );
   const { summary: chatSummary, explanations } = explainResult;
 

@@ -6,7 +6,7 @@
  * context to work with than a flat keyword list.
  */
 
-import type { PlaceIntent } from "./types";
+import type { PlaceIntent, ConvMessage } from "./types";
 
 // ── Re-export canonical neighborhood lists ──────────────────────────────────
 
@@ -598,17 +598,33 @@ function buildInferredSignals(
  *
  * @param base - The basic PlaceIntent already parsed by `parsePlaceIntent()`
  * @param rawQuery - The original query string
+ * @param history - Optional conversation history for follow-up context resolution
  */
 export function extractRichIntent(
   base: PlaceIntent,
-  rawQuery: string
+  rawQuery: string,
+  history?: ConvMessage[]
 ): RichPlaceIntent {
   const q = rawQuery;
+
+  // Resolve follow-up context from prior turns
+  // If current query lacks a neighbourhood signal, inherit from the most recent user turn that had one.
+  let resolvedQuery = q;
+  if (history && history.length > 0) {
+    const recentUserTurns = history.filter((h) => h.role === "user").slice(-3);
+    // If current query contains follow-up pronouns but no explicit location, inherit prior location
+    const isFollowUp = /\b(this|that|there|one|it|them|same|similar|more|cheaper|better|upscale|cheaper|fancy|quiet|other)\b/i.test(q)
+      || /\b(أرخص|أفضل|مماثل|مشابه|نفس|هناك|آخر)\b/.test(q);
+    if (isFollowUp) {
+      // Build a combined query that appends prior context so detectors can find neighbourhood/occasion signals
+      resolvedQuery = recentUserTurns.map((t) => t.content).join(" ") + " " + q;
+    }
+  }
 
   const language = detectLanguage(q);
 
   // Budget
-  const { min, max, sensitivity } = parseBudget(q);
+  const { min, max, sensitivity } = parseBudget(resolvedQuery);
   const budget: BudgetSignal = {
     min,
     max,
@@ -618,7 +634,7 @@ export function extractRichIntent(
   };
 
   // Location
-  const neighborhood = detectNeighborhood(q);
+  const neighborhood = detectNeighborhood(resolvedQuery);
   const location: LocationSignal = {
     raw: neighborhood ? neighborhood.toLowerCase() : null,
     neighborhood,
@@ -627,7 +643,7 @@ export function extractRichIntent(
   };
 
   // Occasion
-  const occasionType = detectOccasion(q);
+  const occasionType = detectOccasion(resolvedQuery);
   const occasion: OccasionSignal = {
     type: occasionType,
     formality: detectFormality(q, occasionType),
@@ -637,16 +653,16 @@ export function extractRichIntent(
 
   // Recipient
   const recipient: RecipientSignal = {
-    who: detectRecipient(q),
+    who: detectRecipient(resolvedQuery),
     gender: detectGender(q),
     interests: [],
   };
 
   // Requirements
-  const requirements = detectRequirements(q);
+  const requirements = detectRequirements(resolvedQuery);
 
   // Urgency
-  const urgency = detectUrgency(q);
+  const urgency = detectUrgency(resolvedQuery);
 
   // Assemble partial intent for signal inference
   const partial = {

@@ -169,6 +169,16 @@ export async function recommend(
   // Short or generic words like "him", "her", "gift" don't define product type, so exclude them.
   const specificKw = constraints.keywords.filter((k) => k.length >= 4);
 
+  // Generic attribute/modifier words that describe a property but don't identify product type.
+  // "portable camping equipment" → "portable" is an attribute; "camping" is the domain word.
+  // An alternative matching ONLY a generic modifier (not the domain word) is off-topic.
+  const GENERIC_MODIFIERS = new Set([
+    "portable", "wireless", "smart", "electric", "mini", "digital",
+    "best", "good", "great", "fast", "quick", "modern", "premium", "quality",
+    "small", "large", "light", "heavy", "cheap", "affordable", "cheap",
+  ]);
+  const domainKw = specificKw.filter((k) => !GENERIC_MODIFIERS.has(k));
+
   // ── Quality filter for alternatives ─────────────────────────────────────
   const ranked = allRanked
     .filter((c, i) => {
@@ -189,6 +199,15 @@ export async function recommend(
       if (specificKw.length > 0) {
         const minHits = specificKw.length >= 3 ? 2 : 1;
         if (c.keywordHits < minHits) return false;
+      }
+
+      // Domain-keyword guard: if there are non-generic domain keywords (e.g. "camping",
+      // "headphones", "tent"), every alternative must match at least one of them directly
+      // in its name or searchText. Prevents items that only match generic attribute words
+      // (e.g. a bike lock matching "portable" but not "camping") from slipping through.
+      if (domainKw.length > 0) {
+        const hay = ((c.searchText || "") + " " + c.name).toLowerCase();
+        if (!domainKw.some((k) => hay.includes(k))) return false;
       }
 
       // When category was relaxed, only keep alternatives that are genuinely relevant

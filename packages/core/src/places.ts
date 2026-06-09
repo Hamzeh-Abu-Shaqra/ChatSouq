@@ -9,7 +9,13 @@ import type {
   PlaceResultItem,
   RecommendInput,
   ResultPlace,
+  TavilySignal,
 } from "./types";
+import {
+  enrichPlacesBatch,
+  tavilyScoreAdjust,
+  formatTavilyContext,
+} from "./tavilyEnrichment";
 import { extractRichIntent, NEIGHBORHOOD_CANONICAL } from "./placeIntent";
 import { rankPlacesRich } from "./placeRanker";
 import {
@@ -1270,7 +1276,39 @@ export async function recommendPlaces(
   // in rankPlacesRich, ensuring the specifically-named place beats generic category results.
   const merged  = deduplicateCandidates([...nameMatches, ...candidates, ...scraped]);
 
-  const ranked = rankPlacesRich(merged, richIntent).slice(0, limit);
+  let ranked = rankPlacesRich(merged, richIntent).slice(0, limit);
+
+  // ── Tavily per-place enrichment (runs in parallel, best-effort) ───────────
+  // Validates the top 5 places against live web data — adjusts scores and
+  // surfaces warnings ("Permanently closed", "Has moved", etc.) before the
+  // LLM sees the candidate list.
+  const signalMap = new Map<number, TavilySignal>();
+  if (!provider.isMock && ranked.length > 0) {
+    try {
+      const batch = await enrichPlacesBatch(
+        ranked.slice(0, 5).map((c) => ({
+          id:       c.id,
+          name:     c.name,
+          category: c.category,
+          city:     c.city,
+        })),
+      );
+      if (batch.size > 0) {
+        batch.forEach((sig, id) => signalMap.set(id, sig));
+        // Apply score adjustments and re-sort only when at least one delta ≠ 0
+        const adjusted = ranked.map((c) => {
+          const sig = signalMap.get(c.id);
+          if (!sig) return c;
+          const delta = tavilyScoreAdjust(sig);
+          return delta !== 0 ? { ...c, score: Math.max(0, Math.min(100, c.score + delta)) } : c;
+        });
+        const anyChanged = adjusted.some((c, i) => c.score !== ranked[i]!.score);
+        if (anyChanged) ranked = adjusted.sort((a, b) => b.score - a.score);
+      }
+    } catch (tavilyErr) {
+      console.error("[places] Tavily enrichment failed — continuing:", tavilyErr);
+    }
+  }
 
   // Build code-based why/pros as fallback, then enrich with Claude + web search if available.
   const whyMap  = new Map<number, string>(ranked.map((c, i) => [c.id, placeWhy(c, i === 0, queryLang)]));
@@ -1317,6 +1355,10 @@ export async function recommendPlaces(
         role: i === 0 ? "best" : "alternative",
         // Expose key search_text snippets (first 120 chars) so LLM can pick up features
         features: c.searchText ? c.searchText.slice(0, 120) : null,
+        // Live web intelligence from Tavily — review sentiment, warnings, online presence
+        tavilyContext: signalMap.has(c.id)
+          ? (formatTavilyContext(signalMap.get(c.id)!) || null)
+          : null,
       }));
       const langInstruction = queryLang === "ar"
         ? "IMPORTANT: Write both the 'summary' and all 'why' values in Arabic only."
@@ -1366,7 +1408,8 @@ export async function recommendPlaces(
           "      - Then: location/occasion fit ('In [neighbourhood]', 'Good for [occasion]', 'Walking distance from...').\n" +
           "      - End with one specific quality signal (rating, cuisine style, unique feature, what it's known for).\n" +
           "    tags: up to 5 short tags (e.g. Rooftop, Walk-in OK, Private rooms, Delivery, Valet, Ladies section, Open late).\n\n" +
-          `Use ONLY facts from the provided data — no invented prices, dishes, or phone numbers. ${langInstruction}` +
+          `Use ONLY facts from the provided data — no invented prices, dishes, or phone numbers. ${langInstruction}\n` +
+          "If a place has a non-null tavilyContext: incorporate its review sentiment or any ⚠️ warnings into your 'why' for that place.\n" +
           (contextLine ? `\nQUERY CONTEXT:${contextLine}` : "") +
           memCtx +
           (webContext ? `\n${webContext}` : "") +
@@ -1411,6 +1454,8 @@ export async function recommendPlaces(
     why: whyMap.get(c.id) ?? placeWhy(c, i === 0, queryLang),
     pros: placePros(c, intent, queryLang),
     tags: tagsMap.get(c.id),
+    // Tavily signal — undefined when Tavily is not configured or not yet checked
+    tavilySignal: signalMap.get(c.id),
   }));
 
   const response: PlaceRecommendationResponse = {

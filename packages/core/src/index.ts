@@ -10,6 +10,14 @@ export { getCategories } from "./retrieve";
 export { formatJOD } from "./explain";
 export { webSearch, formatWebResults } from "./web-search";
 export {
+  enrichPlacesBatch,
+  tavilyScoreAdjust,
+  formatTavilyContext,
+  runNightlyTavilyBatch,
+  getTavilyCacheSize,
+} from "./tavilyEnrichment";
+export type { EnrichInput } from "./tavilyEnrichment";
+export {
   loadThread,
   appendTurn,
   extractPreferences,

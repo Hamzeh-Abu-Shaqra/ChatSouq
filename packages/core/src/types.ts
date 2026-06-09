@@ -94,6 +94,26 @@ export interface ResultPlace {
   rating: number | null;
 }
 
+/**
+ * Tavily web-validation signal for a single place.
+ * Populated when TAVILY_API_KEY is set; absent for products / general answers.
+ */
+export interface TavilySignal {
+  placeId: number;
+  /** Tavily found results that mention this place by name */
+  validated: boolean;
+  /** e.g. ["Permanently closed", "Has moved — verify location"] */
+  warningFlags: string[];
+  /** -1 (very negative) to +1 (very positive) based on review density */
+  sentimentScore: number;
+  /** How many web results mentioned the place */
+  mentionCount: number;
+  /** First 200 chars from the highest-scoring web result */
+  sourceSummary: string;
+  /** Unix ms timestamp of when this signal was last fetched */
+  lastChecked: number;
+}
+
 export interface PlaceResultItem {
   place: ResultPlace;
   score: number;
@@ -102,6 +122,8 @@ export interface PlaceResultItem {
   pros: string[];
   /** Short display tags (max 5), e.g. ["Rooftop", "Romantic", "Reservations open"]. */
   tags?: string[];
+  /** Tavily web-validation signal — present only when TAVILY_API_KEY is configured */
+  tavilySignal?: TavilySignal;
 }
 
 export interface PlaceIntent {

@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin, Star, Clock } from "lucide-react";
+import { MapPin, Star, Clock, ShieldCheck, AlertTriangle } from "lucide-react";
 import { motion } from "framer-motion";
 import type { Vendor } from "../../types/vendor";
 import { CTAButton } from "./CTAButton";
@@ -94,6 +94,50 @@ export function FeaturedCard({ vendor, isArabic = false }: FeaturedCardProps) {
           >
             {vendor.category}
           </span>
+
+          {/* Tavily verified badge */}
+          {vendor.tavilyValidated && (
+            <span
+              style={{
+                fontSize: "11px",
+                fontWeight: 600,
+                color: "#1a6e45",
+                background: "#f0fdf4",
+                border: "1px solid #86efac",
+                padding: "2px 8px",
+                borderRadius: "10px",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                whiteSpace: "nowrap",
+              }}
+            >
+              <ShieldCheck size={11} strokeWidth={2} />
+              {isArabic ? "موثَّق" : "Verified online"}
+            </span>
+          )}
+
+          {/* Warning flags from Tavily */}
+          {vendor.warningFlags && vendor.warningFlags.length > 0 && (
+            <span
+              style={{
+                fontSize: "11px",
+                fontWeight: 600,
+                color: "#92400e",
+                background: "#fffbeb",
+                border: "1px solid #fcd34d",
+                padding: "2px 8px",
+                borderRadius: "10px",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                whiteSpace: "nowrap",
+              }}
+            >
+              <AlertTriangle size={11} strokeWidth={2} />
+              {vendor.warningFlags[0]}
+            </span>
+          )}
 
           {/* Rating */}
           {vendor.rating != null && (

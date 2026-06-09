@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/tavily-validation",
+      "schedule": "0 0 * * *"
+    }
+  ]
+}

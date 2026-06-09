@@ -36,6 +36,10 @@ export interface Vendor {
   openNow?: boolean;
   hours?: string;
   address?: string;
+  /** Tavily confirmed this place exists online with positive/neutral signals */
+  tavilyValidated?: boolean;
+  /** Human-readable warnings from Tavily: "Permanently closed", "Has moved", etc. */
+  warningFlags?: string[];
 }
 
 // ── Chat response type ────────────────────────────────────────────────────────
@@ -72,6 +76,8 @@ function placeToVendor(item: PlaceRecommendationResponse["best"], rank: number):
         .filter((p) => !p.startsWith("Located") && !p.startsWith("موجود") && !p.startsWith("Contact:") && !p.startsWith("للتواصل"))
         .slice(0, 4);
 
+  const sig = item.tavilySignal;
+
   return {
     rank,
     id: p.id,
@@ -95,6 +101,9 @@ function placeToVendor(item: PlaceRecommendationResponse["best"], rank: number):
     address: p.address ?? undefined,
     hours: p.openingHours ?? undefined,
     isTopPick: rank === 1,
+    // Tavily validation — show badge when confirmed, pass through warnings
+    tavilyValidated: sig?.validated === true && sig.warningFlags.length === 0,
+    warningFlags: sig?.warningFlags?.length ? sig.warningFlags : undefined,
   };
 }
 

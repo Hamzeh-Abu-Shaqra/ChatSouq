@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin, Star } from "lucide-react";
+import { MapPin, Star, ShieldCheck, AlertTriangle } from "lucide-react";
 import { motion } from "framer-motion";
 import type { Vendor } from "../../types/vendor";
 import { CTAButton } from "./CTAButton";
@@ -69,7 +69,7 @@ export function ResultCard({ vendor, index, isArabic = false }: ResultCardProps)
         {name}
       </h3>
 
-      {/* Category + rating */}
+      {/* Category + Tavily badges + rating */}
       <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
         <span
           style={{
@@ -84,6 +84,51 @@ export function ResultCard({ vendor, index, isArabic = false }: ResultCardProps)
         >
           {vendor.category}
         </span>
+
+        {/* Tavily verified badge */}
+        {vendor.tavilyValidated && (
+          <span
+            style={{
+              fontSize: "10px",
+              fontWeight: 600,
+              color: "#1a6e45",
+              background: "#f0fdf4",
+              border: "1px solid #86efac",
+              padding: "1px 6px",
+              borderRadius: "8px",
+              display: "flex",
+              alignItems: "center",
+              gap: "3px",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <ShieldCheck size={9} strokeWidth={2} />
+            {isArabic ? "موثَّق" : "Verified"}
+          </span>
+        )}
+
+        {/* Warning flags */}
+        {vendor.warningFlags && vendor.warningFlags.length > 0 && (
+          <span
+            style={{
+              fontSize: "10px",
+              fontWeight: 600,
+              color: "#92400e",
+              background: "#fffbeb",
+              border: "1px solid #fcd34d",
+              padding: "1px 6px",
+              borderRadius: "8px",
+              display: "flex",
+              alignItems: "center",
+              gap: "3px",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <AlertTriangle size={9} strokeWidth={2} />
+            {vendor.warningFlags[0]}
+          </span>
+        )}
+
         {vendor.rating != null && (
           <span
             style={{

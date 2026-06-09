@@ -36,12 +36,6 @@ const THEMES: Record<ThemeKey, Theme> = {
   generic:     { accent:"#059669", bg:"#ecfdf5", fg:"#065f46", badge:"#d1fae5", badgeFg:"#064e3b", icon:"📍",   label:"Place",         ringColor:"rgba(5,150,105,0.18)"  },
 };
 
-const PROFESSIONAL_ROLES = new Set([
-  "doctor","physician","dentist","specialist","consultant",
-  "lawyer","attorney","legal",
-  "accountant","architect","engineer","pharmacist","professional",
-]);
-
 function detectTheme(category: string): ThemeKey {
   const c     = category.toLowerCase();
   const first = c.split(/[^a-z]/)[0] ?? "";
@@ -80,13 +74,6 @@ function isGoodWhy(why: string | undefined | null): boolean {
 function cleanPros(pros: string[]): string[] {
   return pros.filter(
     (p) => !/^(located in|in amman|in jordan|available in|found in)/i.test(p.trim())
-  );
-}
-
-// Cons about missing data are data gaps — don't expose them to users
-function cleanCons(cons: string[]): string[] {
-  return cons.filter(
-    (c) => !/(not listed|not available|no phone|no website|no address|not provided|missing|unknown)/i.test(c)
   );
 }
 
@@ -349,6 +336,11 @@ export function PlaceBestCard({ item }: { item: PlaceResultItem }) {
           {place.category && (
             <span>{place.category}</span>
           )}
+          {place.rating !== null && place.rating !== undefined && (
+            <span className="flex items-center gap-1 font-semibold" style={{ color: theme.accent }}>
+              ★ {place.rating.toFixed(1)}
+            </span>
+          )}
           {!isPro && place.openingHours && (
             <span className="flex items-center gap-1">
               <ClockIcon /> {place.openingHours}
@@ -443,7 +435,14 @@ export function PlaceAltCard({ item, rank }: { item: PlaceResultItem; rank: numb
         {place.name}
       </h4>
 
-      {where && <p className="text-[11px] text-ink-400 mt-0.5">{where}</p>}
+      <div className="flex items-center gap-2 mt-0.5">
+        {where && <p className="text-[11px] text-ink-400">{where}</p>}
+        {place.rating !== null && place.rating !== undefined && (
+          <span className="text-[11px] font-semibold" style={{ color: theme.accent }}>
+            ★ {place.rating.toFixed(1)}
+          </span>
+        )}
+      </div>
 
       {goodWhy && (
         <p className="text-[11px] text-ink-500 line-clamp-2 mt-1">{item.why}</p>
@@ -898,5 +897,3 @@ function CheckDot() {
   );
 }
 
-void PROFESSIONAL_ROLES; // reserved for future professional category detection
-void cleanCons;          // intentionally unused: cons with "not listed" data gaps are filtered out at source

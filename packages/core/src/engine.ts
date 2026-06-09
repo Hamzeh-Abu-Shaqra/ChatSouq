@@ -43,7 +43,6 @@ function toResultItem(c: ScoredCandidate, isBest: boolean): ResultItem {
     isBest,
     why: "",
     pros: [],
-    cons: [],
   };
 }
 
@@ -177,7 +176,6 @@ export async function recommend(
     if (ex) {
       item.why = ex.why;
       item.pros = ex.pros;
-      item.cons = ex.cons;
     }
     return item;
   });

@@ -12,7 +12,6 @@ export function formatJOD(n: number): string {
 export interface Explanation {
   why: string;
   pros: string[];
-  cons: string[];
 }
 
 export interface ExplainResult {
@@ -58,25 +57,6 @@ function codePros(c: ScoredCandidate, constraints: Constraints, cheapest: number
   return pros.slice(0, 4);
 }
 
-function codeCons(c: ScoredCandidate, constraints: Constraints, cheapest: number | null, lang: "en" | "ar"): string[] {
-  const cons: string[] = [];
-  if (cheapest !== null && c.price !== null && c.price > cheapest) {
-    cons.push(lang === "ar"
-      ? `أغلى بـ ${formatJOD(c.price - cheapest)} من أرخص خيار هنا`
-      : `${formatJOD(c.price - cheapest)} more than the cheapest option here`);
-  }
-  if (constraints.budgetMax !== null && c.price !== null && c.price > constraints.budgetMax * 0.9 && c.price <= constraints.budgetMax) {
-    cons.push(lang === "ar" ? "قريب من حد ميزانيتك" : "Near the top of your budget");
-  }
-  if (!c.brand) {
-    cons.push(lang === "ar" ? "الماركة غير محددة في الإعلان" : "Brand not specified in the listing");
-  }
-  if (constraints.categories.length > 0 && c.category && !constraints.categories.includes(c.category)) {
-    cons.push(lang === "ar" ? `مدرج ضمن ${c.category}` : `Listed under ${c.category}`);
-  }
-  return cons.slice(0, 3);
-}
-
 /** Fallback summary when the LLM is mocked or unavailable. */
 function buildCodeSummary(
   ranked: ScoredCandidate[],
@@ -105,7 +85,7 @@ function buildCodeSummary(
 }
 
 /**
- * Build explanations for the shown items. Pros/cons (and all numbers) are
+ * Build explanations for the shown items. Pros (and all numbers) are
  * computed in code from listing facts. Claude generates the conversational
  * `summary` and rewrites the per-item "why" sentence — constrained to the
  * provided facts and told not to introduce any numbers — so accuracy is never
@@ -127,7 +107,6 @@ export async function explainItems(
     explanations.set(c.id, {
       why: codeWhy(c, constraints, i === 0, lang),
       pros: codePros(c, constraints, cheapest, lang),
-      cons: codeCons(c, constraints, cheapest, lang),
     });
   });
 

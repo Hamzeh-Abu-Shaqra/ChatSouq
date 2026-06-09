@@ -1162,14 +1162,6 @@ function placePros(c: ScoredPlace, intent: PlaceIntent, lang: "en" | "ar"): stri
   return pros.slice(0, 4);
 }
 
-function placeCons(c: ScoredPlace, lang: "en" | "ar"): string[] {
-  const cons: string[] = [];
-  if (!c.phone && !c.website) cons.push(lang === "ar" ? "لا يوجد رقم هاتف أو موقع إلكتروني" : "No phone or website listed");
-  if (!c.address && !c.city) cons.push(lang === "ar" ? "العنوان التفصيلي غير محدد" : "Exact address not specified");
-  if (!c.openingHours) cons.push(lang === "ar" ? "أوقات العمل غير مذكورة" : "Opening hours not listed");
-  return cons.slice(0, 2);
-}
-
 function buildPlaceCodeSummary(ranked: PlaceCandidate[], intent: PlaceIntent, lang: "en" | "ar"): string {
   if (ranked.length === 0) {
     return lang === "ar"
@@ -1353,7 +1345,6 @@ export async function recommendPlaces(
     isBest: i === 0,
     why: whyMap.get(c.id) ?? placeWhy(c, i === 0, queryLang),
     pros: placePros(c, intent, queryLang),
-    cons: placeCons(c, queryLang),
   }));
 
   return {

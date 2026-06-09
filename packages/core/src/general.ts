@@ -552,11 +552,11 @@ async function fetchTodayDigest(): Promise<InfoCard[]> {
       LIMIT 5
     `).catch(() => []),
 
-    // Featured places — gyms, cafes, hotels, etc. by rating
+    // Featured places — non-food venues so they don't duplicate the "On The Table" section
     db.execute(sql`
       SELECT name, category, address, phone, website
       FROM jordan_places
-      WHERE category IN ('Gym','Cafe','Hotel','Restaurant','Mall','Park','Museum','Coffee Shop')
+      WHERE category IN ('Gym','Hotel','Mall','Park','Museum','Cinema','Spa','Sports Center')
         AND name IS NOT NULL
       ORDER BY COALESCE(rating, 0) DESC
       LIMIT 8

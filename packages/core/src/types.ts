@@ -46,7 +46,6 @@ export interface ResultItem {
   isBest: boolean;
   why: string;
   pros: string[];
-  cons: string[];
 }
 
 export interface RecommendationResponse {
@@ -93,7 +92,6 @@ export interface PlaceResultItem {
   isBest: boolean;
   why: string;
   pros: string[];
-  cons: string[];
 }
 
 export interface PlaceIntent {
@@ -148,7 +146,7 @@ export interface InfoCard {
   icon: "info" | "map" | "star" | "building" | "calendar" | "phone";
   /** Real URL from the database — news article, Talabat page, website, etc. */
   url?: string;
-  /** Section grouping for the newspaper front layout: "news" | "restaurant" | "place" | "pro" */
+  /** Section grouping for the newspaper front layout: "news" | "restaurant" | "place" */
   section?: string;
 }
 

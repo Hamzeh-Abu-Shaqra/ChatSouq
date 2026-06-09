@@ -534,7 +534,7 @@ async function fetchCompanies(keywords: string[], limit = 12): Promise<CompanyIt
 async function fetchTodayDigest(): Promise<InfoCard[]> {
   const cards: InfoCard[] = [];
 
-  const [news, restaurants, places, pros] = await Promise.all([
+  const [news, restaurants, places] = await Promise.all([
     // Latest news with URLs
     db.execute(sql`
       SELECT title, source, url, scraped_at::text AS scraped_at
@@ -560,15 +560,6 @@ async function fetchTodayDigest(): Promise<InfoCard[]> {
         AND name IS NOT NULL
       ORDER BY COALESCE(rating, 0) DESC
       LIMIT 8
-    `).catch(() => []),
-
-    // Featured professionals
-    db.execute(sql`
-      SELECT name, subcategory, specialty, phone, website
-      FROM jordan_people
-      WHERE subcategory IS NOT NULL
-      ORDER BY id DESC
-      LIMIT 4
     `).catch(() => []),
   ]);
 
@@ -608,20 +599,6 @@ async function fetchTodayDigest(): Promise<InfoCard[]> {
       icon: "map",
       section: "place",
       url: (p.website as string | null) ?? mapsSearch,
-    });
-  }
-
-  // Map professional rows
-  for (const p of pros as Record<string, unknown>[]) {
-    const sub = String(p.subcategory ?? "");
-    const spec = String(p.specialty ?? "");
-    const bodyParts = [sub, spec].filter(Boolean);
-    cards.push({
-      title: String(p.name ?? ""),
-      body: bodyParts.join(" · "),
-      icon: "phone",
-      section: "pro",
-      url: (p.website as string | null) ?? ((p.phone as string | null) ? `tel:${p.phone}` : undefined),
     });
   }
 

@@ -660,7 +660,7 @@ async function searchPlaces(
   queryText: string,
   opts: SearchOpts
 ): Promise<PlaceCandidate[]> {
-  const poolSize = opts.poolSize ?? 120;
+  const poolSize = opts.poolSize ?? 250;
   const vecLit = toVectorLiteral(queryVec);
   const conditions = [sql`p.embedding IS NOT NULL`];
 
@@ -684,10 +684,11 @@ async function searchPlaces(
       p.opening_hours AS "openingHours", p.lat, p.lng, p.source_url AS "sourceUrl",
       p.search_text AS "searchText",
       (1 - (p.embedding <=> ${vecLit}::vector)) AS "vecSim",
-      similarity(coalesce(p.search_text, ''), ${queryText}) AS "txtSim"
+      similarity((p.name || ' ' || coalesce(p.search_text, '')), ${queryText}) AS "txtSim"
     FROM places p
     WHERE ${whereClause}
-    ORDER BY (1 - (p.embedding <=> ${vecLit}::vector)) + 2.0 * similarity(coalesce(p.search_text, ''), ${queryText}) DESC
+    ORDER BY (1 - (p.embedding <=> ${vecLit}::vector)) * 3.0
+           + similarity((p.name || ' ' || coalesce(p.search_text, '')), ${queryText}) DESC
     LIMIT ${poolSize}
   `)) as unknown as Record<string, unknown>[];
 
@@ -779,10 +780,11 @@ async function fetchScrapedCandidates(
           p.rating,
           p.search_text    AS "searchText",
           (1 - (p.embedding <=> ${vecLit}::vector))                          AS "vecSim",
-          similarity(coalesce(p.search_text, ''), ${queryText})              AS "txtSim"
+          similarity((p.name || ' ' || coalesce(p.search_text, '')), ${queryText}) AS "txtSim"
         FROM jordan_places p
         WHERE p.embedding IS NOT NULL
-        ORDER BY "vecSim" + 2.0 * "txtSim" DESC
+        ORDER BY (1 - (p.embedding <=> ${vecLit}::vector)) * 3.0
+               + similarity((p.name || ' ' || coalesce(p.search_text, '')), ${queryText}) DESC
         LIMIT ${limit}
       `)) as unknown as Record<string, unknown>[];
 
@@ -830,10 +832,11 @@ async function fetchScrapedCandidates(
           r.url,
           r.search_text    AS "searchText",
           (1 - (r.embedding <=> ${vecLit}::vector))                          AS "vecSim",
-          similarity(coalesce(r.search_text, ''), ${queryText})              AS "txtSim"
+          similarity((r.name || ' ' || coalesce(r.search_text, '')), ${queryText}) AS "txtSim"
         FROM jordan_restaurants r
         WHERE r.embedding IS NOT NULL
-        ORDER BY "vecSim" + 2.0 * "txtSim" DESC
+        ORDER BY (1 - (r.embedding <=> ${vecLit}::vector)) * 3.0
+               + similarity((r.name || ' ' || coalesce(r.search_text, '')), ${queryText}) DESC
         LIMIT ${limit}
       `)) as unknown as Record<string, unknown>[];
 
@@ -883,10 +886,11 @@ async function fetchScrapedCandidates(
           p.website,
           p.search_text    AS "searchText",
           (1 - (p.embedding <=> ${vecLit}::vector))                          AS "vecSim",
-          similarity(coalesce(p.search_text, ''), ${queryText})              AS "txtSim"
+          similarity((p.name || ' ' || coalesce(p.search_text, '')), ${queryText}) AS "txtSim"
         FROM jordan_people p
         WHERE p.embedding IS NOT NULL
-        ORDER BY "vecSim" + 2.0 * "txtSim" DESC
+        ORDER BY (1 - (p.embedding <=> ${vecLit}::vector)) * 3.0
+               + similarity((p.name || ' ' || coalesce(p.search_text, '')), ${queryText}) DESC
         LIMIT ${limit}
       `)) as unknown as Record<string, unknown>[];
 
@@ -1306,7 +1310,9 @@ export async function recommendPlaces(
   // ── Scraped sources (Google Maps + Talabat) ─────────────────────────────────
   // Fetch in parallel; merge and deduplicate so OSM records come first and
   // scraped records fill gaps or surface higher-rated options.
-  const scraped = await fetchScrapedCandidates(intent, queryVec, input.query, limit * 2);
+  // Give the ranker a real candidate pool per scraped source: at least 60, at most 120.
+  // Previously this was limit*2 (8–16 total) — too small to surface the best result.
+  const scraped = await fetchScrapedCandidates(intent, queryVec, input.query, Math.min(Math.max(limit * 15, 60), 120));
   // Name matches go FIRST — their txtSim=1.0 / vecSim=0.95 will naturally win
   // in rankPlaces, ensuring the specifically-named place beats generic category results.
   const merged  = deduplicateCandidates([...nameMatches, ...candidates, ...scraped]);

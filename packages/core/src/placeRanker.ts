@@ -38,9 +38,13 @@ export interface ScoredPlace extends PlaceCandidate {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-/** MiniLM cosine rescaled so [0.15, 0.65] → [0, 1]. */
+/**
+ * MiniLM cosine rescaled so [0.10, 0.70] → [0, 1].
+ * Wider band than the old [0.15, 0.65] — prevents good matches from
+ * all collapsing to 1.0 and losing discrimination within the top pool.
+ */
 function rescaleVec(cos: number): number {
-  return Math.max(0, Math.min(1, (cos - 0.15) / 0.50));
+  return Math.max(0, Math.min(1, (cos - 0.10) / 0.60));
 }
 
 /** Keyword hit ratio with non-linear power penalty for partial matches. */

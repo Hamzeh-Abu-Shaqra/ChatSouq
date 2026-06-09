@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
-import { db, sql } from "@chatsouq/db";
+import { neon } from "@neondatabase/serverless";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 10;
+
+const sql = neon(process.env.DATABASE_URL!);
 
 /**
  * GET /api/vendor/[slug]
@@ -37,7 +39,7 @@ export async function GET(
     // ── Numeric ID lookup ────────────────────────────────────────────────
     if (numericId && !isNaN(numericId) && numericId > 0) {
       if (!source || source === "place") {
-        const rows = await db.execute(sql`
+        const rows = await sql`
           SELECT
             id, name, subcategory, category, address,
             rating, reviews_count, phone, website,
@@ -47,12 +49,12 @@ export async function GET(
           FROM jordan_places
           WHERE id = ${numericId}
           LIMIT 1
-        `);
+        `;
         if (rows.length > 0) return NextResponse.json(rows[0]);
       }
 
       if (!source || source === "restaurant") {
-        const rows = await db.execute(sql`
+        const rows = await sql`
           SELECT
             id, name,
             cuisine AS subcategory,
@@ -70,12 +72,12 @@ export async function GET(
           FROM jordan_restaurants
           WHERE id = ${numericId}
           LIMIT 1
-        `);
+        `;
         if (rows.length > 0) return NextResponse.json(rows[0]);
       }
 
       if (!source || source === "person") {
-        const rows = await db.execute(sql`
+        const rows = await sql`
           SELECT
             id, name, subcategory, category,
             address,
@@ -91,7 +93,7 @@ export async function GET(
           FROM jordan_people
           WHERE id = ${numericId}
           LIMIT 1
-        `);
+        `;
         if (rows.length > 0) return NextResponse.json(rows[0]);
       }
 
@@ -99,7 +101,7 @@ export async function GET(
     }
 
     // ── Name-slug fallback (e.g. "sekrab-amman") ─────────────────────────
-    const rows = await db.execute(sql`
+    const rows = await sql`
       SELECT
         id, name, subcategory, category, address,
         rating, reviews_count, phone, website,
@@ -109,12 +111,12 @@ export async function GET(
       WHERE REGEXP_REPLACE(LOWER(name), '[^a-z0-9]+', '-', 'g') = ${slug}
       ORDER BY rating DESC NULLS LAST
       LIMIT 1
-    `);
+    `;
     if (rows.length > 0) return NextResponse.json(rows[0]);
 
     // Prefix match fallback
     const prefix = slug.slice(0, 40);
-    const fallback = await db.execute(sql`
+    const fallback = await sql`
       SELECT
         id, name, subcategory, category, address,
         rating, reviews_count, phone, website,
@@ -124,7 +126,7 @@ export async function GET(
       WHERE REGEXP_REPLACE(LOWER(name), '[^a-z0-9]+', '-', 'g') LIKE ${prefix + "%"}
       ORDER BY rating DESC NULLS LAST
       LIMIT 1
-    `);
+    `;
     if (fallback.length > 0) return NextResponse.json(fallback[0]);
 
     return NextResponse.json({ error: "Vendor not found" }, { status: 404 });

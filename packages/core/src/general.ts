@@ -23,7 +23,7 @@ const WEATHER_EN = /\b(weather|climate|temperature|rain|hot|cold|season|best\s+t
 const GOVERNMENT_EN = /\b(ministry|government\s+service|register|residency|visa|permit|license|passport)\b/i;
 const HISTORY_EN = /\b(history|historical|ancient|heritage|culture|civilization)\b/i;
 // Today digest — must be checked BEFORE NEWS_EN since it overlaps
-const TODAY_EN = /\b(today|this\s+morning|what'?s\s+happening|daily\s+digest|morning\s+briefing|amman\s+today|city\s+update|what'?s\s+new|catch\s+me\s+up|what'?s\s+going\s+on|summary|summarize\s+amman|amman\s+now)\b/i;
+const TODAY_EN = /\b(today|this\s+morning|what'?s\s+happening|daily\s+digest|morning\s+briefing|amman\s+today|city\s+update|what'?s\s+new|catch\s+me\s+up|what'?s\s+going\s+on|summary|summarize\s+amman|amman\s+now|recap|round.?up|brief(ing)?|roundup)\b/i;
 const TODAY_AR = /اليوم|ملخص|ماذا يحدث|أخبار اليوم|ما الجديد|عمان الآن/;
 
 const NEWS_EN = /\b(news|latest|headlines|current\s+events|update[s]?|recent\s+news|breaking)\b/i;
@@ -682,12 +682,27 @@ async function callClaude(
 
   // Handle "today" digest separately — just need a brief journalist intro
   if (intentType === "today" && todayCards) {
-    const newsHeadlines = todayCards
+    const arabic = isArabic(query);
+    // Summarise headline themes in English so Claude doesn't just copy Arabic text
+    const newsThemes = todayCards
       .filter((c) => c.section === "news")
-      .slice(0, 4)
-      .map((c) => `"${c.title}"`)
-      .join("; ");
-    const todaySystemPrompt = `You are ChatSouq's morning editor for Amman, Jordan. Write a warm, journalist-style morning briefing of 2-3 sentences. Reference these actual headlines from today: ${newsHeadlines || "General Amman updates"}. Be specific and local. No markdown.`;
+      .slice(0, 5)
+      .map((c) => c.body ?? "") // body has "source · date", safer than raw Arabic title
+      .filter(Boolean)
+      .join(", ");
+    const langInstruction = arabic
+      ? "اكتب باللغة العربية فقط. لا تكتب بالإنجليزية أبدًا."
+      : "Write ONLY in English. Never respond in Arabic, even if the news headlines are in Arabic.";
+    const lang = arabic ? "Arabic" : "English";
+    const todaySystemPrompt = `You are ChatSouq's morning editor for Amman, Jordan.
+${langInstruction}
+Write a warm, journalist-style morning briefing of 2-3 sentences in ${lang}.
+Today's news comes from sources like: ${newsThemes || "Al-Ghad, Roya News, Jordan Times"}.
+Do NOT copy Arabic text verbatim into your response. Synthesize the themes in ${lang}.
+Be specific about Amman and Jordan. No markdown. No lists.`;
+    const fallback = arabic
+      ? "صباح الخير عمّان! إليك ما يحدث في المدينة اليوم."
+      : "Good morning, Amman! Here's what's happening in the city today.";
     try {
       const res = await provider.complete({
         system: todaySystemPrompt,
@@ -698,7 +713,7 @@ async function callClaude(
       });
       return { answer: res.text.trim(), cards: todayCards };
     } catch {
-      return { answer: "Good morning, Amman! Here's what's happening in the city today.", cards: todayCards };
+      return { answer: fallback, cards: todayCards };
     }
   }
 

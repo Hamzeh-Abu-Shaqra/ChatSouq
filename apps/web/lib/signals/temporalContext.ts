@@ -43,12 +43,13 @@ const EID_RANGES: [number, number, number, number, number][] = [
 
 /** Fixed Jordanian national holidays (month, day, name) */
 const JORDAN_HOLIDAYS: [number, number, string][] = [
-  [1,  1, "New Year's Day"],
-  [5,  1, "Labour Day"],
-  [5, 25, "Independence Day"],
-  [6,  9, "King's Birthday"],
-  [10, 16, "Great Arab Revolt / Army Day"],
-  [11, 14, "King Hussein's Birthday"],
+  [1,  1,  "New Year's Day"],
+  [1,  30, "King Abdullah II Birthday"],  // King Abdullah II born 30 Jan 1962
+  [5,  1,  "Labour Day"],
+  [5,  25, "Independence Day"],
+  [6,  10, "Arab Revolt Day"],            // Great Arab Revolt began 10 Jun 1916
+  [8,  11, "Accession Day"],              // King Abdullah II ascended 7 Feb 1999; parade day 11 Aug
+  [11, 14, "King Hussein's Birthday"],    // King Hussein I born 14 Nov 1935
 ];
 
 function isInRange(

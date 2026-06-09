@@ -1,14 +1,14 @@
 """
-Talabat Jordan Scraper — Smart API Discovery
+Talabat Jordan Scraper — Direct __NEXT_DATA__ approach (no Playwright)
 
-Strategy:
-1. Open talabat.com/jordan with Playwright
-2. Intercept network traffic to discover:
-   a. The REAL area list (not guessed IDs)
-   b. The restaurant listing API endpoint + auth headers
-3. Replicate the discovered API calls with requests library + pagination
-4. Filter strictly to Amman areas
-5. Match results with Google Maps data
+How it works:
+  Talabat is a Next.js SSR app. Every area listing page embeds its full
+  restaurant data in <script id="__NEXT_DATA__"> in the HTML.
+  We fetch that HTML with requests (fast, no browser), parse the JSON,
+  paginate through all pages, and de-duplicate by branchId.
+
+Real Amman area IDs were discovered by scanning talabat.com/jordan/restaurants/{id}/area
+and checking city=Amman in the response. IDs 4892-4964 = all Amman delivery zones.
 """
 import os
 import re
@@ -17,31 +17,103 @@ import json
 import difflib
 import psycopg2
 import requests as http
-from playwright.sync_api import sync_playwright
 from dotenv import load_dotenv
 
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
 
-# Amman area keyword filter — any area whose name contains one of these is Amman
-AMMAN_KEYWORDS = {
-    "amman", "عمان", "abdali", "abdoun", "shmeisani", "swefieh",
-    "medina street", "gardens", "jubeiha", "khalda", "tlaa al ali",
-    "rabiyeh", "shmaisani", "um uthaina", "marj el hamam", "bayader",
-    "wadi seer", "sports city", "jabal amman", "marka", "airport road",
-    "zarqa road", "7th circle", "6th circle", "5th circle", "8th circle",
-    "downtown", "west amman", "east amman", "al rabiyeh", "al shmaisani",
-    "ابدلي", "عبدون", "شميساني", "صويفية", "الجاردنز", "جبيهة",
-    "خلدا", "تلاع العلي", "الرابية", "أم أذينة", "مرج الحمام",
-    "بيادر", "وادي السير", "المدينة الرياضية", "جبل عمان", "ماركا",
+HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Connection": "keep-alive",
 }
 
+# All real Amman delivery areas (city=Amman, countryId=8)
+# Discovered by scanning talabat.com/jordan/restaurants/{id}/area
+AMMAN_AREAS = [
+    (4892, "Tabarbour",                    "tabarbour"),
+    (4893, "Jubaiha",                      "jubaiha"),
+    (4894, "Al Baraka",                    "al-baraka"),
+    (4895, "Al Rawnaq",                    "al-rawnaq"),
+    (4896, "Jabal Amman",                  "jabal-amman"),
+    (4897, "Abu Nseir",                    "abu-nseir"),
+    (4898, "Shmaisani",                    "shmaisani"),
+    (4899, "Al Amir Hassan",               "al-amir-hassan"),
+    (4900, "Al Kursi",                     "al-kursi"),
+    (4901, "Mahes",                        "mahes"),
+    (4902, "Jabal Al Weibdeh",             "jabal-al-weibdeh"),
+    (4903, "Wadi El Seer",                 "wadi-el-seer"),
+    (4904, "Naour",                        "naour"),
+    (4905, "Abu Alanda",                   "abu-alanda"),
+    (4906, "Marka",                        "marka"),
+    (4907, "Swelieh",                      "swelieh"),
+    (4908, "Downtown",                     "downtown"),
+    (4909, "Al Diyar",                     "al-diyar"),
+    (4910, "Al Salhien",                   "al-salhien"),
+    (4911, "Mecca Street",                 "mecca-street"),
+    (4912, "Al Swaifyeh",                  "al-swaifyeh"),
+    (4913, "Wadi Saqra",                   "wadi-saqra"),
+    (4914, "Al Jandaweel",                 "al-jandaweel"),
+    (4915, "Daheit Al Aqsa",               "daheit-al-aqsa"),
+    (4916, "Al Sahel",                     "al-sahel"),
+    (4917, "Shafa Badran",                 "shafa-badran"),
+    (4918, "Hay Alkhaledeen",              "hay-alkhaledeen"),
+    (4919, "Dahiyet Al Rashid",            "dahiyet-al-rashid"),
+    (4920, "Dabouq - Baccaloria",          "dabouq-baccaloria"),
+    (4921, "Al Ridwan",                    "al-ridwan"),
+    (4922, "Madinat Al Hussein",           "madinat-al-hussein"),
+    (4923, "Daheit Al Yasmeen",            "daheit-al-yasmeen"),
+    (4924, "Al Sahabah",                   "al-sahabah"),
+    (4925, "Al Gardens",                   "al-gardens"),
+    (4926, "Dahiet Al Hussain",            "dahiet-al-hussain"),
+    (4927, "Ras El Ain",                   "ras-el-ain"),
+    (4928, "Al Kamaliya",                  "al-kamaliya"),
+    (4929, "Al Qwaismeh",                  "al-qwaismeh"),
+    (4930, "Marj El Hamam",                "marj-el-hamam"),
+    (4931, "Al Hummar",                    "al-hummar"),
+    (4932, "Airport Road - Manaseer Gs",   "airport-road-manaseer-gs"),
+    (4933, "Medina Street",                "medina-street"),
+    (4934, "Al Zohour",                    "al-zohour"),
+    (4935, "Dabouq - Ferdous",             "dabouq-ferdous"),
+    (4936, "Um El Summaq",                 "um-el-summaq"),
+    (4937, "Dahiet Al Ameer Rashed",       "dahiet-al-ameer-rashed"),
+    (4938, "Hay Al Rahmanieh",             "hay-al-rahmanieh"),
+    (4939, "University Street",            "university-street"),
+    (4940, "Basman",                       "basman"),
+    (4941, "Khalda",                       "khalda"),
+    (4942, "Airport Road - Dunes Bridge",  "airport-road-dunes-bridge"),
+    (4943, "Jabal Al Hussain",             "jabal-al-hussain"),
+    (4944, "Al Sinaa",                     "al-sinaa"),
+    (4945, "Al Rawabi",                    "al-rawabi"),
+    (4946, "Al Hashmi Al Shamali",         "al-hashmi-al-shamali"),
+    (4947, "Tla Ali",                      "tla-ali"),
+    (4948, "Bader Al Jadeda",              "bader-al-jadeda"),
+    (4949, "Um Uthaiena",                  "um-uthaiena"),
+    (4950, "Abdoun",                       "abdoun"),
+    (4951, "Al Hashmi Al Janobi",          "al-hashmi-al-janobi"),
+    (4952, "Arjan",                        "arjan"),
+    (4953, "Iraq Al Ameer",                "iraq-al-ameer"),
+    (4954, "Al Fuhais",                    "al-fuhais"),
+    (4955, "Gardens Street",               "gardens-street"),
+    (4956, "Dabouq",                       "dabouq"),
+    (4957, "Al Bnayyat",                   "al-bnayyat"),
+    (4958, "Al Bayader",                   "al-bayader"),
+    (4959, "Abdali",                       "abdali"),
+    (4960, "Al Rabieh - Al Salam",         "al-rabieh-al-salam"),
+    (4961, "Al Madinah Al Tabyeh",         "al-madinah-al-tabyeh"),
+    (4962, "Airport Road - Madaba Bridge", "airport-road-madaba-bridge"),
+    (4963, "Al Mghaba Al Gharbi",          "al-mghaba-al-gharbi"),
+    (4964, "Al Muqabalain",               "al-muqabalain"),
+]
 
-def is_amman(area_name: str) -> bool:
-    if not area_name:
-        return False
-    n = area_name.lower()
-    return any(kw in n for kw in AMMAN_KEYWORDS)
+PAGE_SIZE = 15   # Talabat returns 15 vendors per page
 
+
+# ── Database ──────────────────────────────────────────────────────────────────
 
 def get_db():
     return psycopg2.connect(os.getenv("DATABASE_URL"))
@@ -89,7 +161,109 @@ def setup_table():
     conn.close()
 
 
-# ── Name normalization for fuzzy matching ─────────────────────────────────────
+# ── Parsing ───────────────────────────────────────────────────────────────────
+
+def parse_vendor(v: dict, area_name: str) -> dict:
+    """Convert a Talabat vendor object to our schema."""
+    name = (v.get("name") or "").strip()
+    if not name:
+        return None
+
+    cuisine = (v.get("cuisineString") or v.get("cuisine") or "")
+    if isinstance(cuisine, list):
+        cuisine = ", ".join(str(c) for c in cuisine)
+    cuisine = str(cuisine).strip()[:150] or None
+
+    rating = v.get("rate") or v.get("rating")
+    try:
+        rating = float(rating) if rating is not None else None
+    except (ValueError, TypeError):
+        rating = None
+
+    branch_id = str(v.get("branchId") or v.get("id") or "").strip()
+    slug = (v.get("branchSlug") or v.get("slug") or "").strip()
+    url = (f"https://www.talabat.com/jordan/restaurant/{slug}" if slug else None)
+
+    delivery_time = v.get("avgDeliveryTime") or v.get("deliveryTime")
+    min_order = v.get("minimumOrderAmount")
+    delivery_fee = v.get("deliveryFee")
+
+    # statusCode 0 = open, anything else = closed
+    status = v.get("statusCode")
+    is_open = (status == 0) if status is not None else None
+
+    # Filter out grocery stores
+    if v.get("isGrocery") or v.get("verticalType") == 1:
+        return None
+
+    return {
+        "name":          name,
+        "name_ar":       None,
+        "cuisine":       cuisine,
+        "rating":        rating,
+        "rating_count":  v.get("totalRatings"),
+        "delivery_time": str(delivery_time) if delivery_time else None,
+        "min_order":     str(min_order) if min_order is not None else None,
+        "delivery_fee":  str(delivery_fee) if delivery_fee is not None else None,
+        "area":          area_name,
+        "is_open":       is_open,
+        "talabat_id":    branch_id or None,
+        "url":           url,
+        "maps_place_id": None,
+        "address":       None,
+    }
+
+
+def fetch_page(area_id: int, slug: str, page: int) -> tuple[list, int]:
+    """Fetch one page of an area listing. Returns (vendors, total_vendors)."""
+    url = f"https://www.talabat.com/jordan/restaurants/{area_id}/{slug}?page={page}"
+    try:
+        r = http.get(url, headers=HEADERS, timeout=20)
+        match = re.search(
+            r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>',
+            r.text, re.DOTALL
+        )
+        if not match:
+            return [], 0
+        data = json.loads(match.group(1))
+        pd = data.get("props", {}).get("pageProps", {}).get("data", {})
+        return pd.get("vendors", []), pd.get("totalVendors", 0)
+    except Exception as e:
+        return [], 0
+
+
+def scrape_area(area_id: int, area_name: str, slug: str,
+                global_seen: set, max_pages: int = 30) -> list:
+    """
+    Paginate through one Amman area. Adds new branchIds to global_seen
+    to avoid cross-area duplicates. Returns list of parsed restaurant dicts.
+    """
+    results = []
+    for page in range(1, max_pages + 1):
+        vendors, total = fetch_page(area_id, slug, page)
+        if not vendors:
+            break
+
+        for v in vendors:
+            bid = str(v.get("branchId") or v.get("id") or "").strip()
+            if not bid or bid in global_seen:
+                continue
+            global_seen.add(bid)
+            parsed = parse_vendor(v, area_name)
+            if parsed:
+                results.append(parsed)
+
+        # Stop when we've seen all pages
+        total_pages = max(1, (total + PAGE_SIZE - 1) // PAGE_SIZE)
+        if page >= min(total_pages, max_pages):
+            break
+
+        time.sleep(0.25)   # polite delay
+
+    return results
+
+
+# ── Google Maps matching ──────────────────────────────────────────────────────
 
 def normalize(name: str) -> str:
     if not name:
@@ -101,8 +275,6 @@ def normalize(name: str) -> str:
     n = re.sub(r"[^\w\s]", "", n)
     return re.sub(r"\s+", " ", n).strip()
 
-
-# ── Google Maps matching ──────────────────────────────────────────────────────
 
 def load_maps_index():
     try:
@@ -119,10 +291,12 @@ def load_maps_index():
 
 
 def match_with_maps(restaurants, maps_index):
+    if not maps_index:
+        return restaurants
     matched = 0
     for r in restaurants:
         norm = normalize(r.get("name", ""))
-        if not norm or not maps_index:
+        if not norm:
             continue
         best_score, best_pid, best_addr = 0.0, None, None
         for pid, norm_maps, addr in maps_index:
@@ -138,326 +312,9 @@ def match_with_maps(restaurants, maps_index):
     return restaurants
 
 
-# ── JSON extraction ───────────────────────────────────────────────────────────
+# ── Database save ─────────────────────────────────────────────────────────────
 
-def parse_restaurant(obj, area_name=""):
-    """Extract a restaurant dict from any API object shape."""
-    try:
-        name = (obj.get("name") or obj.get("nameEn") or obj.get("name_en") or
-                (obj.get("names") or {}).get("en") or
-                (obj.get("name_translations") or {}).get("en") or "")
-        name_ar = (obj.get("nameAr") or obj.get("name_ar") or
-                   (obj.get("names") or {}).get("ar") or
-                   (obj.get("name_translations") or {}).get("ar") or "")
-        if not name and not name_ar:
-            return None
-
-        # Rating
-        r = obj.get("rating") or {}
-        rating = (obj.get("stars") or obj.get("rating_value") or obj.get("averageRating") or
-                  (r.get("value") if isinstance(r, dict) else r) or None)
-        rating_count = (obj.get("reviewsCount") or obj.get("review_count") or
-                        (r.get("count") if isinstance(r, dict) else None) or None)
-
-        # Delivery
-        d = obj.get("deliveryInfo") or obj.get("delivery") or {}
-        delivery_time = (obj.get("deliveryTime") or obj.get("estimated_delivery_time") or
-                         d.get("time") or d.get("duration") or None)
-        min_order = (obj.get("minimumOrder") or obj.get("minimum_order_amount") or
-                     d.get("minimumOrder") or None)
-        delivery_fee = (obj.get("deliveryFee") or obj.get("delivery_cost") or
-                        d.get("fee") or None)
-
-        # Cuisine
-        cuisines = obj.get("cuisines") or obj.get("categories") or obj.get("cuisine") or []
-        cuisine = None
-        if isinstance(cuisines, list) and cuisines:
-            first = cuisines[0]
-            cuisine = (first.get("name") or first.get("nameEn") if isinstance(first, dict) else str(first))
-        elif isinstance(cuisines, str):
-            cuisine = cuisines
-
-        # Area — prefer from object, fall back to what we know
-        obj_area = (obj.get("area") or obj.get("areaName") or obj.get("zone") or
-                    (obj.get("location") or {}).get("area") or area_name or "")
-
-        # ID & URL
-        branch_id = (obj.get("id") or obj.get("branchId") or obj.get("vendorId") or
-                     obj.get("branch_id") or obj.get("vendor_id"))
-        slug = obj.get("slug") or obj.get("urlKey") or obj.get("url_key") or obj.get("link")
-        url = None
-        if slug:
-            url = slug if slug.startswith("http") else f"https://www.talabat.com/jordan/restaurant/{slug}"
-        elif branch_id:
-            url = f"https://www.talabat.com/jordan/restaurant/{branch_id}"
-
-        is_open = obj.get("isOpen") or obj.get("is_open") or obj.get("open")
-
-        return {
-            "name":          (name or name_ar).strip(),
-            "name_ar":       name_ar.strip() or None,
-            "cuisine":       cuisine,
-            "rating":        float(rating) if rating is not None else None,
-            "rating_count":  int(rating_count) if rating_count is not None else None,
-            "delivery_time": str(delivery_time) if delivery_time else None,
-            "min_order":     str(min_order) if min_order else None,
-            "delivery_fee":  str(delivery_fee) if delivery_fee else None,
-            "area":          str(obj_area).strip() or None,
-            "is_open":       bool(is_open) if is_open is not None else None,
-            "talabat_id":    str(branch_id) if branch_id else None,
-            "url":           url,
-            "maps_place_id": None,
-            "address":       None,
-        }
-    except Exception:
-        return None
-
-
-def dig_for_restaurants(obj, area_name, results, seen, depth=0):
-    """Recursively find restaurant objects anywhere in a JSON payload."""
-    if depth > 10:
-        return
-    if isinstance(obj, list):
-        for item in obj:
-            if isinstance(item, dict):
-                r = parse_restaurant(item, area_name)
-                uid = (r.get("talabat_id") or r.get("url") or r.get("name")) if r else None
-                if r and uid and uid not in seen:
-                    seen.add(uid)
-                    results.append(r)
-                else:
-                    dig_for_restaurants(item, area_name, results, seen, depth + 1)
-            else:
-                dig_for_restaurants(item, area_name, results, seen, depth + 1)
-    elif isinstance(obj, dict):
-        for v in obj.values():
-            dig_for_restaurants(v, area_name, results, seen, depth + 1)
-
-
-def dig_for_areas(obj, areas, depth=0):
-    """Find area/city objects in API responses — returns list of (id, name) tuples."""
-    if depth > 8:
-        return
-    if isinstance(obj, list):
-        for item in obj:
-            dig_for_areas(item, areas, depth + 1)
-    elif isinstance(obj, dict):
-        area_id   = obj.get("id") or obj.get("areaId") or obj.get("area_id")
-        area_name = (obj.get("name") or obj.get("nameEn") or obj.get("area_name") or
-                     (obj.get("names") or {}).get("en") or "")
-        area_slug = obj.get("slug") or obj.get("urlKey") or obj.get("seo_url") or ""
-
-        if area_id and area_name and len(area_name) > 1:
-            areas.append((str(area_id), area_name.strip(), str(area_slug)))
-        else:
-            for v in obj.values():
-                dig_for_areas(v, areas, depth + 1)
-
-
-# ── Playwright scraping ───────────────────────────────────────────────────────
-
-BROWSER_ARGS = ["--no-sandbox", "--disable-dev-shm-usage", "--disable-blink-features=AutomationControlled"]
-CONTEXT_OPTS = dict(
-    user_agent=(
-        "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) "
-        "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
-    ),
-    locale="en-US",
-    viewport={"width": 390, "height": 844},
-    extra_http_headers={
-        "Accept-Language": "en-US,en;q=0.9,ar;q=0.8",
-        "Accept": "application/json, */*",
-    },
-)
-
-
-def discover_areas(browser) -> list:
-    """
-    Load the Talabat Jordan homepage and intercept API responses
-    to find the real list of areas with their IDs.
-    """
-    found_areas = []
-    captured = []
-
-    ctx  = browser.new_context(**CONTEXT_OPTS)
-    page = ctx.new_page()
-
-    def capture(response):
-        try:
-            if response.status != 200:
-                return
-            ct = response.headers.get("content-type", "")
-            if "json" not in ct:
-                return
-            u = response.url.lower()
-            if any(k in u for k in ["area", "city", "region", "location", "zone", "district"]):
-                captured.append(response.json())
-        except Exception:
-            pass
-
-    page.on("response", capture)
-    try:
-        page.goto("https://www.talabat.com/jordan/restaurants", timeout=45000, wait_until="domcontentloaded")
-        page.wait_for_load_state("networkidle", timeout=20000)
-        page.wait_for_timeout(4000)
-
-        # Try clicking the area/location selector if present
-        for sel in ["[data-testid='area-selector']", "[data-testid='location-btn']",
-                    ".area-selector", "#area-dropdown", "button[aria-label*='area']"]:
-            try:
-                el = page.query_selector(sel)
-                if el:
-                    el.click()
-                    page.wait_for_timeout(2000)
-                    break
-            except Exception:
-                pass
-
-        page.wait_for_timeout(2000)
-    except Exception as e:
-        print(f"  [discover] page warning: {e}")
-
-    page.remove_listener("response", capture)
-    page.close()
-    ctx.close()
-
-    for body in captured:
-        dig_for_areas(body, found_areas)
-
-    # Deduplicate
-    seen_ids = set()
-    unique = []
-    for aid, aname, aslug in found_areas:
-        if aid not in seen_ids:
-            seen_ids.add(aid)
-            unique.append((aid, aname, aslug))
-
-    print(f"  [discover] Found {len(unique)} areas from API")
-    return unique
-
-
-def scrape_area(ctx, area_id: str, area_name: str, area_slug: str) -> list:
-    """
-    Load a single Talabat area page and capture all restaurant data
-    by intercepting JSON responses.
-    """
-    results, seen = [], set()
-    captured = []
-
-    page = ctx.new_page()
-
-    def capture(response):
-        try:
-            if response.status != 200:
-                return
-            ct = response.headers.get("content-type", "")
-            if "json" not in ct:
-                return
-            body = response.json()
-            captured.append(body)
-        except Exception:
-            pass
-
-    page.on("response", capture)
-
-    # Try slug URL first, fall back to ID-based URL
-    urls_to_try = []
-    if area_slug:
-        urls_to_try.append(f"https://www.talabat.com/jordan/restaurants/{area_slug}")
-    urls_to_try.append(f"https://www.talabat.com/jordan/restaurants/{area_id}/{area_name.lower().replace(' ', '-')}")
-    urls_to_try.append(f"https://www.talabat.com/jordan/restaurants")
-
-    for url in urls_to_try:
-        try:
-            page.goto(url, timeout=40000, wait_until="domcontentloaded")
-            page.wait_for_load_state("networkidle", timeout=15000)
-            page.wait_for_timeout(2000)
-            # Scroll to trigger lazy loading
-            for _ in range(6):
-                page.evaluate("window.scrollBy(0, 1200)")
-                page.wait_for_timeout(600)
-            page.wait_for_timeout(1500)
-            break
-        except Exception as e:
-            print(f"    [{area_name}] url {url} failed: {e}")
-            continue
-
-    page.remove_listener("response", capture)
-    page.close()
-
-    for body in captured:
-        dig_for_restaurants(body, area_name, results, seen)
-
-    return results
-
-
-def scrape_talabat_jordan() -> list:
-    """Full scrape: discover areas → filter to Amman → scrape each area."""
-    all_restaurants = []
-    global_seen = set()
-
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True, args=BROWSER_ARGS)
-
-        # ── Step 1: Discover real areas ───────────────────────────────────────
-        print("  [talabat] Discovering areas...")
-        areas = discover_areas(browser)
-
-        # Filter to Amman
-        amman_areas = [(aid, aname, aslug) for aid, aname, aslug in areas if is_amman(aname)]
-        print(f"  [talabat] Amman areas found: {len(amman_areas)}")
-
-        # If discovery failed, fall back to known area slugs
-        if not amman_areas:
-            print("  [talabat] Discovery returned 0 Amman areas — using known slugs fallback")
-            amman_areas = [
-                ("1",  "Abdali",         "abdali"),
-                ("2",  "Abdoun",         "abdoun"),
-                ("3",  "Shmeisani",      "shmeisani"),
-                ("4",  "Swefieh",        "swefieh"),
-                ("5",  "Gardens",        "gardens"),
-                ("6",  "Khalda",         "khalda"),
-                ("7",  "Tlaa Al Ali",    "tlaa-al-ali"),
-                ("8",  "Jubeiha",        "jubeiha"),
-                ("9",  "Medina Street",  "medina-street"),
-                ("10", "Sports City",    "sports-city"),
-                ("11", "Bayader",        "bayader-wadi-seer"),
-                ("12", "Um Uthaina",     "um-uthaina"),
-                ("13", "Marj El Hamam",  "marj-el-hamam"),
-                ("14", "Al Rabiyeh",     "al-rabiyeh"),
-                ("15", "Airport Road",   "airport-road"),
-                ("16", "Jabal Amman",    "jabal-amman"),
-                ("17", "Marka",          "marka"),
-                ("18", "Zarqa Road",     "zarqa-road"),
-            ]
-
-        # ── Step 2: Scrape each Amman area ────────────────────────────────────
-        ctx = browser.new_context(**CONTEXT_OPTS)
-
-        for area_id, area_name, area_slug in amman_areas:
-            print(f"  [talabat] Scraping: {area_name}...")
-            restaurants = scrape_area(ctx, area_id, area_name, area_slug)
-
-            new = 0
-            for r in restaurants:
-                uid = r.get("talabat_id") or r.get("url") or r.get("name")
-                if uid and uid not in global_seen:
-                    global_seen.add(uid)
-                    all_restaurants.append(r)
-                    new += 1
-
-            print(f"    → {len(restaurants)} found, {new} new (total: {len(all_restaurants)})")
-            time.sleep(2)
-
-        ctx.close()
-        browser.close()
-
-    return all_restaurants
-
-
-# ── Database ──────────────────────────────────────────────────────────────────
-
-def save_restaurants(restaurants):
+def save_restaurants(restaurants: list) -> int:
     if not restaurants:
         return 0
 
@@ -468,11 +325,10 @@ def save_restaurants(restaurants):
         ])).strip()
 
     conn = get_db()
-    cur  = conn.cursor()
+    cur = conn.cursor()
     saved = 0
     for r in restaurants:
-        uid = r.get("talabat_id") or r.get("url")
-        if not uid:
+        if not r.get("talabat_id"):
             continue
         try:
             cur.execute("""
@@ -482,6 +338,7 @@ def save_restaurants(restaurants):
                      talabat_id, url, maps_place_id, search_text)
                 VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                 ON CONFLICT (talabat_id) DO UPDATE SET
+                    name          = EXCLUDED.name,
                     rating        = COALESCE(EXCLUDED.rating,        jordan_restaurants.rating),
                     rating_count  = COALESCE(EXCLUDED.rating_count,  jordan_restaurants.rating_count),
                     delivery_time = COALESCE(EXCLUDED.delivery_time, jordan_restaurants.delivery_time),
@@ -490,12 +347,13 @@ def save_restaurants(restaurants):
                     address       = COALESCE(EXCLUDED.address,       jordan_restaurants.address),
                     area          = COALESCE(EXCLUDED.area,          jordan_restaurants.area),
                     is_open       = EXCLUDED.is_open,
-                    search_text   = EXCLUDED.search_text
+                    search_text   = EXCLUDED.search_text,
+                    scraped_at    = NOW()
             """, (
-                r.get("name"), r.get("name_ar"), r.get("cuisine"),
+                r["name"], r.get("name_ar"), r.get("cuisine"),
                 r.get("rating"), r.get("rating_count"), r.get("delivery_time"),
                 r.get("min_order"), r.get("delivery_fee"), r.get("address"),
-                r.get("area"), r.get("is_open"), r.get("talabat_id"),
+                r.get("area"), r.get("is_open"), r["talabat_id"],
                 r.get("url"), r.get("maps_place_id"), r.get("search_text"),
             ))
             saved += 1
@@ -514,16 +372,27 @@ def run():
     print("Setting up jordan_restaurants table...")
     setup_table()
 
-    print("Scraping Talabat Jordan (Amman only)...")
-    restaurants = scrape_talabat_jordan()
-    print(f"  Total found: {len(restaurants)}")
+    print(f"Scraping Talabat Jordan — {len(AMMAN_AREAS)} Amman delivery areas...")
+    all_restaurants = []
+    global_seen: set = set()
 
-    if restaurants:
+    for area_id, area_name, slug in AMMAN_AREAS:
+        restaurants = scrape_area(area_id, area_name, slug, global_seen, max_pages=30)
+        if restaurants:
+            all_restaurants.extend(restaurants)
+            print(f"  [{area_name}] +{len(restaurants)} new  (total unique so far: {len(all_restaurants)})")
+        else:
+            print(f"  [{area_name}] 0 new")
+        time.sleep(0.5)
+
+    print(f"\nTotal unique restaurants found: {len(all_restaurants)}")
+
+    if all_restaurants:
         print("Matching with Google Maps...")
         maps_index = load_maps_index()
-        restaurants = match_with_maps(restaurants, maps_index)
+        all_restaurants = match_with_maps(all_restaurants, maps_index)
 
-    saved = save_restaurants(restaurants)
+    saved = save_restaurants(all_restaurants)
     print(f"Talabat done. Saved {saved} restaurants.")
 
 

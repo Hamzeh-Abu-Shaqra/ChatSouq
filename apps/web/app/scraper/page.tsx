@@ -34,7 +34,7 @@ const TABS = [
 
 const COLUMNS: Record<string, string[]> = {
   news:        ["title", "source", "language", "published_at"],
-  food:        ["name", "subcategory", "rating", "address", "delivery_time", "source"],
+  food:        ["name", "subcategory", "rating", "address", "delivery_time", "source", "url"],
   health:      ["name", "subcategory", "address", "rating", "phone"],
   shopping:    ["name", "subcategory", "address", "rating"],
   services:    ["name", "subcategory", "address", "phone"],

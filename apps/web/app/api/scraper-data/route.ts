@@ -59,26 +59,26 @@ export async function GET(request: Request) {
       if (category === "Talabat Delivery") {
         // Only Talabat restaurants
         if (search) {
-          data = await safeQuery(sql`SELECT id, name, cuisine as subcategory, rating, delivery_time, area, address, 'Talabat' as source, url, scraped_at FROM jordan_restaurants WHERE name ILIKE ${'%' + search + '%'} ORDER BY rating DESC NULLS LAST LIMIT ${limit} OFFSET ${offset}`);
+          data = await safeQuery(sql`SELECT id, name, cuisine as subcategory, rating, delivery_time, COALESCE(address, area) as address, 'Talabat' as source, url, scraped_at FROM jordan_restaurants WHERE name ILIKE ${'%' + search + '%'} ORDER BY rating DESC NULLS LAST LIMIT ${limit} OFFSET ${offset}`);
           const c = await safeQuery(sql`SELECT COUNT(*) as count FROM jordan_restaurants WHERE name ILIKE ${'%' + search + '%'}`);
           total = Number(c[0]?.count ?? 0);
         } else {
-          data = await safeQuery(sql`SELECT id, name, cuisine as subcategory, rating, delivery_time, area, address, 'Talabat' as source, url, scraped_at FROM jordan_restaurants ORDER BY rating DESC NULLS LAST LIMIT ${limit} OFFSET ${offset}`);
+          data = await safeQuery(sql`SELECT id, name, cuisine as subcategory, rating, delivery_time, COALESCE(address, area) as address, 'Talabat' as source, url, scraped_at FROM jordan_restaurants ORDER BY rating DESC NULLS LAST LIMIT ${limit} OFFSET ${offset}`);
           const c = await safeQuery(sql`SELECT COUNT(*) as count FROM jordan_restaurants`);
           total = Number(c[0]?.count ?? 0);
         }
       } else if (category) {
         // Filter by specific subcategory (cafe, bakery, etc.)
-        data = await safeQuery(sql`SELECT id, name, subcategory, rating, NULL::text as delivery_time, NULL::text as area, address, 'Google Maps' as source, NULL::text as url, scraped_at FROM jordan_places WHERE category = 'food' AND subcategory = ${category} AND (${search} = '' OR name ILIKE ${'%' + search + '%'}) ORDER BY rating DESC NULLS LAST LIMIT ${limit} OFFSET ${offset}`);
+        data = await safeQuery(sql`SELECT id, name, subcategory, rating, NULL::text as delivery_time, address, 'Google Maps' as source, NULL::text as url, scraped_at FROM jordan_places WHERE category = 'food' AND subcategory = ${category} AND (${search} = '' OR name ILIKE ${'%' + search + '%'}) ORDER BY rating DESC NULLS LAST LIMIT ${limit} OFFSET ${offset}`);
         const c = await safeQuery(sql`SELECT COUNT(*) as count FROM jordan_places WHERE category = 'food' AND subcategory = ${category} AND (${search} = '' OR name ILIKE ${'%' + search + '%'})`);
         total = Number(c[0]?.count ?? 0);
       } else if (search) {
         // Search across both tables
         data = await safeQuery(sql`
-          SELECT id, name, subcategory, rating, NULL::text as delivery_time, NULL::text as area, address, 'Google Maps' as source, NULL::text as url, scraped_at
+          SELECT id, name, subcategory, rating, NULL::text as delivery_time, address, 'Google Maps' as source, NULL::text as url, scraped_at
           FROM jordan_places WHERE category = 'food' AND name ILIKE ${'%' + search + '%'}
           UNION ALL
-          SELECT id, name, cuisine as subcategory, rating, delivery_time, area, address, 'Talabat' as source, url, scraped_at
+          SELECT id, name, cuisine as subcategory, rating, delivery_time, COALESCE(address, area) as address, 'Talabat' as source, url, scraped_at
           FROM jordan_restaurants WHERE name ILIKE ${'%' + search + '%'}
           ORDER BY rating DESC NULLS LAST LIMIT ${limit} OFFSET ${offset}
         `);
@@ -88,10 +88,10 @@ export async function GET(request: Request) {
       } else {
         // All food — union both tables
         data = await safeQuery(sql`
-          SELECT id, name, subcategory, rating, NULL::text as delivery_time, NULL::text as area, address, 'Google Maps' as source, NULL::text as url, scraped_at
+          SELECT id, name, subcategory, rating, NULL::text as delivery_time, address, 'Google Maps' as source, NULL::text as url, scraped_at
           FROM jordan_places WHERE category = 'food'
           UNION ALL
-          SELECT id, name, cuisine as subcategory, rating, delivery_time, area, address, 'Talabat' as source, url, scraped_at
+          SELECT id, name, cuisine as subcategory, rating, delivery_time, COALESCE(address, area) as address, 'Talabat' as source, url, scraped_at
           FROM jordan_restaurants
           ORDER BY rating DESC NULLS LAST LIMIT ${limit} OFFSET ${offset}
         `);

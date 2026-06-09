@@ -180,10 +180,16 @@ export async function recommend(
       if (constraints.budgetMax !== null && c.price !== null && c.price > constraints.budgetMax * 1.2) return false;
 
       // Keyword relevance guard: when the user specified meaningful product keywords
-      // (e.g. "camping", "headphones", "wireless"), every alternative must match at
-      // least one of them. This prevents Sports & Outdoors noise — footballs or padel
-      // rackets appearing alongside camping gear just because they share a broad category.
-      if (specificKw.length > 0 && c.keywordHits === 0) return false;
+      // (e.g. "camping", "headphones", "wireless"), every alternative must satisfy
+      // a minimum keyword hit threshold.
+      //   • 1+ specific kw  → at least 1 hit  (e.g. "gift camping under 50 JOD")
+      //   • 3+ specific kw  → at least 2 hits (e.g. "portable camping equipment")
+      // The stricter rule for 3+ kw prevents generic-modifier matches: an item that
+      // only matches "portable" (but not "camping" or "equipment") is off-topic.
+      if (specificKw.length > 0) {
+        const minHits = specificKw.length >= 3 ? 2 : 1;
+        if (c.keywordHits < minHits) return false;
+      }
 
       // When category was relaxed, only keep alternatives that are genuinely relevant
       if (relaxedCategory && c.keywordHits === 0 && c.category !== bestCategory) return false;

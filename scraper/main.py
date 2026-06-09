@@ -44,18 +44,17 @@ run_maps     = try_import("google_maps",  lambda: __import__("scrapers.google_ma
 run_talabat  = try_import("talabat",      lambda: __import__("scrapers.talabat",       fromlist=["run"]).run)
 run_opensooq = try_import("opensooq",     lambda: __import__("scrapers.opensooq",      fromlist=["run"]).run)
 run_people   = try_import("people",       lambda: __import__("scrapers.people",        fromlist=["run"]).run)
-run_linkedin = try_import("linkedin",     lambda: __import__("scrapers.linkedin",      fromlist=["run"]).run)
 
 # ── Interval config (seconds) ────────────────────────────────────────────────
-# News is time-sensitive → runs every 10 minutes
-# Heavy scrapers run every few hours to avoid API costs
+# Quality-first: each scraper runs only as often as its data meaningfully changes.
+# Running too often wastes API credits and fills the DB with duplicate noise.
 INTERVALS = {
-    "News":        10 * 60,       # 10 minutes
-    "Talabat":      1 * 3600,     # 1 hour
-    "OpenSooq":     2 * 3600,     # 2 hours
-    "Google Maps":  6 * 3600,     # 6 hours
-    "People":      12 * 3600,     # 12 hours
-    "LinkedIn":    24 * 3600,     # 24 hours (skipped anyway)
+    "News":        30 * 60,        # 30 min  — RSS feeds update ~hourly; 30min is plenty
+    "Talabat":      8 * 3600,      # 8 hours — restaurant menus don't change daily
+    "OpenSooq":    24 * 3600,      # 24 hours — listings cycle daily, not hourly
+    "Google Maps": 48 * 3600,      # 48 hours — place data is stable; API costs money
+    "People":       7 * 86400,     # 7 days  — professional directory changes slowly
+    "LinkedIn":    30 * 86400,     # 30 days — skipped anyway; placeholder
 }
 
 SCRAPERS = [
@@ -64,7 +63,6 @@ SCRAPERS = [
     ("Talabat",     run_talabat),
     ("OpenSooq",    run_opensooq),
     ("People",      run_people),
-    ("LinkedIn",    run_linkedin),
 ]
 SCRAPERS = [(name, fn) for name, fn in SCRAPERS if fn is not None]
 

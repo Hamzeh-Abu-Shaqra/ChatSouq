@@ -1,8 +1,8 @@
 """
 Jordan News Scraper
-Primary: RSS feeds (reliable, no JS, structured)
-Fallback: Playwright for sites without RSS
-Sources: Jordan Times, Petra News Agency, Al-Ghad, Jo24, Al-Rai, Roya News
+Strategy: RSS-only (reliable, no browser needed, structured XML)
+Sources: Google News JO, Al-Ghad, Jo24, Roya News, and 10+ via Google News aggregation
+Quality: deduplicates by URL, strips HTML, detects AR/EN from content
 """
 import os
 import re
@@ -12,7 +12,6 @@ import psycopg2
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from email.utils import parsedate_to_datetime
-from playwright.sync_api import sync_playwright
 from dotenv import load_dotenv
 
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
@@ -287,75 +286,6 @@ def scrape_rss_source(source):
     return []
 
 
-def scrape_playwright_source(source):
-    """Scrape a news site with Playwright, capturing JSON API responses."""
-    articles = []
-    seen_urls = set()
-
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
-        page.set_extra_http_headers({"Accept-Language": "en-US,en;q=0.9"})
-
-        api_hits = []
-
-        def capture(response):
-            try:
-                ct = response.headers.get("content-type", "")
-                if "json" in ct and response.status == 200:
-                    u = response.url
-                    if any(k in u for k in ["article", "news", "post", "story", "feed"]):
-                        api_hits.append(response.json())
-            except Exception:
-                pass
-
-        page.on("response", capture)
-
-        try:
-            page.goto(source["url"], timeout=45000, wait_until="domcontentloaded")
-            page.wait_for_load_state("networkidle", timeout=15000)
-            page.wait_for_timeout(3000)
-
-            for _ in range(4):
-                page.evaluate("window.scrollBy(0, 1000)")
-                page.wait_for_timeout(600)
-        except Exception as e:
-            print(f"  [{source['name']}] nav warning: {e}")
-
-        page.remove_listener("response", capture)
-
-        # Try to find article links in HTML
-        link_els = page.query_selector_all("a[href]")
-        base = source.get("base_url", "")
-        for el in link_els:
-            try:
-                href = el.get_attribute("href") or ""
-                title = el.inner_text().strip()
-                if not href.startswith("http"):
-                    href = base + href
-                if (
-                    len(title) > 15
-                    and href.startswith("http")
-                    and href not in seen_urls
-                    and any(k in href for k in ["/news/", "/article/", "/story/", "/post/"])
-                ):
-                    seen_urls.add(href)
-                    articles.append({
-                        "title": title,
-                        "url": href,
-                        "source": source["name"],
-                        "language": detect_language(title),
-                        "summary": None,
-                        "published_at": None,
-                    })
-            except Exception:
-                pass
-
-        browser.close()
-
-    print(f"  [{source['name']}] Playwright → {len(articles)} articles")
-    return articles[:60]
-
 
 def save_articles(articles):
     if not articles:
@@ -389,7 +319,7 @@ def save_articles(articles):
 
 
 def run():
-    print("Setting up jordan_news table...")
+    print("Setting up jordan_news table...", flush=True)
     setup_table()
     total = 0
 
@@ -398,18 +328,10 @@ def run():
         saved = save_articles(articles)
         total += saved
         if saved:
-            print(f"    → Saved {saved} articles from {source['name']}")
+            print(f"    → Saved {saved} articles from {source['name']}", flush=True)
         time.sleep(1)
 
-    for source in PLAYWRIGHT_SOURCES:
-        print(f"  Scraping {source['name']} via Playwright...")
-        articles = scrape_playwright_source(source)
-        saved = save_articles(articles)
-        total += saved
-        if saved:
-            print(f"    → Saved {saved} articles from {source['name']}")
-
-    print(f"News done. Total saved: {total}")
+    print(f"News done. Total saved: {total}", flush=True)
 
 
 if __name__ == "__main__":

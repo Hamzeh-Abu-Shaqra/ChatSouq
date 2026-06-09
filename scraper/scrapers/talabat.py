@@ -136,7 +136,7 @@ def setup_table():
             address TEXT,
             area TEXT,
             is_open BOOLEAN,
-            talabat_id TEXT UNIQUE,
+            talabat_id TEXT,
             url TEXT,
             maps_place_id TEXT,
             search_text TEXT,
@@ -151,11 +151,14 @@ def setup_table():
         "ALTER TABLE jordan_restaurants ADD COLUMN IF NOT EXISTS is_open BOOLEAN",
         "ALTER TABLE jordan_restaurants ADD COLUMN IF NOT EXISTS maps_place_id TEXT",
         "ALTER TABLE jordan_restaurants ADD COLUMN IF NOT EXISTS search_text TEXT",
+        # Ensure unique constraint exists (safe to run even if already present)
+        "CREATE UNIQUE INDEX IF NOT EXISTS jordan_restaurants_talabat_id_idx ON jordan_restaurants (talabat_id) WHERE talabat_id IS NOT NULL",
     ]:
         try:
             cur.execute(stmt)
+            conn.commit()
         except Exception:
-            pass
+            conn.rollback()
     conn.commit()
     cur.close()
     conn.close()
@@ -337,7 +340,7 @@ def save_restaurants(restaurants: list) -> int:
                      min_order, delivery_fee, address, area, is_open,
                      talabat_id, url, maps_place_id, search_text)
                 VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-                ON CONFLICT (talabat_id) DO UPDATE SET
+                ON CONFLICT (talabat_id) WHERE talabat_id IS NOT NULL DO UPDATE SET
                     name          = EXCLUDED.name,
                     rating        = COALESCE(EXCLUDED.rating,        jordan_restaurants.rating),
                     rating_count  = COALESCE(EXCLUDED.rating_count,  jordan_restaurants.rating_count),
@@ -356,11 +359,11 @@ def save_restaurants(restaurants: list) -> int:
                 r.get("area"), r.get("is_open"), r["talabat_id"],
                 r.get("url"), r.get("maps_place_id"), r.get("search_text"),
             ))
+            conn.commit()   # commit each row so one failure doesn't abort the batch
             saved += 1
         except Exception as e:
-            print(f"    DB error for {r.get('name')}: {e}")
+            conn.rollback()  # clear aborted transaction state before next row
 
-    conn.commit()
     cur.close()
     conn.close()
     return saved
@@ -369,31 +372,35 @@ def save_restaurants(restaurants: list) -> int:
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 def run():
-    print("Setting up jordan_restaurants table...")
+    print("Setting up jordan_restaurants table...", flush=True)
     setup_table()
 
-    print(f"Scraping Talabat Jordan — {len(AMMAN_AREAS)} Amman delivery areas...")
-    all_restaurants = []
+    # 5 pages × 15 vendors = 75 restaurants per area × 73 areas ≈ ~2 min total.
+    # Areas heavily overlap, so unique count after de-dup is ~500-1500.
+    # Save after every area so the dashboard fills up progressively.
+    MAX_PAGES = 5
+
+    print(f"Scraping Talabat Jordan — {len(AMMAN_AREAS)} Amman areas (max {MAX_PAGES} pages each)...", flush=True)
+    maps_index = load_maps_index()
+
     global_seen: set = set()
+    total_saved = 0
 
     for area_id, area_name, slug in AMMAN_AREAS:
-        restaurants = scrape_area(area_id, area_name, slug, global_seen, max_pages=30)
-        if restaurants:
-            all_restaurants.extend(restaurants)
-            print(f"  [{area_name}] +{len(restaurants)} new  (total unique so far: {len(all_restaurants)})")
-        else:
-            print(f"  [{area_name}] 0 new")
-        time.sleep(0.5)
+        restaurants = scrape_area(area_id, area_name, slug, global_seen, max_pages=MAX_PAGES)
+        if not restaurants:
+            print(f"  [{area_name}] 0 new", flush=True)
+            continue
 
-    print(f"\nTotal unique restaurants found: {len(all_restaurants)}")
+        # Match against Google Maps for this batch
+        match_with_maps(restaurants, maps_index)
 
-    if all_restaurants:
-        print("Matching with Google Maps...")
-        maps_index = load_maps_index()
-        all_restaurants = match_with_maps(all_restaurants, maps_index)
+        saved = save_restaurants(restaurants)
+        total_saved += saved
+        print(f"  [{area_name}] +{len(restaurants)} new → saved {saved}  (DB total: {total_saved})", flush=True)
+        time.sleep(0.3)
 
-    saved = save_restaurants(all_restaurants)
-    print(f"Talabat done. Saved {saved} restaurants.")
+    print(f"\nTalabat done. Total saved: {total_saved}", flush=True)
 
 
 if __name__ == "__main__":

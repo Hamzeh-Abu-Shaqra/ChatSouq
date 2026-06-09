@@ -41,11 +41,28 @@ function resolveFollowUp(query: string, history?: ConvMessage[]): string {
 function productSignal(query: string, productCategories: string[]): number {
   const c = parseConstraints(query, productCategories);
   let s = c.categories.length * 2;
-  // Budget alone doesn't make it a product query — need product category too
+
+  // Budget + category together: strong purchase signal
   if ((c.budgetMax !== null || c.budgetMin !== null) && c.categories.length > 0) s += 2;
-  if (/\b(buy|gift|present|cheap|price|recommend|best\s+\w+\s+under|i\s+want|show\s+me|find\s+me|looking\s+for)\b/i.test(query)) s += 1;
+  // Budget alone (no category yet): mild shopping signal
+  if ((c.budgetMax !== null || c.budgetMin !== null) && c.categories.length === 0) s += 1;
+
+  // Gifting intent — strong signal even without an explicit product category.
+  // Must score ≥ 3 on its own so gift queries beat a bare governorate pSig.
+  if (/\b(gift|gifts|present|presents|gifting|هدية|هدايا|هديه)\b/i.test(query)) s += 3;
+
+  // Occasion-based shopping (birthday, Eid, Valentine, graduation…) — people
+  // buying something for an occasion, not looking for a place to celebrate.
+  if (
+    /\b(birthday|anniversary|valentine|valentines|eid|graduation|wedding|ramadan|christmas|mother.?s\s+day|father.?s\s+day|new\s+year)\b/i.test(query) ||
+    /\b(عيد|رمضان|خطوبة|زفاف|تخرج|الفلانتاين)\b/.test(query)
+  ) s += 2;
+
+  // Explicit purchase / browse intent: +1
+  if (/\b(buy|cheap|price|best\s+\w+\s+under|i\s+want|show\s+me|find\s+me|looking\s+for|shop\s+for|shopping\s+for|purchase)\b/i.test(query)) s += 1;
+
   if (c.brands.length) s += 1;
-  if (c.keywords.length >= 2) s += 1; // multi-keyword product search
+  if (c.keywords.length >= 2) s += 1;
   return s;
 }
 

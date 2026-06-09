@@ -177,6 +177,12 @@ const CATEGORY_HINTS: Record<string, string[]> = {
   bicycle:      ["sports & outdoors"],
   treadmill:    ["sports & outdoors"],
   gym:          ["sports & outdoors"],
+  game:         ["gaming", "toys & games"],
+  games:        ["gaming", "toys & games"],
+  "board game": ["toys & games"],
+  "card game":  ["toys & games"],
+  office:       ["stationery & office"],
+  "office supplies": ["stationery & office"],
   pen:          ["stationery & office"],
   stationery:   ["stationery & office"],
 
@@ -284,6 +290,8 @@ const CATEGORY_HINTS: Record<string, string[]> = {
   "رياضة":         ["sports & outdoors"],
   "دراجة":         ["sports & outdoors"],
   "جيم":           ["sports & outdoors"],
+  "ألعاب لوحية":    ["toys & games"],
+  "مستلزمات مكتب":  ["stationery & office"],
 };
 
 const RECIPIENTS: Record<string, string> = {
@@ -296,6 +304,16 @@ const RECIPIENTS: Record<string, string> = {
   son: "son", daughter: "daughter",
   kid: "kids", kids: "kids", child: "kids", children: "kids",
   friend: "friend", colleague: "colleague", boss: "boss",
+  // Gender/generic references
+  man: "him", guy: "him", gentleman: "him",
+  woman: "her", girl: "her", lady: "her",
+  // Extended family
+  nephew: "nephew", niece: "niece",
+  grandma: "grandmother", grandmother: "grandmother", nana: "grandmother", granny: "grandmother",
+  grandpa: "grandfather", grandfather: "grandfather",
+  fiance: "partner", fiancee: "partner",
+  teacher: "colleague",
+  family: "family",
   // Arabic
   "أمي": "mother", "امي": "mother", "أمه": "mother", "ماما": "mother",
   "أبي": "father", "ابي": "father", "بابا": "father", "ابوي": "father",
@@ -306,6 +324,12 @@ const RECIPIENTS: Record<string, string> = {
   "ابني": "son", "ابنتي": "daughter", "بنتي": "daughter",
   "صديقي": "friend", "صديقتي": "friend",
   "طفلي": "kids", "ولدي": "son",
+  "خطيبي": "partner", "خطيبتي": "partner",
+  "عريسي": "partner", "عروستي": "partner",
+  "جدتي": "grandmother", "جدي": "grandfather",
+  "عمتي": "aunt", "خالتي": "aunt",
+  "عمي": "uncle", "خالي": "uncle",
+  "عيلتي": "family", "أهلي": "family",
 };
 
 const OCCASIONS: Record<string, string> = {
@@ -329,14 +353,16 @@ const OCCASIONS: Record<string, string> = {
 const STOPWORDS = new Set([
   // English
   "a","an","the","for","to","of","in","on","under","below","less","than","my","me","i",
-  "want","need","looking","find","get","buy","gift","present","with","and","or","best",
+  "want","need","looking","find","get","buy","with","and","or","best",
   "good","nice","jod","jd","dinar","dinars","around","about","budget","price","cheap",
   "between","max","maximum","up","at","is","that","she","he","her","his","likes","like",
   "show","give","some","top","quality","recommend","recommendations","something",
   "new","latest","using","use","type","kind","which","what","how",
+  // Generic filler — no product signal
+  "ideas","idea","him","option","options","choice","choices",
   // Arabic function words & filler
   "اريد","أريد","ابغى","أبغى","ابي","أبي","محتاج","محتاجة","ابحث","أبحث",
-  "عن","من","إلى","الى","في","على","عن","هدية","هل","ماذا","كيف","ايش","وش",
+  "عن","من","إلى","الى","في","على","عن","هل","ماذا","كيف","ايش","وش",
   "لي","لك","له","لها","لهم","لنا","عندي","عندك",
   "أنا","انا","انت","أنت","هو","هي",
   "دينار","دنانير","أردني","الأردني",
@@ -527,6 +553,20 @@ function extractBrands(q: string): string[] {
   return found;
 }
 
+/**
+ * Jordanian geographic terms that should NOT become product search keywords.
+ * They carry location context but pollute keyword-based product ranking.
+ */
+const JORDAN_GEO_STOPWORDS = new Set([
+  // English governorates / common city names
+  "amman", "jordan", "irbid", "zarqa", "aqaba", "jerash", "madaba", "karak",
+  "mafraq", "balqa", "ajloun", "tafilah", "tafila", "maan", "salt", "petra",
+  // Arabic
+  "عمان", "الأردن", "اردن", "إربد", "اربد", "الزرقاء", "زرقاء",
+  "العقبة", "عقبة", "جرش", "مادبا", "الكرك", "كرك",
+  "المفرق", "مفرق", "البلقاء", "السلط", "عجلون", "الطفيلة", "معان",
+]);
+
 function extractKeywords(q: string): string[] {
   const tokens = q
     .toLowerCase()
@@ -537,6 +577,7 @@ function extractKeywords(q: string): string[] {
   return tokens.filter((w) => {
     if (w.length < 2) return false;
     if (STOPWORDS.has(w)) return false;
+    if (JORDAN_GEO_STOPWORDS.has(w)) return false;
     if (/^\d+$/.test(w)) return false;
     // Keep important attributes even if short (e.g. "4k", "tws")
     if (IMPORTANT_ATTRIBUTES.has(w)) return true;

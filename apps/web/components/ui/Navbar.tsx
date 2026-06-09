@@ -13,13 +13,13 @@ export function Navbar() {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const isHome = pathname === "/";
 
-  // On homepage: transparent until scrolled past hero (~80% of vh); elsewhere: 48px
+  // Single scroll listener — threshold differs between homepage (hero-relative) and other pages
   useEffect(() => {
     function onScroll() {
       const threshold = isHome ? window.innerHeight * 0.8 : 48;
       setScrolled(window.scrollY > threshold);
     }
-    onScroll(); // Set initial state
+    onScroll(); // Set initial state without waiting for first scroll
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, [isHome]);
@@ -62,6 +62,14 @@ export function Navbar() {
 
             {/* Right: nav actions */}
             <div className="flex items-center gap-1 sm:gap-3">
+              {/* News — desktop only */}
+              <Link
+                href="/news"
+                className="hidden sm:block text-[13px] text-[#6B7280] hover:text-[#1A1A1A] transition-colors px-2 py-1"
+              >
+                News
+              </Link>
+
               {/* For businesses — desktop only */}
               <Link
                 href="/vendors"
@@ -103,6 +111,7 @@ export function Navbar() {
           <div className="md:hidden bg-[#F9F8F6] border-t border-[#E8E4DC]" style={{ borderTopWidth: "0.5px" }}>
             <div className="px-4 py-3 space-y-1">
               <MobileLink href="/chat" onClick={() => setMobileMenuOpen(false)}>Search</MobileLink>
+              <MobileLink href="/news" onClick={() => setMobileMenuOpen(false)}>News</MobileLink>
               <MobileLink href="/vendors" onClick={() => setMobileMenuOpen(false)}>For businesses</MobileLink>
               <MobileLink href="/about" onClick={() => setMobileMenuOpen(false)}>About</MobileLink>
               <div className="pt-2 border-t border-[#E8E4DC] mt-2" style={{ borderTopWidth: "0.5px" }}>

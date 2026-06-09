@@ -350,6 +350,10 @@ export async function getCtrBoosts(
   const boosts = new Map<number, number>();
   if (resultIds.length === 0) return boosts;
 
+  // Validate: only include positive integers (DB primary keys) to prevent injection
+  const safeIds = resultIds.map(Number).filter((n) => Number.isFinite(n) && n > 0 && n === Math.floor(n));
+  if (safeIds.length === 0) return boosts;
+
   try {
     const queryNorm = query.toLowerCase().trim().replace(/\s+/g, " ").slice(0, 200);
     // Validate IDs before using sql.raw() to prevent injection

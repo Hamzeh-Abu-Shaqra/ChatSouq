@@ -11,3 +11,4 @@ data/seed/*.ndjson
 data/seed/*.json
 !data/seed/.gitkeep
 .vercel
+.env.production

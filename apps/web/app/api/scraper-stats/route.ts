@@ -32,6 +32,7 @@ export async function GET() {
       ]);
 
     const foodCount = Number(food.count) + Number(foodTalabat.count);
+    // Compare dates safely — either may be null
     const foodScraped =
       food.last_scraped == null ? foodTalabat.last_scraped
       : foodTalabat.last_scraped == null ? food.last_scraped

@@ -758,6 +758,137 @@ const PLACE_HINTS: Record<string, string[]> = {
   "police station":  ["Police"],
   "شرطة":            ["Police"],
   "مركز شرطة":       ["Police"],
+
+  // ── Car Repair — Flat Tire & Breakdown ────────────────────────────────────
+  "flat tire":       ["Car Repair"],
+  "flat tyre":       ["Car Repair"],
+  "tyre puncture":   ["Car Repair"],
+  "tire puncture":   ["Car Repair"],
+  puncture:          ["Car Repair"],
+  "tyre repair":     ["Car Repair"],
+  "tire repair":     ["Car Repair"],
+  breakdown:         ["Car Repair"],
+  "car broke":       ["Car Repair"],
+  "car broken":      ["Car Repair"],
+  "بنشر":            ["Car Repair"],
+  "إطار مثقوب":      ["Car Repair"],
+  "بنجر":            ["Car Repair"],
+
+  // ── Medical: Pain & Illness Expressions ──────────────────────────────────
+  // Arabic pain expressions → Clinic / Physiotherapy
+  "ألم في":          ["Clinic", "Physiotherapy"],
+  "وجع في":          ["Clinic", "Physiotherapy"],
+  "بيوجعني":         ["Clinic", "Physiotherapy"],
+  "يؤلمني":          ["Clinic"],
+  "مريض":            ["Clinic", "Hospital"],
+  "مريضة":           ["Clinic", "Hospital"],
+  "اشعة":            ["Medical Lab", "Clinic"],
+  "اشعة سينية":      ["Medical Lab", "Clinic"],
+  "كشف طبي":         ["Clinic"],
+  "pain clinic":     ["Clinic", "Physiotherapy"],
+  "back pain":       ["Clinic", "Physiotherapy"],
+  "injury clinic":   ["Clinic", "Physiotherapy"],
+
+  // ── Rehabilitation ────────────────────────────────────────────────────────
+  rehabilitation:    ["Physiotherapy", "Clinic"],
+  rehab:             ["Physiotherapy", "Clinic"],
+  "physical rehab":  ["Physiotherapy"],
+  "تأهيل":           ["Physiotherapy", "Clinic"],
+  "إعادة تأهيل":     ["Physiotherapy", "Clinic"],
+  "مركز تأهيل":      ["Physiotherapy"],
+
+  // ── Hunger / Eating Intent ────────────────────────────────────────────────
+  // "I'm hungry / جعان" → restaurant, not a product to buy
+  hungry:            ["Restaurant", "Fast Food"],
+  "i'm hungry":      ["Restaurant", "Fast Food"],
+  "im hungry":       ["Restaurant", "Fast Food"],
+  starving:          ["Restaurant", "Fast Food"],
+  جعان:              ["Restaurant", "Fast Food"],
+  جعانة:             ["Restaurant", "Fast Food"],
+  جعانين:            ["Restaurant", "Fast Food"],
+  "عندي جوع":        ["Restaurant", "Fast Food"],
+
+  // ── Hammam / Jacuzzi / Turkish Bath ──────────────────────────────────────
+  hammam:            ["Spa", "Hammam"],
+  "turkish bath":    ["Spa", "Hammam"],
+  "moroccan bath":   ["Spa", "Hammam"],
+  "حمام مغربي":      ["Spa", "Hammam"],
+  "حمام تركي":       ["Spa", "Hammam"],
+  jacuzzi:           ["Spa"],
+  "جاكوزي":          ["Spa"],
+  "بانيو فوار":      ["Spa"],
+
+  // ── Nail Salon (Arabic) ───────────────────────────────────────────────────
+  مناكير:            ["Salon"],
+  ناخن:              ["Salon"],
+  "باديكير":         ["Salon"],
+  "مانيكير":         ["Salon"],
+
+  // ── Laundry & Dry Cleaning (extensions) ──────────────────────────────────
+  // (laundry, dry cleaning, مغسلة, تنظيف جاف already exist above)
+  "laundry shop":    ["Laundry"],
+  "wash my clothes": ["Laundry"],
+  "غسيل ملابس":      ["Laundry"],
+  "كوي ملابس":       ["Laundry"],
+
+  // ── Tailoring & Alterations (extensions) ─────────────────────────────────
+  // (tailor, tailoring, alterations, خياط, خياطة, تعديل ملابس already exist above)
+  "suit alteration": ["Tailor"],
+  "clothes alteration": ["Tailor"],
+  seamstress:        ["Tailor"],
+  "fix my suit":     ["Tailor"],
+  "تفصيل ملابس":     ["Tailor"],
+  "خياط ملابس":      ["Tailor"],
+
+  // ── Printing & Photocopying (extensions) ─────────────────────────────────
+  // (printing, print shop, طباعة already exist above)
+  "copy shop":       ["Print Shop"],
+  photocopy:         ["Print Shop"],
+  "print documents": ["Print Shop"],
+  "print my cv":     ["Print Shop"],
+  "print photos":    ["Print Shop"],
+  "مركز طباعة":      ["Print Shop"],
+  "مطبعة":           ["Print Shop"],
+  "تصوير مستندات":   ["Print Shop"],
+  "طباعة أوراق":     ["Print Shop"],
+
+  // ── Post Office & Courier ─────────────────────────────────────────────────
+  "post office":     ["Post Office"],
+  "mail office":     ["Post Office"],
+  "postal service":  ["Post Office"],
+  courier:           ["Courier", "Post Office"],
+  "send a package":  ["Courier", "Post Office"],
+  "ship a package":  ["Courier", "Post Office"],
+  "بريد":            ["Post Office"],
+  "مكتب بريد":       ["Post Office"],
+  "بريد أردني":      ["Post Office"],
+  "شحن طرد":         ["Courier", "Post Office"],
+
+  // ── Phone / Mobile Shops & Telecom ────────────────────────────────────────
+  // (phone repair, mobile repair, تصليح موبايل already exist in Electronics Repair section above)
+  "phone shop":      ["Phone Shop", "Electronics"],
+  "mobile shop":     ["Phone Shop", "Electronics"],
+  "sim card":        ["Phone Shop", "Telecom"],
+  "screen repair":   ["Phone Repair"],
+  "محل موبايل":      ["Phone Shop", "Electronics"],
+  "محل جوالات":      ["Phone Shop", "Electronics"],
+  "شاشة مكسورة":     ["Phone Repair"],
+  "شريحة جوال":      ["Phone Shop", "Telecom"],
+
+  // ── Internet & Gaming Cafés ───────────────────────────────────────────────
+  "internet cafe":   ["Internet Cafe"],
+  "internet center": ["Internet Cafe"],
+  "gaming cafe":     ["Gaming Cafe", "Entertainment"],
+  "gaming center":   ["Gaming Cafe", "Entertainment"],
+
+  // ── Sports Events (Watch a Match) ────────────────────────────────────────
+  "watch a match":   ["Sports Center", "Stadium"],
+  "watch a game":    ["Sports Center", "Stadium"],
+  "watch football":  ["Sports Center", "Stadium"],
+  "live match":      ["Sports Center", "Stadium"],
+  "مشاهدة مباراة":   ["Sports Center", "Stadium"],
+  "فرجة على مباراة": ["Sports Center", "Stadium"],
+  "مباراة حية":      ["Sports Center", "Stadium"],
 };
 
 let categoryCache: { at: number; values: string[] } | null = null;
@@ -950,9 +1081,22 @@ export function placeSignal(query: string, dbCategories: string[]): number {
   if (/\b(near|around|close to)\s+\w/i.test(query)) s += 1;
   // Arabic proximity / location signals
   if (/قريب مني|بالقرب من|بجانبي|حواليه|قريبة مني/.test(query)) s += 2;
+  // "أقرب X" (nearest X) is one of the most common Arabic query forms
+  if (/أقرب\s+\S/.test(query)) s += 2;
   if (/أين|اين|وين|فين|كيف أوصل|كيف اوصل|أماكن|مكان/.test(query)) s += 1;
   // Arabic governorates or country name (without needing a place category match)
   if (/عمان|إربد|اربد|الزرقاء|العقبة|الأردن|الاردن/.test(query)) s += 1;
+
+  // ── Product-context cancellation for dual-mapped terms ─────────────────────
+  // "gym equipment", "fitness tracker", "yoga mat" etc. are product queries that
+  // accidentally score high pSig because gym/fitness hit PLACE_HINTS.
+  // Subtract when a place-keyword is followed by a product noun.
+  if (/\b(gym|fitness|sports?|yoga|pilates|crossfit)\s+(equipment|gear|shoes?|clothing|clothes|shorts?|pants?|shirts?|leggings?|tracker|watch|band|mat|bag|gloves?|accessories|supplement|protein|weights?|dumbbells?)\b/i.test(query)) s -= 2;
+  // "coffee" products (beans, pod, machine) vs. going to a café
+  if (/\b(coffee)\s+(beans?|grounds?|pods?|machine|maker|grinder|powder|instant|capsule)\b/i.test(query)) s -= 2;
+  // "sweets" / "chocolate" as a product to buy vs. a place to visit
+  if (/\b(buy|order|cheap|price)\s+(sweets?|chocolate|candy|حلويات|شوكولاتة)\b/i.test(query)) s -= 2;
+
   return s;
 }
 

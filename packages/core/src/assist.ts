@@ -25,16 +25,31 @@ interface Deps {
 function resolveFollowUp(query: string, history?: ConvMessage[]): string {
   if (!history?.length) return query;
   const trimmed = query.trim();
-  // A pure location refinement: starts with a preposition and is short (≤ 6 words)
-  // Supports both English and Arabic prepositions: في، قرب، بالقرب من، حول، عند
-  if (
-    !/^(in|near|around|at|close to|by)\s+\S/i.test(trimmed) &&
-    !/^(في|قرب|بالقرب من|حول|عند|بجانب|ب)\s*\S/.test(trimmed)
-  ) return query;
+  // A pure location refinement: starts with a preposition and is short (≤ 8 words)
+  // Supports both English and Arabic prepositions: في، قرب، بالقرب من، حول، عند، ب
+  const isLocRefinement =
+    /^(in|near|around|at|close to|by)\s+\S/i.test(trimmed) ||
+    /^(في|قرب|بالقرب من|حول|عند|بجانب|ب)\s*\S/.test(trimmed);
+  if (!isLocRefinement) return query;
   if (trimmed.split(/\s+/).length > 8) return query; // too long — has own intent
-  const lastUser = [...history].reverse().find((m) => m.role === "user");
-  if (!lastUser) return query;
-  return `${lastUser.content} ${trimmed}`;
+
+  // Look further back than just the last user turn: find the last user turn that
+  // has meaningful content (> 3 words), not another bare location refinement.
+  // This ensures "best restaurants in Amman" → "in Sweifieh" → "in Abdoun" all
+  // chain back to the original intent, not to the second "in Sweifieh" stub.
+  const reversed = [...history].reverse();
+  const anchor = reversed.find((m) => {
+    if (m.role !== "user") return false;
+    const words = m.content.trim().split(/\s+/).length;
+    if (words <= 3) return false; // skip previous stubs like "in Sweifieh"
+    // Skip if this user turn is itself a bare location refinement
+    const isStub =
+      /^(in|near|around|at|close to|by)\s+\S/i.test(m.content.trim()) ||
+      /^(في|قرب|بالقرب من|حول|عند|بجانب|ب)\s*\S/.test(m.content.trim());
+    return !isStub;
+  });
+  if (!anchor) return query;
+  return `${anchor.content} ${trimmed}`;
 }
 
 /** 0..N "this is a product-shopping query" signal. */
@@ -49,7 +64,12 @@ function productSignal(query: string, productCategories: string[]): number {
 
   // Gifting intent — strong signal even without an explicit product category.
   // Must score ≥ 3 on its own so gift queries beat a bare governorate pSig.
-  if (/\b(gift|gifts|present|presents|gifting|هدية|هدايا|هديه)\b/i.test(query)) s += 3;
+  // EXCEPTION: "من محل / from a shop" phrases indicate the user wants a PLACE (gift shop),
+  // not a product from the catalogue — cancel the gift boost in that case.
+  const hasGiftIntent = /\b(gift|gifts|present|presents|gifting|هدية|هدايا|هديه)\b/i.test(query);
+  const wantsGiftPlace = /\bfrom\s+(a|the)\s+\w+\s*(shop|store|center|place|boutique)\b/i.test(query) ||
+    /من\s+(محل|متجر|دكان|مركز)\s*(هدايا|هدية)?/.test(query);
+  if (hasGiftIntent && !wantsGiftPlace) s += 3;
 
   // Occasion-based shopping (birthday, Eid, Valentine, graduation…) — people
   // buying something for an occasion, not looking for a place to celebrate.
@@ -64,8 +84,10 @@ function productSignal(query: string, productCategories: string[]): number {
     /\b(gift|buy|shop|price|cheap|offer|discount|special|deal|هدية|هدايا|تسوق|اشتري|عروض|تخفيض|خاص)\b/i.test(query)
   ) s += 2;
 
-  // Explicit purchase / browse intent: +1
+  // Explicit purchase / browse intent: +1 (English + Arabic)
   if (/\b(buy|cheap|price|best\s+\w+\s+under|i\s+want|show\s+me|find\s+me|looking\s+for|shop\s+for|shopping\s+for|purchase)\b/i.test(query)) s += 1;
+  // Arabic purchase intent (اشتري / أشتري / بدي أشتري / حابب أشتري)
+  if (/اشتري|أشتري|بدي\s+أشتري|بدي\s+اشتري|حابب\s+أشتري|حابب\s+اشتري|أبي\s+أشتري|أبغى\s+أشتري/.test(query)) s += 1;
 
   if (c.brands.length) s += 1;
   if (c.keywords.length >= 2) s += 1;
@@ -90,31 +112,52 @@ function productSignal(query: string, productCategories: string[]): number {
   // Fitness service → gym/studio, not a product to buy
   if (
     /\b(join\s+(a\s+)?(gym|fitness|yoga|pilates|crossfit|club)|sign\s+up\s+(for|to)\s+\w+\s*class(es)?|go\s+(to\s+the\s+)?(gym|swim(ming)?|yoga|pilates|boxing)|take\s+a\s+(yoga|pilates|spin|boxing|fitness|zumba)\s+class(es)?|book\s+a\s+(class|session|training\s+session))\b/i.test(query) ||
-    /\b(بدي\s+روح\s+جيم|أريد\s+أروح\s+جيم|نادي\s+رياضي)\b/.test(query)
+    // Arabic: "بدي جيم" / "بدي روح جيم" / "أريد جيم" — want a gym, not gym gear
+    /\b(بدي\s+(روح\s+)?جيم|أريد\s+(أروح\s+)?جيم|نادي\s+رياضي)\b/.test(query)
   ) s -= 3;
 
   // Car service → garage/car wash, not a product to buy
   if (
-    /\b(fix\s+(my\s+)?car|repair\s+(my\s+)?car|wash\s+(my\s+)?car|service\s+(my\s+)?car|oil\s+change|change\s+(the\s+|my\s+)?oil|change\s+(my\s+)?tires?|rotate\s+tires?|wheel\s+alignment|car\s+maintenance|my\s+car\s+(needs?|broke|is\s+broken|won'?t\s+start))\b/i.test(query) ||
-    /\b(أصلح\s+سيارة|غسيل\s+سيارة|صيانة\s+سيارة|تغيير\s+زيت)\b/.test(query)
+    /\b(fix\s+(my\s+)?car|repair\s+(my\s+)?car|wash\s+(my\s+)?car|service\s+(my\s+)?car|oil\s+change|change\s+(the\s+|my\s+)?oil|change\s+(my\s+)?tires?|rotate\s+tires?|wheel\s+alignment|car\s+maintenance|my\s+car\s+(needs?|broke|is\s+broken|won'?t\s+start)|flat\s+tyre|flat\s+tire|tyre\s+puncture|tire\s+puncture)\b/i.test(query) ||
+    // Arabic car service — covers both غسيل (noun form) and غسل (verb form) plus breakdown phrases
+    /أصلح\s+سيارت|غسيل?\s+سيارت|صيانة\s+سيارت|تغيير\s+زيت|سيارتي\s+(خربانة|خربان|واقفة|وقفت|مش\s+شاغلة|مكسورة|تعطلت)|بنشر\s+سيارتي|إطار\s+مثقوب/.test(query)
   ) s -= 3;
 
   // Medical service → clinic/doctor, not a product to buy
   if (
     /\b(see\s+a\s+(doctor|dentist|specialist|physician|therapist|psychiatrist|dermatologist|cardiologist)|visit\s+a?\s*(doctor|clinic|hospital|dentist)|book\s+(a\s+)?(doctor|appointment|medical\s+appointment|check.?up)|need\s+a\s+(doctor|dentist|check.?up)|consult\s+(a\s+)?(doctor|specialist)|go\s+to\s+(the\s+)?(doctor|clinic|hospital|dentist|pharmacy))\b/i.test(query) ||
-    /\b(أريد\s+أروح\s+دكتور|أريد\s+دكتور|بدي\s+دكتور|زيارة\s+طبيب)\b/.test(query)
+    // Arabic medical: "أريد/بدي/أحتاج دكتور" + pain expressions
+    /أريد\s+أروح\s+دكتور|أريد\s+دكتور|بدي\s+دكتور|أحتاج\s+دكتور|زيارة\s+طبيب|عندي\s+ألم|ظهري\s+بيوجعني|بيوجعني\s+\S+|يؤلمني/.test(query)
   ) s -= 3;
 
-  // Entertainment venue → cinema/activity, not a product to buy
+  // Entertainment venue → cinema/activity/stadium, not a product to buy
   if (
-    /\b(watch\s+a?\s*(movie|film|show)(\s+in\s+a?\s*cinema|\s+at\s+the\s+cinema)?|go\s+(bowling|karting|kart\s+racing|paintball|laser\s*tag|skating|ice\s+skating|to\s+an?\s+escape\s+room)|play\s+(bowling|billiards|pool|snooker)|catch\s+a\s+movie)\b/i.test(query) ||
-    /\b(أريد\s+أشوف\s+فيلم|مشاهدة\s+فيلم|روح\s+سينما|بدي\s+ألعب)\b/.test(query)
+    /\b(watch\s+a?\s*(movie|film|show|match|game)(\s+in\s+a?\s*cinema|\s+at\s+the\s+cinema)?|go\s+(bowling|karting|kart\s+racing|paintball|laser\s*tag|skating|ice\s+skating|to\s+an?\s+escape\s+room)|play\s+(bowling|billiards|pool|snooker)|catch\s+a\s+movie|watch\s+(football|a\s+live|live\s+match))\b/i.test(query) ||
+    /أريد\s+أشوف\s+فيلم|مشاهدة\s+فيلم|مشاهدة\s+مباراة|روح\s+سينما|بدي\s+ألعب|بدي\s+أشوف\s+مباراة/.test(query)
   ) s -= 3;
 
   // Massage/spa/beauty treatment → beauty place, not a product to buy
   if (
-    /\b(get\s+a?\s*(massage|facial|wax(ing)?|threading|spa\s+treatment|body\s+scrub)|book\s+a?\s*(massage|facial|spa|beauty\s+treatment|salon\s+appointment))\b/i.test(query) ||
-    /\b(أريد\s+مساج|بدي\s+مساج|حجز\s+مساج)\b/.test(query)
+    /\b(get\s+a?\s*(massage|facial|wax(ing)?|threading|spa\s+treatment|body\s+scrub|hammam)|book\s+a?\s*(massage|facial|spa|beauty\s+treatment|salon\s+appointment))\b/i.test(query) ||
+    /أريد\s+مساج|بدي\s+مساج|حجز\s+مساج|حمام\s+مغربي|حمام\s+تركي/.test(query)
+  ) s -= 3;
+
+  // Laundry / dry cleaning service → laundromat, not a product to buy
+  if (
+    /\b(wash\s+my\s+clothes|drop\s+off\s+(my\s+)?laundry|dry\s+clean(ing)?|take\s+(my\s+)?clothes\s+to\s+the\s+laundry)\b/i.test(query) ||
+    /أغسل\s+ملابسي|غسيل\s+ملابس|مغسلة|تنظيف\s+جاف/.test(query)
+  ) s -= 3;
+
+  // Tailoring / alterations service → tailor, not a product to buy
+  if (
+    /\b(fix\s+my\s+(suit|dress|shirt|pants|trousers)|tailor\s+my\s+\w+|get\s+(alterations?|my\s+clothes?\s+altered|my\s+(suit|dress)\s+fitted)|take\s+(it|them)\s+to\s+(a\s+)?tailor)\b/i.test(query) ||
+    /أخيط|خياط|تعديل\s+ملابس|تفصيل/.test(query)
+  ) s -= 3;
+
+  // Printing / photocopying service → print shop, not a product to buy
+  if (
+    /\b(print\s+(my\s+)?(documents?|cv|resume|files?|photos?|pages?)|photocopy|need\s+to\s+print|i\s+want\s+to\s+print)\b/i.test(query) ||
+    /أطبع\s+أوراق|أطبع\s+مستند|طباعة\s+أوراق|تصوير\s+مستندات/.test(query)
   ) s -= 3;
 
   return Math.max(0, s);

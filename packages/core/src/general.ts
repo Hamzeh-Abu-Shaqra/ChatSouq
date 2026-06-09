@@ -23,8 +23,8 @@ const WEATHER_EN = /\b(weather|climate|temperature|rain|hot|cold|season|best\s+t
 const GOVERNMENT_EN = /\b(ministry|government\s+service|register|residency|visa|permit|license|passport)\b/i;
 const HISTORY_EN = /\b(history|historical|ancient|heritage|culture|civilization)\b/i;
 // Today digest — must be checked BEFORE NEWS_EN since it overlaps
-const TODAY_EN = /\b(today|this\s+morning|what'?s\s+happening|daily\s+digest|morning\s+briefing|amman\s+today|city\s+update|what'?s\s+new|catch\s+me\s+up|what'?s\s+going\s+on|summary|summarize\s+amman|amman\s+now|recap|round.?up|brief(ing)?|roundup)\b/i;
-const TODAY_AR = /اليوم|ملخص|ماذا يحدث|أخبار اليوم|ما الجديد|عمان الآن/;
+const TODAY_EN = /\b(today|tonight|this\s+morning|this\s+evening|what'?s\s+happening|daily\s+digest|morning\s+briefing|amman\s+today|city\s+update|what'?s\s+new|catch\s+me\s+up|what'?s\s+going\s+on|summary|summarize\s+amman|amman\s+now|recap|round.?up|brief(ing)?|roundup)\b/i;
+const TODAY_AR = /اليوم|الليلة|ملخص|ماذا يحدث|أخبار اليوم|ما الجديد|عمان الآن/;
 
 const NEWS_EN = /\b(news|latest|headlines|current\s+events|update[s]?|recent\s+news|breaking)\b/i;
 const COMPANY_EN = /\b(compan(y|ies)|business(es)?|startup[s]?|firm[s]?|employer[s]?|work\s+at|job[s]?\s+at|corporate|industry)\b/i;
@@ -53,6 +53,14 @@ const TRANSPORT_AR = /مواصلات\s+عامة|باص\s+(إلى|من|رقم)|ت
 const COST_OF_LIVING_EN = /\b(cost\s+of\s+living|monthly\s+expenses?|living\s+(cost|costs|expenses?)|how\s+expensive\s+is\s+(jordan|amman|living)|price\s+of\s+life|average\s+(salary|wage|income)\s+in\s+jordan|expenses?\s+in\s+(jordan|amman))\b/i;
 const COST_OF_LIVING_AR = /تكاليف\s+المعيشة|مصاريف\s+الحياة|غلاء\s+المعيشة|معدل\s+الأجور|متوسط\s+الراتب\s+في\s+الأردن|كم\s+تكلف\s+المعيشة/;
 
+// Public holiday / national day queries
+const HOLIDAY_EN = /\b(public\s+holiday|national\s+holiday|bank\s+holiday|is\s+(tomorrow|today|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\s+a\s+holiday|holiday\s+in\s+jordan|jordan\s+public\s+holidays?|off\s+day|working\s+hours?\s+during|jordan\s+national\s+day|independence\s+day\s+jordan)\b/i;
+const HOLIDAY_AR = /عطلة\s+رسمية|إجازة\s+رسمية|إجازة\s+عيد|يوم\s+عطلة|هل\s+غد\s+عطلة|العطل\s+الرسمية|اليوم\s+الوطني|عيد\s+الاستقلال/;
+
+// Telecom / SIM card / mobile operator queries
+const TELECOM_EN = /\b(sim\s+card|phone\s+plan|mobile\s+plan|data\s+plan|internet\s+plan|orange\s+jordan|zain\s+jordan|umniah|prepaid\s+sim|postpaid\s+plan|phone\s+number\s+in\s+jordan|telecom|mobile\s+operator|how\s+to\s+get\s+a\s+sim)\b/i;
+const TELECOM_AR = /شريحة\s+اتصال|باقة\s+انترنت|باقة\s+اتصالات|اورنج\s+الأردن|زين\s+الأردن|أمنية|رقم\s+أردني|شريحة\s+جوال|مشغل\s+اتصالات/;
+
 const RENTAL_RE     = (q: string) => RENTAL_EN.test(q)     || RENTAL_AR.test(q);
 const TOURISM_RE    = (q: string) => TOURISM_EN.test(q)    || TOURISM_AR.test(q);
 const LIFESTYLE_RE  = (q: string) => LIFESTYLE_EN.test(q)  || LIFESTYLE_AR.test(q);
@@ -66,6 +74,8 @@ const TODAY_RE      = (q: string) => TODAY_EN.test(q)      || TODAY_AR.test(q);
 const EXCHANGE_RATE_RE  = (q: string) => EXCHANGE_RATE_EN.test(q)  || EXCHANGE_RATE_AR.test(q);
 const TRANSPORT_RE2     = (q: string) => TRANSPORT_EN.test(q)      || TRANSPORT_AR.test(q);
 const COST_OF_LIVING_RE = (q: string) => COST_OF_LIVING_EN.test(q) || COST_OF_LIVING_AR.test(q);
+const HOLIDAY_RE        = (q: string) => HOLIDAY_EN.test(q)        || HOLIDAY_AR.test(q);
+const TELECOM_RE        = (q: string) => TELECOM_EN.test(q)        || TELECOM_AR.test(q);
 
 export type GeneralIntentType = "rental" | "tourism" | "lifestyle" | "weather" | "government" | "history" | "news" | "companies" | "general" | "today";
 
@@ -84,6 +94,8 @@ export function detectGeneralIntent(query: string): GeneralIntentType {
   if (EXCHANGE_RATE_RE(query))    return "general";
   if (TRANSPORT_RE2(query))       return "general";
   if (COST_OF_LIVING_RE(query))   return "general";
+  if (HOLIDAY_RE(query))          return "general";
+  if (TELECOM_RE(query))          return "general";
   return "general";
 }
 
@@ -102,7 +114,9 @@ export function isGeneralQuery(query: string): boolean {
     GENERAL_INFO_RE(query) ||
     EXCHANGE_RATE_RE(query) ||
     TRANSPORT_RE2(query) ||
-    COST_OF_LIVING_RE(query)
+    COST_OF_LIVING_RE(query) ||
+    HOLIDAY_RE(query) ||
+    TELECOM_RE(query)
   );
 }
 

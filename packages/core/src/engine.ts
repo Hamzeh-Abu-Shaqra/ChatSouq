@@ -165,13 +165,29 @@ export async function recommend(
 
   const bestCategory = allRanked[0]?.category ?? null;
 
+  // Specific keywords (≥4 chars) that carry the user's intent — "camping", "headphones", etc.
+  // Short or generic words like "him", "her", "gift" don't define product type, so exclude them.
+  const specificKw = constraints.keywords.filter((k) => k.length >= 4);
+
   // ── Quality filter for alternatives ─────────────────────────────────────
   const ranked = allRanked
     .filter((c, i) => {
       if (i === 0) return true; // always keep the top pick
       if (c.score < MIN_ALT_SCORE) return false; // too weak
+
+      // Budget hard fence: never show alternatives more than 20% over a stated budget.
+      // Prevents 75 JOD tent / 280 JOD rackets when user said "under 50 JOD".
+      if (constraints.budgetMax !== null && c.price !== null && c.price > constraints.budgetMax * 1.2) return false;
+
+      // Keyword relevance guard: when the user specified meaningful product keywords
+      // (e.g. "camping", "headphones", "wireless"), every alternative must match at
+      // least one of them. This prevents Sports & Outdoors noise — footballs or padel
+      // rackets appearing alongside camping gear just because they share a broad category.
+      if (specificKw.length > 0 && c.keywordHits === 0) return false;
+
       // When category was relaxed, only keep alternatives that are genuinely relevant
       if (relaxedCategory && c.keywordHits === 0 && c.category !== bestCategory) return false;
+
       return true;
     })
     .slice(0, limit);

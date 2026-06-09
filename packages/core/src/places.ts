@@ -395,6 +395,25 @@ const PLACE_HINTS: Record<string, string[]> = {
   "أعراس":          ["Wedding Hall"],
   "حفل زفاف":       ["Wedding Hall"],
 
+  // ── Camping / Outdoor Activities ─────────────────────────────────────────
+  camping:           ["Campsite", "Outdoor Area", "Nature Reserve", "Park"],
+  campsite:          ["Campsite", "Outdoor Area"],
+  "camping site":    ["Campsite", "Outdoor Area"],
+  "camping spot":    ["Campsite", "Outdoor Area", "Nature Reserve"],
+  "camping spots":   ["Campsite", "Outdoor Area", "Nature Reserve"],
+  "outdoor activity":["Outdoor Area", "Park", "Nature Reserve"],
+  "nature reserve":  ["Nature Reserve"],
+  hike:              ["Nature Reserve", "Park", "Outdoor Area"],
+  hiking:            ["Nature Reserve", "Park", "Outdoor Area"],
+  "hiking trail":    ["Nature Reserve", "Park"],
+  bbq:               ["Park", "Outdoor Area"],
+  "تخييم":           ["Campsite", "Outdoor Area"],
+  "معسكر":           ["Campsite", "Outdoor Area"],
+  "مخيم":            ["Campsite", "Outdoor Area"],
+  "مخيمات":          ["Campsite", "Outdoor Area", "Nature Reserve"],
+  "تنزه":            ["Park", "Outdoor Area"],
+  "رحلة طبيعية":     ["Nature Reserve", "Park"],
+
   // ── Tailor & Alterations ───────────────────────────────────────────────────
   tailor:           ["Tailor"],
   tailoring:        ["Tailor"],
@@ -635,7 +654,9 @@ export function placeSignal(query: string, dbCategories: string[]): number {
   if (detectDistrict(query)) s += 2;
   // English proximity signals
   if (/\b(near me|nearby|close to|around here|in town)\b/i.test(query)) s += 2;
-  if (/\b(where|place|places|spot|visit|go to|open now)\b/i.test(query)) s += 1;
+  if (/\b(where|place|places|spot|spots|visit|go to|open now)\b/i.test(query)) s += 1;
+  // "near X" / "around X" generic — strong location indicator even without "me"
+  if (/\b(near|around|close to)\s+\w/i.test(query)) s += 1;
   // Arabic proximity / location signals
   if (/قريب مني|بالقرب من|بجانبي|حواليه|قريبة مني/.test(query)) s += 2;
   if (/أين|اين|وين|فين|كيف أوصل|كيف اوصل|أماكن|مكان/.test(query)) s += 1;

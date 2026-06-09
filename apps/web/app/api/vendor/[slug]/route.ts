@@ -105,7 +105,7 @@ export async function GET(
       SELECT
         id, name, subcategory, category, address,
         rating, reviews_count, phone, website,
-        opening_hours, area, lat, lng, scraped_at,
+        opening_hours, NULL::text AS area, lat, lng, scraped_at,
         'place' AS source_type
       FROM jordan_places
       WHERE REGEXP_REPLACE(LOWER(name), '[^a-z0-9]+', '-', 'g') = ${slug}
@@ -120,7 +120,7 @@ export async function GET(
       SELECT
         id, name, subcategory, category, address,
         rating, reviews_count, phone, website,
-        opening_hours, area, lat, lng, scraped_at,
+        opening_hours, NULL::text AS area, lat, lng, scraped_at,
         'place' AS source_type
       FROM jordan_places
       WHERE REGEXP_REPLACE(LOWER(name), '[^a-z0-9]+', '-', 'g') LIKE ${prefix + "%"}

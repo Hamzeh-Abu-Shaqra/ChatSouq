@@ -54,6 +54,11 @@ function saveToLocalHistory(query: string, id: number) {
   localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
 }
 
+function deleteFromLocalHistory(id: number) {
+  const updated = getLocalHistory().filter((h) => h.id !== id);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+}
+
 function buildAssistantContext(res: AssistResponse): string {
   const lines: string[] = [res.summary];
   if (res.kind === "products" && res.best) {
@@ -134,9 +139,16 @@ function ChatPageInner() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [historyLoaded, initialQ]);
 
+  // Only scroll when a new turn is added OR the last turn finishes loading
+  // (NOT on feedback updates which also call setTurns)
+  const turnCount = turns.length;
+  const lastStatus = turns[turns.length - 1]?.status;
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [turns]);
+    if (turnCount > 0) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [turnCount, lastStatus]);
 
   /* Follow-up events from ResponseContainer --------------------------------- */
   useEffect(() => {
@@ -243,18 +255,39 @@ function ChatPageInner() {
               </p>
               <div className="space-y-0.5">
                 {localHistory.slice(0, 20).map((h) => (
-                  <button
+                  <div
                     key={h.id}
-                    onClick={() => ask(h.query)}
-                    className="w-full text-left px-2 py-2 rounded-lg group transition-colors"
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#F3F1EE"; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = ""; }}
+                    className="group flex items-center gap-1 rounded-lg transition-colors"
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = "#F3F1EE"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = ""; }}
                   >
-                    <p className="text-[13px] text-[#1A1A1A] truncate">{h.query}</p>
-                    <p className="text-[11px] text-[#9ca3af] mt-0.5">
-                      {new Date(h.timestamp).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                    </p>
-                  </button>
+                    <button
+                      onClick={() => ask(h.query)}
+                      className="flex-1 text-left px-2 py-2 min-w-0"
+                    >
+                      <p className="text-[13px] text-[#1A1A1A] truncate">{h.query}</p>
+                      <p className="text-[11px] text-[#9ca3af] mt-0.5">
+                        {new Date(h.timestamp).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                      </p>
+                    </button>
+                    {/* Per-item delete — visible on hover */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteFromLocalHistory(h.id);
+                        setLocalHistory(getLocalHistory());
+                      }}
+                      className="flex-shrink-0 mr-1 p-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="Delete"
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "#ef4444"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "#9ca3af"; }}
+                      style={{ color: "#9ca3af" }}
+                    >
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                      </svg>
+                    </button>
+                  </div>
                 ))}
               </div>
             </>

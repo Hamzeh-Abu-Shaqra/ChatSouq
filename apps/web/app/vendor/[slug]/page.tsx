@@ -21,13 +21,6 @@ interface VendorData {
   scraped_at: string | null;
 }
 
-const SIMILAR_FALLBACK = [
-  { name: "Sufra Restaurant",    area: "Rainbow Street",  cat: "Jordanian cuisine",   rating: 4.6 },
-  { name: "Fakhr El-Din",        area: "Umm Uthaina",     cat: "Lebanese · Levantine", rating: 4.8 },
-  { name: "Wild Jordan Café",    area: "Jabal Amman",     cat: "Café · Organic",       rating: 4.5 },
-  { name: "Joz Hind",           area: "Weibdeh",          cat: "Modern Jordanian",     rating: 4.7 },
-];
-
 function StarRating({ rating }: { rating: number }) {
   const full = Math.floor(rating);
   const half = rating % 1 >= 0.5;
@@ -304,40 +297,6 @@ export default function VendorPage({ params }: { params: Promise<{ slug: string 
               )}
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* ── SIMILAR PLACES ────────────────────────────────────────────────── */}
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 py-12" style={{ borderTop: "0.5px solid #E8E4DC" }}>
-        <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-6" style={{ color: "#C9A84C" }}>
-          ◆ Similar places in Amman
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {SIMILAR_FALLBACK.map((place) => (
-            <button
-              key={place.name}
-              onClick={() => router.push(`/chat?q=${encodeURIComponent(`Tell me about ${place.name} in Amman`)}`)}
-              className="text-left bg-white rounded-xl p-4 transition-all"
-              style={{ border: "0.5px solid #E8E4DC" }}
-              onMouseEnter={(e) => {
-                const el = e.currentTarget as HTMLButtonElement;
-                el.style.borderColor = "#C9A84C";
-                el.style.background = "#FBF4E3";
-              }}
-              onMouseLeave={(e) => {
-                const el = e.currentTarget as HTMLButtonElement;
-                el.style.borderColor = "#E8E4DC";
-                el.style.background = "#fff";
-              }}
-            >
-              <p className="text-[13px] font-medium text-[#1A1A1A] mb-1">{place.name}</p>
-              <p className="text-[11px] text-[#9ca3af] mb-2">{place.cat} · {place.area}</p>
-              <div className="flex items-center gap-1.5">
-                <StarRating rating={place.rating} />
-                <span className="text-[12px] text-[#6B7280]">{place.rating}</span>
-              </div>
-            </button>
-          ))}
         </div>
       </div>
 

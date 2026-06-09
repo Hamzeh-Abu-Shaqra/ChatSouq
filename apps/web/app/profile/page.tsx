@@ -1,19 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-const RECENT_SEARCHES = [
-  "Best romantic restaurant in Weibdeh for two",
-  "Gyms in Abdoun with a pool",
-  "Eid gift for my mother under 50 JOD",
-];
+const HISTORY_KEY = "chatsouq_local_history";
 
-const SAVED_PLACES = [
-  { name: "Sekrab Amman",       cat: "Restaurant",  area: "Downtown"       },
-  { name: "Stretch Studio",     cat: "Yoga studio", area: "Sweifieh"       },
-  { name: "Baklawa District",   cat: "Sweets",      area: "Jabal Amman"    },
-];
+interface HistoryEntry {
+  id: string;
+  query: string;
+  timestamp: number;
+}
 
 const SETTINGS = [
   { label: "Language",       value: "English",    action: "Change" },
@@ -23,7 +19,22 @@ const SETTINGS = [
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [savedItems, setSavedItems] = useState(SAVED_PLACES);
+  const [savedItems, setSavedItems] = useState<{ name: string; cat: string; area: string }[]>([]);
+  const [recentSearches, setRecentSearches] = useState<HistoryEntry[]>([]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(HISTORY_KEY);
+      const parsed: HistoryEntry[] = raw ? JSON.parse(raw) : [];
+      // Most recent first, cap at 10
+      const sorted = [...parsed]
+        .sort((a, b) => b.timestamp - a.timestamp)
+        .slice(0, 10);
+      setRecentSearches(sorted);
+    } catch {
+      setRecentSearches([]);
+    }
+  }, []);
 
   function removeItem(name: string) {
     setSavedItems((items) => items.filter((i) => i.name !== name));
@@ -124,7 +135,7 @@ export default function ProfilePage() {
 
         {/* Recent searches */}
         <Section title="Recent searches">
-          {RECENT_SEARCHES.length === 0 ? (
+          {recentSearches.length === 0 ? (
             <EmptyState
               icon="🔍"
               message="No recent searches."
@@ -133,10 +144,10 @@ export default function ProfilePage() {
             />
           ) : (
             <div className="space-y-2">
-              {RECENT_SEARCHES.map((q) => (
+              {recentSearches.map((entry) => (
                 <button
-                  key={q}
-                  onClick={() => router.push(`/chat?q=${encodeURIComponent(q)}`)}
+                  key={entry.id}
+                  onClick={() => router.push(`/chat?q=${encodeURIComponent(entry.query)}`)}
                   className="w-full text-left bg-white rounded-xl px-4 py-3 transition-all"
                   style={{ border: "0.5px solid #E8E4DC" }}
                   onMouseEnter={(e) => {
@@ -151,7 +162,7 @@ export default function ProfilePage() {
                   }}
                 >
                   <span className="text-[12px] text-[#9ca3af] mr-2">🔍</span>
-                  <span className="text-[13px] text-[#374151]">{q}</span>
+                  <span className="text-[13px] text-[#374151]">{entry.query}</span>
                 </button>
               ))}
             </div>

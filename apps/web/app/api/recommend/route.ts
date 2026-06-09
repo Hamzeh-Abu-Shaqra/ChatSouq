@@ -12,6 +12,7 @@ import { db, schema } from "@chatsouq/db";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60; // seconds — long-running AI inference
 
 export async function POST(req: Request) {
   let body: {

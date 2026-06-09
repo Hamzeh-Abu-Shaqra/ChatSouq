@@ -32,7 +32,10 @@ export async function GET() {
       ]);
 
     const foodCount = Number(food.count) + Number(foodTalabat.count);
-    const foodScraped = food.last_scraped > foodTalabat.last_scraped ? food.last_scraped : foodTalabat.last_scraped;
+    const foodScraped =
+      food.last_scraped == null ? foodTalabat.last_scraped
+      : foodTalabat.last_scraped == null ? food.last_scraped
+      : food.last_scraped >= foodTalabat.last_scraped ? food.last_scraped : foodTalabat.last_scraped;
 
     const total =
       Number(news.count) + foodCount + Number(health.count) +
@@ -55,8 +58,7 @@ export async function GET() {
       total,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error("scraper-stats error:", message);
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[api/scraper-stats]", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

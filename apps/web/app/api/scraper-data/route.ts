@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 30;
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -178,7 +179,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ data, total, page, limit, categories });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[api/scraper-data]", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

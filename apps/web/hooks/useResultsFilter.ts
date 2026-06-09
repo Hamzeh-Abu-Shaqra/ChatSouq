@@ -64,7 +64,7 @@ export function useResultsFilter(vendors: Vendor[]) {
   const remaining = filtered.length - showCount;
 
   function showMore() {
-    setShowCount((n) => n + PAGE_SIZE + 1);
+    setShowCount((n) => n + PAGE_SIZE);
   }
 
   function reset() {

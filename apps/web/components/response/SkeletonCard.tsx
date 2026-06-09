@@ -5,7 +5,7 @@ import type { CSSProperties } from "react";
 const SHIMMER_STYLE: CSSProperties = {
   background: "linear-gradient(90deg, #f0ece4 25%, #e8e0d0 50%, #f0ece4 75%)",
   backgroundSize: "200% 100%",
-  animation: "shimmer 1.5s infinite",
+  animation: "shimmer-gradient 1.5s infinite",
   borderRadius: "4px",
 };
 
@@ -13,7 +13,7 @@ const GOLD_SHIMMER_STYLE: CSSProperties = {
   height: "4px",
   background: "linear-gradient(90deg, #e8d5a0 25%, #C9A84C 50%, #e8d5a0 75%)",
   backgroundSize: "200% 100%",
-  animation: "shimmer 1.5s infinite",
+  animation: "shimmer-gradient 1.5s infinite",
   borderRadius: 0,
 };
 
@@ -88,13 +88,6 @@ export function ResultCardSkeleton() {
 export function ResponseSkeleton() {
   return (
     <>
-      <style>{`
-        @keyframes shimmer {
-          0% { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
-        }
-      `}</style>
-
       <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {[100, 90, 75, 60].map((w, i) => (

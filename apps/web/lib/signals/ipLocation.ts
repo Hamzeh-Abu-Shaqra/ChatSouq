@@ -62,21 +62,10 @@ async function fetchFromIpApi(): Promise<IpLocationData | null> {
 }
 
 async function fetchFromIpApiCom(): Promise<IpLocationData | null> {
-  try {
-    const res = await fetch("http://ip-api.com/json/?fields=status,country,countryCode,regionName,city", {
-      signal: AbortSignal.timeout(4000),
-    });
-    if (!res.ok) return null;
-    const data = await res.json() as { status?: string; countryCode?: string; city?: string; regionName?: string };
-    if (data.status !== "success") return null;
-    return {
-      country: data.countryCode ?? null,
-      city: data.city ?? null,
-      region: data.regionName ?? null,
-    };
-  } catch {
-    return null;
-  }
+  // ip-api.com free tier is HTTP-only; HTTPS requires a paid plan.
+  // Modern browsers block HTTP requests from HTTPS pages (mixed content).
+  // This fallback is intentionally disabled — ipapi.co (HTTPS) is the primary.
+  return null;
 }
 
 /**

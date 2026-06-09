@@ -13,21 +13,13 @@ export function Navbar() {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const isHome = pathname === "/";
 
+  // On homepage: transparent until scrolled past hero (~80% of vh); elsewhere: 48px
   useEffect(() => {
     function onScroll() {
-      setScrolled(window.scrollY > 48);
-    }
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  // On homepage: transparent until scrolled past hero (~80% of vh)
-  useEffect(() => {
-    if (!isHome) return;
-    function onScroll() {
-      const threshold = window.innerHeight * 0.8;
+      const threshold = isHome ? window.innerHeight * 0.8 : 48;
       setScrolled(window.scrollY > threshold);
     }
+    onScroll(); // Set initial state
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, [isHome]);

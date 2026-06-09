@@ -86,6 +86,7 @@ export default function VendorsPage() {
   });
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   function update(field: keyof FormState, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -94,6 +95,7 @@ export default function VendorsPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
+    setSubmitError(null);
     try {
       const res = await fetch("/api/business-onboarding", {
         method: "POST",
@@ -104,8 +106,7 @@ export default function VendorsPage() {
       setSubmitted(true);
     } catch (err) {
       console.error("[onboarding]", err);
-      // Still mark as submitted to the user — we can reconcile later
-      setSubmitted(true);
+      setSubmitError("Something went wrong. Please try again or email us at hello@chatsouq.ai");
     } finally {
       setSubmitting(false);
     }
@@ -372,6 +373,9 @@ export default function VendorsPage() {
               </button>
               <p className="text-[12px] text-[#9ca3af]">Free forever. No credit card required.</p>
             </div>
+            {submitError && (
+              <p className="mt-3 text-[13px]" style={{ color: "#dc2626" }}>{submitError}</p>
+            )}
           </form>
         )}
       </section>

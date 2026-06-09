@@ -99,10 +99,13 @@ export default function ScraperDashboard() {
       if (cat) params.set("category", cat);
       if (q) params.set("search", q);
       const res = await fetch(`/api/scraper-data?${params}`, { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       setData(json.data ?? []);
       setTotal(json.total ?? 0);
       if (json.categories?.length) setCategories(json.categories);
+    } catch (e) {
+      console.error("fetchData error:", e);
     } finally {
       setLoadingData(false);
     }

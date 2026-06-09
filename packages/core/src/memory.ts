@@ -352,12 +352,15 @@ export async function getCtrBoosts(
 
   try {
     const queryNorm = query.toLowerCase().trim().replace(/\s+/g, " ").slice(0, 200);
+    // Validate IDs before using sql.raw() to prevent injection
+    const safeIds = resultIds.map(Number).filter((n) => Number.isFinite(n) && n > 0 && n === Math.floor(n));
+    if (safeIds.length === 0) return boosts;
     const rows = (await db.execute(sql`
       SELECT result_id, ctr, clicks
       FROM click_stats
       WHERE query_norm = ${queryNorm}
         AND result_kind = ${resultKind}
-        AND result_id = ANY(ARRAY[${sql.raw(resultIds.join(","))}]::int[])
+        AND result_id = ANY(ARRAY[${sql.raw(safeIds.join(","))}]::int[])
         AND clicks >= 2
     `)) as unknown as { result_id: number; ctr: number; clicks: number }[];
 

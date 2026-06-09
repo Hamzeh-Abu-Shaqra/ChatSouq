@@ -32,11 +32,7 @@ export default function BrowsePage() {
   const router = useRouter();
 
   function go(href: string) {
-    if (href.startsWith("/chat")) {
-      router.push(href);
-    } else {
-      router.push(href);
-    }
+    router.push(href);
   }
 
   return (

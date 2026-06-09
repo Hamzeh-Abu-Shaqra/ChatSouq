@@ -63,7 +63,16 @@ function productSignal(query: string, productCategories: string[]): number {
 
   if (c.brands.length) s += 1;
   if (c.keywords.length >= 2) s += 1;
-  return s;
+
+  // Service-verb + body-part patterns are place queries, not product purchases.
+  // "cut my hair", "trim my beard", "do my nails" → reduce product signal so
+  // the router falls through to places instead of the product catalogue.
+  if (
+    /\b(cut|trim|wash|dry|style|dye|color|do|get|fix|wax)\s+(my\s+|a\s+)?(hair|beard|nails|brows|eyebrows|lashes)\b/i.test(query) ||
+    /\b(haircut|hair\s+cut|blowout|blow\s+dry|manicure|pedicure)\b/i.test(query)
+  ) s -= 3;
+
+  return Math.max(0, s);
 }
 
 /**

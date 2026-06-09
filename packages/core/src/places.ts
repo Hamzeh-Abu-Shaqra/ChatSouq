@@ -1139,13 +1139,25 @@ function toResultPlace(c: PlaceCandidate): ResultPlace {
 const ARABIC_CHAR_RE = /[؀-ۿ]/;
 
 function placeWhy(c: ScoredPlace, isBest: boolean, queryLang: "en" | "ar"): string {
-  const lead = isBest ? "Top pick" : "Alternative";
-  const where = c.city ? `in ${c.city}` : c.governorate ? `in ${c.governorate}` : "in Jordan";
   const nameIsArabic = ARABIC_CHAR_RE.test(c.name);
-  // When the name is Arabic and the query is English, omit the raw name from the
-  // reasoning text — the card heading will display it correctly in RTL.
-  const namePart = nameIsArabic && queryLang === "en" ? "" : `: ${c.name}`;
-  return `${lead}${namePart}, a ${c.category.toLowerCase()} ${where}.`.replace(/\s+/g, " ").replace(/^(Top pick|Alternative), /, "$1: ");
+  const ratingStr = c.rating != null
+    ? (queryLang === "ar" ? ` · تقييم ${c.rating.toFixed(1)}/5` : `. Rated ${c.rating.toFixed(1)}/5`)
+    : "";
+  const contactStr = c.phone
+    ? (queryLang === "ar" ? " · يمكن الحجز" : ". Contact available")
+    : "";
+
+  if (queryLang === "ar") {
+    const where = c.city ? ` في ${c.city}` : c.governorate ? ` في ${c.governorate}` : "";
+    const label = isBest ? "الخيار الأمثل" : "خيار بديل";
+    return `${label}: ${c.category}${where}${ratingStr}${contactStr}.`.replace(/\s+/g, " ");
+  }
+
+  const where = c.city ? ` in ${c.city}` : c.governorate ? ` in ${c.governorate}` : "";
+  const lead = isBest ? "Top pick" : "Alternative";
+  // Omit raw Arabic name from English text — card heading renders it correctly
+  const namePart = !nameIsArabic ? ` — ${c.name}` : "";
+  return `${lead}${namePart}, a ${c.category.toLowerCase()}${where}${ratingStr}${contactStr}.`.replace(/\s+/g, " ");
 }
 
 function placePros(c: ScoredPlace, intent: PlaceIntent, lang: "en" | "ar"): string[] {
@@ -1182,11 +1194,11 @@ function buildPlaceCodeSummary(ranked: PlaceCandidate[], intent: PlaceIntent, la
   if (lang === "ar") {
     const loc = where ? ` في ${where}` : "";
     const alts = altCount > 0 ? ` وعندي ${altCount} خيار${altCount === 1 ? "" : " إضافي"} كذلك.` : ".";
-    return `أفضل خيار هو **${best.name}**${loc}.${alts}`;
+    return `أفضل خيار هو ${best.name}${loc}.${alts}`;
   }
   const loc = where ? ` in ${where}` : "";
   const alts = altCount > 0 ? ` I've also found ${altCount} other option${altCount > 1 ? "s" : ""} worth considering.` : "";
-  return `**${best.name}**${loc} is the top match for your search.${alts}`;
+  return `${best.name}${loc} is the top match for your search.${alts}`;
 }
 
 interface Deps {
@@ -1289,20 +1301,25 @@ export async function recommendPlaces(
   let llmInsight:   string | null   = null;
   let llmFollowUps: string[]        = [];
   if (!provider.isMock && ranked.length > 0) {
+    // ── Web search (best-effort — Claude runs even if this fails) ─────────────
+    let webContext = "";
+    const hasTrendSignal = /trending|this week|new\b|open(ed|ing)|pop.?up|latest|recent|what.?s/i.test(input.query);
+    const webSearchQuery = hasTrendSignal
+      ? `${input.query} Amman Jordan`
+      : [
+          ...(intent.categories.length > 0 ? [intent.categories[0]!] : []),
+          ...(intent.district ? [intent.district] : []),
+          intent.governorate ?? "Amman",
+        ].join(" ") || input.query;
     try {
-      // Fire web search in parallel with building the place list — no added latency
-      // Use the full original query for trend/discovery/temporal searches so "new cafes
-      // in Rainbow Street this week" actually searches for that, not just "Cafe Amman".
-      const hasTrendSignal = /trending|this week|new\b|open(ed|ing)|pop.?up|latest|recent|what.?s/i.test(input.query);
-      const webSearchQuery = hasTrendSignal
-        ? `${input.query} Amman Jordan`
-        : [
-            ...(intent.categories.length > 0 ? [intent.categories[0]!] : []),
-            ...(intent.district ? [intent.district] : []),
-            intent.governorate ?? "Amman",
-          ].join(" ") || input.query;
       const webResults = await webSearch(webSearchQuery, { maxResults: 3, searchDepth: "basic" });
-      const webContext = formatWebResults(webResults, "LIVE WEB INFO");
+      webContext = formatWebResults(webResults, "LIVE WEB INFO");
+    } catch (webErr) {
+      console.error("[places] webSearch failed — continuing without web context:", webErr);
+    }
+
+    // ── LLM enrichment ────────────────────────────────────────────────────────
+    try {
 
       // Rich place context — include rating and address so the LLM can write
       // a genuinely informative summary, not just a template.
@@ -1394,7 +1411,8 @@ export async function recommendPlaces(
           if (Array.isArray(p.tags) && p.tags.length) tagsMap.set(p.id, p.tags.slice(0, 5));
         }
       }
-    } catch {
+    } catch (llmErr) {
+      console.error("[places] LLM enrichment failed:", llmErr);
       // keep code-generated whys and fallback summary
     }
   }

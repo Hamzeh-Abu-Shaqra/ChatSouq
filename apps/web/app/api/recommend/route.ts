@@ -7,7 +7,7 @@ import {
   maybeUpdateSummary,
   buildMemoryBlock,
 } from "@chatsouq/core/memory";
-import type { ConvMessage } from "@chatsouq/core";
+import type { ConvMessage, QueryContext } from "@chatsouq/core";
 import { db, schema } from "@chatsouq/db";
 
 export const runtime = "nodejs";
@@ -18,6 +18,7 @@ export async function POST(req: Request) {
     query?: string;
     sessionId?: string;
     history?: ConvMessage[];
+    context?: QueryContext;
   };
   try {
     body = await req.json();
@@ -58,6 +59,8 @@ export async function POST(req: Request) {
       // Memory block is now a first-class field on RecommendInput — injected into
       // every engine (products, places, general) so all LLM calls have user context.
       memoryBlock,
+      // Tier 1 context signals from the client (location, temporal, history)
+      context: body.context ?? undefined,
     });
 
     // ── Persist this turn in the background ───────────────────────────────────

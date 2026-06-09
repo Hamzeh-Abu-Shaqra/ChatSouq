@@ -7,7 +7,10 @@
  */
 
 import type { HistoryContext, RecentQuery } from "@chatsouq/core";
-import { NEIGHBORHOOD_CANONICAL } from "@chatsouq/core";
+// Import from the subpath — placeIntent.ts has NO DB imports, safe for client bundles.
+// Do NOT change to "@chatsouq/core" (that pulls in the full DB stack).
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
+import { NEIGHBORHOOD_CANONICAL } from "@chatsouq/core/placeIntent";
 
 const HISTORY_KEY = "chatsouq_local_history"; // matches chat/page.tsx
 

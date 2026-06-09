@@ -210,6 +210,65 @@ export interface ConvMessage {
   content: string;
 }
 
+// ── Tier 1 context signals ────────────────────────────────────────────────────
+
+/**
+ * Location resolved from GPS, IP, stated, history or default (West Amman).
+ * Priority: GPS > user-stated > IP > history-inferred > default.
+ */
+export interface LocationContext {
+  /** How this location was resolved */
+  source: "gps" | "ip" | "stated" | "history" | "default";
+  /** Canonical Amman neighbourhood, e.g. "Weibdeh" */
+  neighborhood: string | null;
+  /** Governorate, e.g. "Amman" */
+  governorate: string | null;
+  lat: number | null;
+  lng: number | null;
+  /** GPS accuracy in metres (null for non-GPS sources) */
+  accuracyM: number | null;
+}
+
+/** Jordan-local temporal context derived from Asia/Amman time. */
+export interface TemporalContext {
+  timezone: "Asia/Amman";
+  /** Local hour 0-23 */
+  localHour: number;
+  /** 0=Sun … 6=Sat */
+  localDay: number;
+  timeOfDay: "morning" | "afternoon" | "evening" | "night";
+  isRamadan: boolean;
+  isEid: boolean;
+  /** Friday+Saturday are weekend in Jordan */
+  isWeekend: boolean;
+  isFriday: boolean;
+  season: "spring" | "summer" | "autumn" | "winter";
+  isSchoolYear: boolean;
+  holiday: string | null;
+}
+
+export interface RecentQuery {
+  query: string;
+  timestamp: number;
+  kind: "products" | "places" | "general" | null;
+}
+
+/** Inferred user profile from browser-local query history. */
+export interface HistoryContext {
+  recentQueries: RecentQuery[];
+  inferredBudget: "budget" | "mid_range" | "upscale" | null;
+  inferredNeighborhood: string | null;
+  preferredCategories: string[];
+  avoidedVendorIds: number[];
+}
+
+/** Assembled client-side context signals sent with every recommendation request. */
+export interface QueryContext {
+  location: LocationContext | null;
+  temporal: TemporalContext | null;
+  history: HistoryContext | null;
+}
+
 export interface RecommendInput {
   query: string;
   /** Prior turns in this session — used for context-aware follow-up answers. */
@@ -221,6 +280,8 @@ export interface RecommendInput {
    * Injected into LLM system prompts so every engine has full user context.
    */
   memoryBlock?: string;
+  /** Tier 1 context signals from the client (location, temporal, history). */
+  context?: QueryContext;
 }
 
 /** Internal candidate shape returned by retrieval before ranking. */

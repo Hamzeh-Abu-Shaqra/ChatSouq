@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import type { AssistResponse, NeighborhoodCard, InfoCard, ConvMessage } from "@chatsouq/core";
+import type { AssistResponse, NeighborhoodCard, InfoCard, ConvMessage, QueryContext } from "@chatsouq/core";
 import {
   NeighborhoodBestCard, NeighborhoodAltCard,
   GeneralInfoCard, NewsInfoCard, CompanyInfoCard,
@@ -10,6 +10,9 @@ import {
 } from "../../components/cards";
 import { ResponseContainer } from "../../components/response/ResponseContainer";
 import { adaptResponse } from "../../types/vendor";
+import { assembleContext, assembleContextSync } from "../../lib/signals/contextAssembler";
+import LocationBanner from "../../components/ui/LocationBanner";
+import ContextIndicator from "../../components/ui/ContextIndicator";
 
 const SESSION_KEY = "chatsouq_session_id";
 const HISTORY_KEY = "chatsouq_local_history";
@@ -106,12 +109,22 @@ function ChatPageInner() {
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [memoryActive, setMemoryActive]   = useState(false);
   const [localHistory, setLocalHistory]   = useState<LocalHistoryItem[]>([]);
+  const [activeContext, setActiveContext] = useState<QueryContext | null>(null);
   const [sidebarOpen, setSidebarOpen]     = useState(false);
   const sessionIdRef      = useRef<string>("");
   const conversationIdRef = useRef<string | null>(null);
   const bottomRef         = useRef<HTMLDivElement>(null);
   const inputRef          = useRef<HTMLTextAreaElement>(null);
   const didInitRef        = useRef(false);
+
+  /* Assemble Tier 1 context signals ---------------------------------------- */
+  useEffect(() => {
+    // Sync context (temporal + history) immediately — no async needed
+    const syncCtx = assembleContextSync();
+    setActiveContext(syncCtx as QueryContext);
+    // Full context (with IP geolocation) in background — updates quietly
+    assembleContext(false).then(setActiveContext).catch(() => {});
+  }, []);
 
   /* Restore session --------------------------------------------------------- */
   useEffect(() => {
@@ -194,7 +207,7 @@ function ChatPageInner() {
       const res = await fetch("/api/recommend", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: q, sessionId: sessionIdRef.current }),
+        body: JSON.stringify({ query: q, sessionId: sessionIdRef.current, context: activeContext }),
       });
       if (!res.ok) throw new Error((await res.json().catch(() => ({})))?.error ?? "Request failed");
       const data = (await res.json()) as AssistResponse & { sessionId?: string };
@@ -314,6 +327,15 @@ function ChatPageInner() {
 
       {/* ── MAIN CONTENT ─────────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Location permission banner — slim 40px, shown once per session */}
+        <LocationBanner
+          onLocationResolved={(nb) => {
+            setActiveContext((prev) => prev
+              ? { ...prev, location: { source: "gps", neighborhood: nb, governorate: "Amman", lat: null, lng: null, accuracyM: null } }
+              : null
+            );
+          }}
+        />
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-3xl px-4 py-6">
@@ -373,9 +395,12 @@ function ChatPageInner() {
                 {busy ? <Spinner /> : <SendIcon />}
               </button>
             </form>
-            <p className="mt-1.5 text-center text-[11px] text-[#9ca3af]">
-              ChatSouq knows Amman · Ask anything
-            </p>
+            <div className="mt-1.5 flex items-center justify-between">
+              <p className="text-[11px] text-[#9ca3af]">
+                ChatSouq knows Amman · Ask anything
+              </p>
+              <ContextIndicator context={activeContext} />
+            </div>
           </div>
         </div>
       </div>

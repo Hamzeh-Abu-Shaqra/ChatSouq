@@ -1,5 +1,5 @@
 import type { AIProvider } from "@chatsouq/ai";
-import type { Constraints } from "./types";
+import type { Constraints, QueryContext } from "./types";
 import type { ScoredCandidate } from "./rank";
 
 const ARABIC_RE = /[؀-ۿ]/;
@@ -89,12 +89,12 @@ function buildCodeSummary(
   const altCount = ranked.length - 1;
   if (lang === "ar") {
     const alts = altCount > 0 ? ` وعندي ${altCount} بديل${altCount === 1 ? "" : " إضافي"} كذلك.` : ".";
-    return `أفضل خيار هو **${name}**${price} من ${best.vendorName}.${alts}`;
+    return `أفضل خيار هو ${name}${price} من ${best.vendorName}.${alts}`;
   }
   const from = ` from ${best.vendorName}`;
   const budget = constraints.budgetMax ? ` within your ${formatJOD(constraints.budgetMax)} budget` : "";
   const alts = altCount > 0 ? ` I've also found ${altCount} alternative${altCount > 1 ? "s" : ""} worth a look.` : "";
-  return `**${name}**${price}${from} is the top match${budget}.${alts}`;
+  return `${name}${price}${from} is the top match${budget}.${alts}`;
 }
 
 /**
@@ -110,6 +110,7 @@ export async function explainItems(
   ranked: ScoredCandidate[],
   constraints: Constraints,
   memoryBlock?: string,
+  context?: QueryContext,
 ): Promise<ExplainResult> {
   const lang: "en" | "ar" = ARABIC_RE.test(query) ? "ar" : "en";
   const pricedShown = ranked.filter((c) => c.price !== null).map((c) => c.price as number);
@@ -154,6 +155,14 @@ export async function explainItems(
     ].filter(Boolean).join("\n");
 
     const memCtx = memoryBlock ? `\nUSER CONTEXT (use to personalise):\n${memoryBlock}` : "";
+
+    // Temporal context — tells Claude what time of day / season / holiday it is in Jordan
+    const t = context?.temporal;
+    const dayNames = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+    const temporalCtx = t
+      ? `\nTEMPORAL CONTEXT: It's ${dayNames[t.localDay] ?? "today"} ${t.timeOfDay} in Amman${t.isRamadan ? " (Ramadan — note for gifting context)" : ""}${t.holiday ? ` (${t.holiday} — public holiday)` : ""}.`
+      : "";
+
     const res = await provider.complete({
       system:
         "You are ChatSouq, Amman's AI shopping assistant. " +
@@ -164,7 +173,7 @@ export async function explainItems(
         "followUps: 4 short follow-up query suggestions (max 8 words each). " +
         "For each item: a 1-sentence 'why' (max 20 words) and up to 4 short feature tags (e.g. Wireless, ANC, 40hr battery). " +
         "Use ONLY provided facts — no invented specs. " +
-        `${langInstruction}${memCtx} ` +
+        `${langInstruction}${memCtx}${temporalCtx} ` +
         'Return JSON exactly: {"intro":"...","connector":"...","insight":"...","followUps":["..."],"items":[{"id":number,"why":"...","tags":["..."]}]}',
       messages: [{ role: "user", content: `${contextLine}\nItems: ${JSON.stringify(items)}` }],
       json: true,

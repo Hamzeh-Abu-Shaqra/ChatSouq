@@ -1,9 +1,11 @@
 "use client";
 
-import { MapPin, Star, Clock, ShieldCheck, AlertTriangle } from "lucide-react";
+import { useState } from "react";
+import { MapPin, Star, Clock, ShieldCheck, AlertTriangle, X } from "lucide-react";
 import { motion } from "framer-motion";
 import type { Vendor } from "../../types/vendor";
 import { CTAButton } from "./CTAButton";
+import { recordAvoidedVendor } from "../../lib/signals/searchHistory";
 
 interface FeaturedCardProps {
   vendor: Vendor;
@@ -12,6 +14,33 @@ interface FeaturedCardProps {
 
 export function FeaturedCard({ vendor, isArabic = false }: FeaturedCardProps) {
   const name = isArabic && vendor.nameAr ? vendor.nameAr : vendor.name;
+  const [dismissed, setDismissed] = useState(false);
+
+  if (dismissed) {
+    return (
+      <div
+        style={{
+          border: "1px solid #E8D5A0",
+          borderRadius: "12px",
+          padding: "16px 24px",
+          background: "#FAFAF8",
+          color: "#9B8A6A",
+          fontSize: "13px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <span>{isArabic ? "تم الإخفاء ✓ لن يظهر هذا المكان في البحثات القادمة" : "Dismissed ✓ — won't appear in future searches"}</span>
+        <button
+          onClick={() => setDismissed(false)}
+          style={{ background: "none", border: "none", cursor: "pointer", color: "#C9A84C", fontSize: "12px" }}
+        >
+          {isArabic ? "تراجع" : "Undo"}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -36,7 +65,7 @@ export function FeaturedCard({ vendor, isArabic = false }: FeaturedCardProps) {
       />
 
       <div style={{ padding: "24px" }}>
-        {/* Top Pick badge + name */}
+        {/* Top Pick badge + name + dismiss */}
         <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", marginBottom: "14px" }}>
           <span
             style={{
@@ -68,6 +97,35 @@ export function FeaturedCard({ vendor, isArabic = false }: FeaturedCardProps) {
           >
             {name}
           </h2>
+
+          {/* Dismiss button */}
+          <button
+            title={isArabic ? "إخفاء هذا المكان" : "Not for me"}
+            onClick={() => {
+              recordAvoidedVendor(vendor.id);
+              setDismissed(true);
+            }}
+            style={{
+              flexShrink: 0,
+              background: "none",
+              border: "1px solid #E8D5A0",
+              borderRadius: "6px",
+              cursor: "pointer",
+              color: "#9B8A6A",
+              padding: "3px 6px",
+              display: "flex",
+              alignItems: "center",
+              gap: "3px",
+              fontSize: "11px",
+              marginTop: "2px",
+              transition: "all 0.15s ease",
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "#C9A84C"; (e.currentTarget as HTMLButtonElement).style.color = "#5C4A1E"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "#E8D5A0"; (e.currentTarget as HTMLButtonElement).style.color = "#9B8A6A"; }}
+          >
+            <X size={11} strokeWidth={2} />
+            {isArabic ? "إخفاء" : "Not for me"}
+          </button>
         </div>
 
         {/* Meta row */}

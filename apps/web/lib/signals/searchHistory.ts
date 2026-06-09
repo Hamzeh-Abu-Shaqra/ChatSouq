@@ -12,7 +12,8 @@ import type { HistoryContext, RecentQuery } from "@chatsouq/core";
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { NEIGHBORHOOD_CANONICAL } from "@chatsouq/core/placeIntent";
 
-const HISTORY_KEY = "chatsouq_local_history"; // matches chat/page.tsx
+const HISTORY_KEY   = "chatsouq_local_history"; // matches chat/page.tsx
+const AVOIDED_KEY   = "chatsouq_avoided_vendors";
 
 interface StoredHistoryItem {
   id: number;
@@ -124,8 +125,48 @@ export function getHistoryContext(): HistoryContext | null {
     inferredBudget,
     inferredNeighborhood,
     preferredCategories,
-    avoidedVendorIds: [], // future: populated from explicit "not this vendor" feedback
+    avoidedVendorIds: readAvoidedVendors(),
   };
+}
+
+// ── Avoided vendor helpers ────────────────────────────────────────────────────
+
+function readAvoidedVendors(): number[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(AVOIDED_KEY);
+    return raw ? (JSON.parse(raw) as number[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Persist a vendor/place ID that the user has explicitly dismissed.
+ * The ID is added to localStorage and will be excluded from future recommendations.
+ * Max 100 entries; oldest entries are dropped when full.
+ */
+export function recordAvoidedVendor(id: number): void {
+  if (typeof window === "undefined") return;
+  try {
+    const existing = readAvoidedVendors();
+    if (existing.includes(id)) return; // already avoided
+    const updated = [id, ...existing].slice(0, 100);
+    localStorage.setItem(AVOIDED_KEY, JSON.stringify(updated));
+  } catch {
+    // localStorage errors are silent
+  }
+}
+
+/**
+ * Remove a vendor/place ID from the avoided list (undo dismiss).
+ */
+export function removeAvoidedVendor(id: number): void {
+  if (typeof window === "undefined") return;
+  try {
+    const updated = readAvoidedVendors().filter((v) => v !== id);
+    localStorage.setItem(AVOIDED_KEY, JSON.stringify(updated));
+  } catch {}
 }
 
 /**

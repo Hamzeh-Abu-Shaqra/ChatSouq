@@ -1310,6 +1310,12 @@ export async function recommendPlaces(
     }
   }
 
+  // ── Filter out places the user has explicitly dismissed ──────────────────
+  const avoidedPlaceIds = new Set(input.context?.history?.avoidedVendorIds ?? []);
+  if (avoidedPlaceIds.size > 0) {
+    ranked = ranked.filter((c) => !avoidedPlaceIds.has(c.id));
+  }
+
   // Build code-based why/pros as fallback, then enrich with Claude + web search if available.
   const whyMap  = new Map<number, string>(ranked.map((c, i) => [c.id, placeWhy(c, i === 0, queryLang)]));
   const tagsMap = new Map<number, string[]>();

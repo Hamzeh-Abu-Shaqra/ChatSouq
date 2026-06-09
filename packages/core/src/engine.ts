@@ -124,6 +124,12 @@ export async function recommend(
   const relaxedCategory = requestedCat && !chosen.c;
   const relaxedBudget = requestedBudget && !chosen.b;
 
+  // ── Filter out vendors the user has explicitly dismissed ──────────────────
+  const avoidedVendorIds = new Set(input.context?.history?.avoidedVendorIds ?? []);
+  if (avoidedVendorIds.size > 0) {
+    candidates = candidates.filter((c) => !avoidedVendorIds.has(c.vendorId));
+  }
+
   // ── Rank first, then apply CTR boost as a post-ranking score adjustment ─────
   // Previously, CTR was added to vecSim BEFORE ranking — this caused the boost
   // to be compressed by rescaleVec(), losing most of its signal. Applying it

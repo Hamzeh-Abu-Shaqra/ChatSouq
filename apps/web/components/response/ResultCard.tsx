@@ -1,9 +1,11 @@
 "use client";
 
-import { MapPin, Star, ShieldCheck, AlertTriangle } from "lucide-react";
+import { useState } from "react";
+import { MapPin, Star, ShieldCheck, AlertTriangle, X } from "lucide-react";
 import { motion } from "framer-motion";
 import type { Vendor } from "../../types/vendor";
 import { CTAButton } from "./CTAButton";
+import { recordAvoidedVendor } from "../../lib/signals/searchHistory";
 
 interface ResultCardProps {
   vendor: Vendor;
@@ -13,6 +15,34 @@ interface ResultCardProps {
 
 export function ResultCard({ vendor, index, isArabic = false }: ResultCardProps) {
   const name = isArabic && vendor.nameAr ? vendor.nameAr : vendor.name;
+  const [dismissed, setDismissed] = useState(false);
+
+  if (dismissed) {
+    return (
+      <div
+        style={{
+          border: "1px solid #E8D5A0",
+          borderRadius: "10px",
+          padding: "16px",
+          background: "#FAFAF8",
+          color: "#9B8A6A",
+          fontSize: "12px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          minHeight: "80px",
+        }}
+      >
+        <span>{isArabic ? "تم الإخفاء ✓" : "Dismissed ✓"}</span>
+        <button
+          onClick={() => setDismissed(false)}
+          style={{ background: "none", border: "none", cursor: "pointer", color: "#C9A84C", fontSize: "11px" }}
+        >
+          {isArabic ? "تراجع" : "Undo"}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -52,6 +82,30 @@ export function ResultCard({ vendor, index, isArabic = false }: ResultCardProps)
       >
         {vendor.rank}
       </span>
+
+      {/* Dismiss button — top-left (or top-right in RTL) */}
+      <button
+        title={isArabic ? "إخفاء" : "Not for me"}
+        onClick={() => { recordAvoidedVendor(vendor.id); setDismissed(true); }}
+        style={{
+          position: "absolute",
+          top: "10px",
+          left: isArabic ? "auto" : "10px",
+          right: isArabic ? "10px" : "auto",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          color: "#C8BBA0",
+          padding: "2px",
+          display: "flex",
+          alignItems: "center",
+          lineHeight: 1,
+        }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "#9B8A6A"; }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "#C8BBA0"; }}
+      >
+        <X size={12} strokeWidth={2} />
+      </button>
 
       {/* Name */}
       <h3

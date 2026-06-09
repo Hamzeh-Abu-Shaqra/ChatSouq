@@ -2,34 +2,120 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Design tokens ──────────────────────────────────────────────────────────── */
 :root {
   color-scheme: light;
-  --color-paper: #f5f3ee;
-  --color-ink: #0d1117;
-  --color-souq: #059669;
-  --color-gold: #C9A84C;
-  --color-gold-light: #FBF4E3;
-  --color-gold-dark: #7A5C10;
+
+  /* Gold */
+  --gold:        #C9A84C;
+  --gold-light:  #FBF4E3;
+  --gold-dark:   #7A5C10;
+  --gold-border: #E8D5A0;
+
+  /* Paper */
+  --paper:     #F9F8F6;
+  --paper-mid: #F3F1EE;
+  --white:     #FFFFFF;
+
+  /* Ink */
+  --ink:   #1A1A1A;
+  --muted: #6B7280;
+
+  /* Border */
+  --border:       #E8E4DC;
+  --border-hover: #D1CBC0;
+
+  /* Legacy (still referenced by locked chat components) */
+  --color-paper:       #F9F8F6;
+  --color-ink:         #0d1117;
+  --color-souq:        #059669;
+  --color-gold:        #C9A84C;
+  --color-gold-light:  #FBF4E3;
+  --color-gold-dark:   #7A5C10;
   --color-gold-border: #E8D5A0;
   --font-serif: var(--font-playfair), "Playfair Display", Georgia, "Times New Roman", serif;
 }
 
+/* ── Dark mode ──────────────────────────────────────────────────────────────── */
+.dark {
+  color-scheme: dark;
+
+  --paper:        #0F0F0F;
+  --paper-mid:    #1A1A1A;
+  --white:        #1C1C1C;
+  --ink:          #F0EBE1;
+  --muted:        #9CA3AF;
+  --border:       #2A2A2A;
+  --border-hover: #3A3A3A;
+  --gold-light:   #1C1505;
+  /* --gold stays #C9A84C always */
+
+  --color-paper:  #0F0F0F;
+  --color-ink:    #F0EBE1;
+}
+
+/* ── Base reset ─────────────────────────────────────────────────────────────── */
 html, body { padding: 0; margin: 0; }
 
 body {
-  background-color: var(--color-paper);
-  color: var(--color-ink);
+  background-color: var(--paper);
+  color: var(--ink);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  font-size: 15px;
+  line-height: 1.75;
 }
 
-/* ── Shimmer skeleton ────────────────────────── */
+/* ── Scrollbar — gold accent ─────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.22); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(201,168,76,0.40); }
+
+/* ── Scrollbar hide utility ─────────────────────────────────────────────── */
+.scrollbar-hide { scrollbar-width: none; -ms-overflow-style: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.chips-scroll { scrollbar-width: none; -ms-overflow-style: none; }
+.chips-scroll::-webkit-scrollbar { display: none; }
+
+/* ── Focus ──────────────────────────────────────────────────────────────────── */
+:focus-visible { outline: 2px solid #C9A84C; outline-offset: 2px; }
+
+/* ── Card hover ─────────────────────────────────────────────────────────────── */
+.card-hover { transition: transform 0.2s ease, border-color 0.2s ease; }
+.card-hover:hover { transform: translateY(-2px); border-color: var(--border-hover); }
+
+/* ── Font utilities ─────────────────────────────────────────────────────────── */
+.font-serif { font-family: var(--font-serif); }
+
+/* ── RTL base ───────────────────────────────────────────────────────────────── */
+[dir="rtl"] { text-align: right; }
+[dir="rtl"] .font-serif { font-family: "Noto Serif Arabic", Georgia, serif; }
+[dir="rtl"] .drop-cap::first-letter { display: none; } /* disable drop-cap in RTL */
+
+/* ── Drop cap ───────────────────────────────────────────────────────────────── */
+.drop-cap::first-letter {
+  font-family: var(--font-playfair), "Playfair Display", Georgia, serif;
+  font-size: 3.2rem;
+  font-weight: 500;
+  color: var(--gold);
+  float: left;
+  line-height: 0.82;
+  margin-right: 0.09em;
+  margin-top: 0.1em;
+}
+@media (max-width: 767px) {
+  /* Disable drop cap on mobile */
+  .drop-cap::first-letter { all: unset; }
+}
+
+/* ── Shimmer skeleton ───────────────────────────────────────────────────────── */
 .shimmer {
   position: relative;
   overflow: hidden;
-  background-color: #e8e5df;
+  background-color: var(--paper-mid);
   border-radius: 6px;
 }
 .shimmer::after {
@@ -37,12 +123,12 @@ body {
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.65) 50%, transparent);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55) 50%, transparent);
   animation: shimmer 1.6s ease-in-out infinite;
 }
 @keyframes shimmer { 100% { transform: translateX(100%); } }
 
-/* ── Typing dots ─────────────────────────────── */
+/* ── Typing dots ────────────────────────────────────────────────────────────── */
 @keyframes typing-dot {
   0%, 60%, 100% { transform: translateY(0);    opacity: 0.35; }
   30%           { transform: translateY(-5px); opacity: 1;    }
@@ -51,70 +137,56 @@ body {
 .typing-dot:nth-child(2) { animation-delay: 0.18s; }
 .typing-dot:nth-child(3) { animation-delay: 0.36s; }
 
-/* ── Scrollbar ───────────────────────────────── */
-::-webkit-scrollbar       { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(5,150,105,0.18); border-radius: 999px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(5,150,105,0.32); }
+/* ── Masthead rules (newspaper style — used by existing chat) ─────────────── */
+.masthead-rule { border: none; border-top: 2.5px solid var(--ink); }
+.masthead-rule-thin { border: none; border-top: 0.5px solid var(--border); }
 
-/* ── Focus ───────────────────────────────────── */
-:focus-visible { outline: 2px solid #059669; outline-offset: 2px; }
-
-/* ── Card hover ──────────────────────────────── */
-.card-hover { transition: transform 0.15s ease, box-shadow 0.15s ease; }
-.card-hover:hover { transform: translateY(-2px); }
-
-/* ── Serif headings ──────────────────────────── */
-.font-serif { font-family: var(--font-serif); }
-
-/* ── Newspaper masthead line ─────────────────── */
-.masthead-rule {
-  border: none;
-  border-top: 2.5px solid #0d1117;
-}
-.masthead-rule-thin {
-  border: none;
-  border-top: 1px solid rgba(13,17,23,0.14);
-}
-
-/* ── Fade-in-up ──────────────────────────────── */
+/* ── Fade-in-up ─────────────────────────────────────────────────────────────── */
 @keyframes fade-in-up {
   0%   { opacity: 0; transform: translateY(10px); }
   100% { opacity: 1; transform: translateY(0); }
 }
 .animate-fade-up { animation: fade-in-up 0.28s ease-out both; }
 
-/* ── Scale-in ────────────────────────────────── */
+/* ── Scale-in ───────────────────────────────────────────────────────────────── */
 @keyframes scale-in {
   0%   { opacity: 0; transform: scale(0.97); }
   100% { opacity: 1; transform: scale(1); }
 }
 .animate-scale-in { animation: scale-in 0.22s ease-out both; }
 
-/* ── Editorial drop-cap ──────────────────────── */
-.drop-cap::first-letter {
-  font-family: var(--font-playfair), "Playfair Display", Georgia, serif;
-  font-size: 3.2rem;
-  font-weight: 500;
-  color: var(--color-gold);
-  float: left;
-  line-height: 0.82;
-  margin-right: 0.09em;
-  margin-top: 0.1em;
-}
-
-/* ── Response container ──────────────────────── */
-.response-container { max-width: 100%; }
-
-/* ── Blink cursor ────────────────────────────── */
+/* ── Blink cursor ───────────────────────────────────────────────────────────── */
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 .cursor-blink::after {
   content: '|';
   animation: blink 1s step-end infinite;
-  color: var(--color-gold);
+  color: var(--gold);
   margin-left: 1px;
 }
 
-/* ── Hide scrollbar on filter chips ─────────────*/
-.chips-scroll { scrollbar-width: none; -ms-overflow-style: none; }
-.chips-scroll::-webkit-scrollbar { display: none; }
+/* ── Response container ─────────────────────────────────────────────────────── */
+.response-container { max-width: 100%; }
+
+/* ── Gold section label ─────────────────────────────────────────────────────── */
+.section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+/* ── Flat border utilities ──────────────────────────────────────────────────── */
+.border-default { border: 0.5px solid var(--border); }
+.border-gold    { border: 0.5px solid var(--gold-border); }
+
+/* ── Page transition ────────────────────────────────────────────────────────── */
+.page-enter {
+  animation: fade-in-up 0.20s ease-out both;
+}
+
+/* ── Nav transparency on homepage ──────────────────────────────────────────── */
+.nav-transparent {
+  background: transparent !important;
+  border-bottom-color: transparent !important;
+}

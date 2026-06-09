@@ -2,9 +2,11 @@ import type { Config } from "tailwindcss";
 
 export default {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
+        // ── Gold — the one true accent ─────────────────────────────────────
         gold: {
           DEFAULT: "#C9A84C",
           light:   "#FBF4E3",
@@ -16,18 +18,32 @@ export default {
           500:     "#C9A84C",
           700:     "#7A5C10",
         },
-        paper: "#f8f6f2",
-        ink: {
-          900: "#0d1117",
-          800: "#1f2937",
-          700: "#374151",
-          600: "#4b5563",
-          500: "#6b7280",
-          400: "#9ca3af",
-          300: "#d1d5db",
-          200: "#e5e7eb",
-          100: "#f3f4f6",
+        // ── Paper — warm off-white backgrounds ────────────────────────────
+        paper: {
+          DEFAULT: "#F9F8F6",
+          mid:     "#F3F1EE",
         },
+        // ── Ink — body text ───────────────────────────────────────────────
+        ink: {
+          DEFAULT: "#1A1A1A",
+          900:     "#0d1117",
+          800:     "#1f2937",
+          700:     "#374151",
+          600:     "#4b5563",
+          500:     "#6b7280",
+          400:     "#9ca3af",
+          300:     "#d1d5db",
+          200:     "#e5e7eb",
+          100:     "#f3f4f6",
+        },
+        // ── Muted — secondary text ─────────────────────────────────────────
+        muted: "#6B7280",
+        // ── Border tokens ─────────────────────────────────────────────────
+        border: {
+          DEFAULT: "#E8E4DC",
+          hover:   "#D1CBC0",
+        },
+        // ── Legacy sand/souq colors (used by existing chat components) ────
         sand: {
           50:  "#faf7f2",
           100: "#f3ede2",
@@ -44,90 +60,32 @@ export default {
           800: "#065f46",
           900: "#064e3b",
         },
-        amber: {
-          50:  "#fffbeb",
-          100: "#fef3c7",
-          400: "#fbbf24",
-          500: "#f59e0b",
-          700: "#b45309",
-        },
-        blue: {
-          50:  "#eff6ff",
-          100: "#dbeafe",
-          600: "#2563eb",
-          700: "#1d4ed8",
-        },
-        teal: {
-          50:  "#f0fdfa",
-          100: "#ccfbf1",
-          500: "#14b8a6",
-          600: "#0d9488",
-          700: "#0f766e",
-        },
-        orange: {
-          50:  "#fff7ed",
-          100: "#ffedd5",
-          500: "#f97316",
-          600: "#ea580c",
-          700: "#c2410c",
-        },
-        cyan: {
-          50:  "#ecfeff",
-          100: "#cffafe",
-          500: "#06b6d4",
-          600: "#0891b2",
-          700: "#0e7490",
-        },
-        rose: {
-          50:  "#fff1f2",
-          100: "#ffe4e6",
-          500: "#f43f5e",
-          600: "#e11d48",
-          700: "#be123c",
-        },
-        slate: {
-          50:  "#f8fafc",
-          100: "#f1f5f9",
-          200: "#e2e8f0",
-          500: "#64748b",
-          600: "#475569",
-          700: "#334155",
-        },
-        violet: {
-          50:  "#f5f3ff",
-          100: "#ede9fe",
-          600: "#7c3aed",
-          700: "#6d28d9",
-        },
-        green: {
-          50:  "#f0fdf4",
-          100: "#dcfce7",
-          600: "#16a34a",
-          700: "#15803d",
-        },
-        indigo: {
-          50:  "#eef2ff",
-          100: "#e0e7ff",
-          600: "#4f46e5",
-          700: "#4338ca",
-        },
+        // ── Semantic colors (kept for backwards compatibility) ─────────────
+        amber:   { 50: "#fffbeb", 100: "#fef3c7", 400: "#fbbf24", 500: "#f59e0b", 700: "#b45309" },
+        blue:    { 50: "#eff6ff", 100: "#dbeafe", 600: "#2563eb", 700: "#1d4ed8" },
+        teal:    { 50: "#f0fdfa", 100: "#ccfbf1", 500: "#14b8a6", 600: "#0d9488", 700: "#0f766e" },
+        orange:  { 50: "#fff7ed", 100: "#ffedd5", 500: "#f97316", 600: "#ea580c", 700: "#c2410c" },
+        cyan:    { 50: "#ecfeff", 100: "#cffafe", 500: "#06b6d4", 600: "#0891b2", 700: "#0e7490" },
+        rose:    { 50: "#fff1f2", 100: "#ffe4e6", 500: "#f43f5e", 600: "#e11d48", 700: "#be123c" },
+        slate:   { 50: "#f8fafc", 100: "#f1f5f9", 200: "#e2e8f0", 500: "#64748b", 600: "#475569", 700: "#334155" },
+        violet:  { 50: "#f5f3ff", 100: "#ede9fe", 600: "#7c3aed", 700: "#6d28d9" },
+        green:   { 50: "#f0fdf4", 100: "#dcfce7", 600: "#16a34a", 700: "#15803d" },
+        indigo:  { 50: "#eef2ff", 100: "#e0e7ff", 600: "#4f46e5", 700: "#4338ca" },
         emerald: { 50: "#ecfdf5" },
-        purple: {
-          50:  "#faf5ff",
-          100: "#f3e8ff",
-          700: "#7e22ce",
-        },
-        pink:   { 50: "#fdf2f8" },
-        yellow: { 50: "#fefce8" },
+        purple:  { 50: "#faf5ff", 100: "#f3e8ff", 700: "#7e22ce" },
+        pink:    { 50: "#fdf2f8" },
+        yellow:  { 50: "#fefce8" },
       },
       fontFamily: {
-        sans: ["var(--font-inter)", "ui-sans-serif", "system-ui", "-apple-system", "sans-serif"],
+        sans:  ["var(--font-inter)", "ui-sans-serif", "system-ui", "-apple-system", "sans-serif"],
         serif: ["var(--font-playfair)", "Georgia", "Times New Roman", "serif"],
       },
       fontSize: {
         "2xs": ["0.65rem", { lineHeight: "1rem" }],
       },
+      // ── No shadows — flat design only ─────────────────────────────────────
       boxShadow: {
+        // Keep legacy values for existing locked components
         sm:     "0 1px 3px rgba(0,0,0,0.06)",
         card:   "0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06)",
         float:  "0 4px 24px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)",
@@ -136,11 +94,17 @@ export default {
         pro:    "0 8px 32px -4px rgba(8,145,178,0.16), 0 2px 8px rgba(0,0,0,0.05)",
         news:   "0 4px 20px -2px rgba(225,29,72,0.12), 0 2px 8px rgba(0,0,0,0.05)",
         place:  "0 4px 20px -2px rgba(5,150,105,0.12), 0 2px 8px rgba(0,0,0,0.04)",
+        // New: flat-only
+        none:   "none",
       },
       keyframes: {
         "fade-up": {
           "0%":   { opacity: "0", transform: "translateY(8px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "fade-in": {
+          "0%":   { opacity: "0" },
+          "100%": { opacity: "1" },
         },
         "scale-in": {
           "0%":   { opacity: "0", transform: "scale(0.97)" },
@@ -149,10 +113,21 @@ export default {
         shimmer: {
           "100%": { transform: "translateX(100%)" },
         },
+        "pulse-gold": {
+          "0%, 100%": { opacity: "1" },
+          "50%":       { opacity: "0.5" },
+        },
       },
       animation: {
-        "fade-up":  "fade-up 0.30s ease-out both",
-        "scale-in": "scale-in 0.25s ease-out both",
+        "fade-up":    "fade-up 0.30s ease-out both",
+        "fade-in":    "fade-in 0.25s ease-out both",
+        "scale-in":   "scale-in 0.25s ease-out both",
+        "pulse-gold": "pulse-gold 2s ease-in-out infinite",
+      },
+      transitionDuration: {
+        "150": "150ms",
+        "200": "200ms",
+        "350": "350ms",
       },
     },
   },

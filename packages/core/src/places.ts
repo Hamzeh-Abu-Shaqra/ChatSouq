@@ -10,6 +10,13 @@ import type {
   RecommendInput,
   ResultPlace,
 } from "./types";
+import { extractRichIntent } from "./placeIntent";
+import { rankPlacesRich } from "./placeRanker";
+import {
+  buildCacheKey,
+  getCachedPlaceResponse,
+  setCachedPlaceResponse,
+} from "./responseCache";
 
 // Jordan's 12 governorates + common aliases + Arabic names.
 // Detecting one scopes a place query to a region.
@@ -1201,6 +1208,13 @@ export async function recommendPlaces(
   const embedder = deps.embedder ?? getEmbedder();
   const limit = Math.max(1, Math.min(input.limit ?? 4, 8));
 
+  // ── Cache check ─────────────────────────────────────────────────────────────
+  const cacheKey = buildCacheKey(input.query, { memoryBlock: input.memoryBlock, limit });
+  if (cacheKey) {
+    const cached = getCachedPlaceResponse<PlaceRecommendationResponse>(cacheKey);
+    if (cached) return { ...cached, meta: { ...cached.meta, tookMs: Date.now() - started } };
+  }
+
   const categories = await getPlaceCategories();
 
   const queryLang: "en" | "ar" = /[؀-ۿ]/.test(input.query) ? "ar" : "en";
@@ -1209,6 +1223,8 @@ export async function recommendPlaces(
   // this lets scraped sources (jordan_places, jordan_restaurants) serve results
   // immediately without waiting for the full OSM ingest to complete.
   const intent = parsePlaceIntent(input.query, categories);
+  // Enrich with 7-dimension rich intent (budget, occasion, recipient, etc.)
+  const richIntent = extractRichIntent(intent, input.query);
 
   const embedText = [input.query, ...intent.categories, ...intent.keywords].filter(Boolean).join(" ");
 
@@ -1262,7 +1278,7 @@ export async function recommendPlaces(
   // in rankPlaces, ensuring the specifically-named place beats generic category results.
   const merged  = deduplicateCandidates([...nameMatches, ...candidates, ...scraped]);
 
-  const ranked = rankPlaces(merged, intent).slice(0, limit);
+  const ranked = rankPlacesRich(merged, richIntent).slice(0, limit);
 
   // Build code-based why/pros as fallback, then enrich with Claude + web search if available.
   const whyMap  = new Map<number, string>(ranked.map((c, i) => [c.id, placeWhy(c, i === 0, queryLang)]));
@@ -1294,31 +1310,63 @@ export async function recommendPlaces(
         name: ARABIC_CHAR_RE.test(c.name) ? (c.nameAr ?? c.name) : c.name,
         category: c.category,
         subcategory: c.subcategory ?? null,
-        city: c.city ?? c.governorate ?? "Jordan",
+        neighborhood: c.city ?? null,
+        governorate: c.governorate ?? null,
         address: c.address ? c.address.slice(0, 80) : null,
         rating: c.rating != null ? `${c.rating}/5` : null,
         phone: c.phone ? "yes" : "no",
         website: c.website ? "yes" : "no",
         openingHours: c.openingHours ?? null,
         role: i === 0 ? "best" : "alternative",
+        // Expose key search_text snippets (first 120 chars) so LLM can pick up features
+        features: c.searchText ? c.searchText.slice(0, 120) : null,
       }));
       const langInstruction = queryLang === "ar"
         ? "IMPORTANT: Write both the 'summary' and all 'why' values in Arabic only."
         : "Write both the 'summary' and all 'why' values in English.";
       const memCtx = input.memoryBlock ? `\nUSER CONTEXT (use to personalise):\n${input.memoryBlock}` : "";
+      // Build context signals for the LLM
+      const occasionCtx = richIntent.occasion.type !== "none"
+        ? ` Occasion: ${richIntent.occasion.type}${richIntent.occasion.formality ? ` (${richIntent.occasion.formality})` : ""}.`
+        : "";
+      const recipientCtx = richIntent.recipient.who
+        ? ` For: ${richIntent.recipient.who}.`
+        : "";
+      const budgetCtx = richIntent.budget.max !== null
+        ? ` Budget: under ${richIntent.budget.max} JOD (${richIntent.budget.sensitivity}).`
+        : richIntent.budget.tier
+        ? ` Budget preference: ${richIntent.budget.tier}.`
+        : "";
+      const neighborhoodCtx = richIntent.location.neighborhood
+        ? ` Location: ${richIntent.location.neighborhood}.`
+        : "";
+      const reqCtx = richIntent.requirements.length > 0
+        ? ` Requirements: ${richIntent.requirements.join(", ")}.`
+        : "";
+      const contextLine = [occasionCtx, recipientCtx, budgetCtx, neighborhoodCtx, reqCtx]
+        .filter(Boolean).join("") || "";
+
       const placeRes = await provider.complete({
         system:
-          "You are ChatSouq, Amman's local guide. " +
-          "Write an editorial-quality response in three distinct text blocks plus per-item data. " +
-          "intro: a rich 2–4 sentence editorial paragraph about the search context (drop-cap worthy, no bullet points). " +
-          "connector: a single italic sentence (max 30 words) connecting the top pick to the alternatives below. " +
-          "insight: a 1–2 sentence practical tip (booking, timing, payment, parking). " +
-          "followUps: 4 short follow-up queries the user might want next (max 8 words each). " +
-          "For each place: a 1-sentence 'why' (max 20 words) and up to 5 short tags (e.g. Rooftop, Walk-in, Private rooms). " +
-          `Use ONLY provided facts — no invented details. ${langInstruction}` +
+          "You are ChatSouq — write as a seasoned Amman local journalist, not a chatbot.\n\n" +
+          "FORBIDDEN WORDS: great, amazing, perfect, wonderful, excellent, fantastic, delightful, lovely. Use specific adjectives instead.\n\n" +
+          "OUTPUT FORMAT — return JSON with these exact keys:\n" +
+          "  intro: 2–3 sentence editorial paragraph. First sentence MUST open with a specific local insight — a trend, a neighbourhood detail, a contrast, or a seasonal fact. Never start with 'Looking for a...'\n" +
+          "  connector: one italic bridge sentence (max 22 words) linking top pick to the alternatives.\n" +
+          "  insight: 1–2 sentences of actionable local knowledge — best time to go, how to book, what to order, parking, dress code.\n" +
+          "  followUps: exactly 4 follow-up queries the user might want next (max 9 words each).\n" +
+          "  items: array where each entry has:\n" +
+          "    id: number (must match the provided place id)\n" +
+          "    why: max 18 words. Structure:\n" +
+          "      - If budget context exists: open with price signal ('Around X–Y JOD' or 'Budget-friendly option').\n" +
+          "      - Then: location/occasion fit ('In [neighbourhood]', 'Good for [occasion]', 'Walking distance from...').\n" +
+          "      - End with one specific quality signal (rating, cuisine style, unique feature, what it's known for).\n" +
+          "    tags: up to 5 short tags (e.g. Rooftop, Walk-in OK, Private rooms, Delivery, Valet, Ladies section, Open late).\n\n" +
+          `Use ONLY facts from the provided data — no invented prices, dishes, or phone numbers. ${langInstruction}` +
+          (contextLine ? `\nQUERY CONTEXT:${contextLine}` : "") +
           memCtx +
           (webContext ? `\n${webContext}` : "") +
-          '\nReturn JSON exactly: {"intro":"...","connector":"...","insight":"...","followUps":["...","...","...","..."],"items":[{"id":number,"why":"...","tags":["..."]}]}',
+          '\nReturn JSON: {"intro":"...","connector":"...","insight":"...","followUps":["...","...","...","..."],"items":[{"id":number,"why":"...","tags":["..."]}]}',
         messages: [{
           role: "user",
           content: `User asked for: "${input.query}"\nPlaces: ${JSON.stringify(placeItems)}`,
@@ -1352,14 +1400,15 @@ export async function recommendPlaces(
 
   const items: PlaceResultItem[] = ranked.map((c, i) => ({
     place: toResultPlace(c),
-    score: Number(c.score.toFixed(4)),
+    // Normalise score from 0–100 to 0–1 so the API contract stays consistent
+    score: Number((c.score / 100).toFixed(4)),
     isBest: i === 0,
     why: whyMap.get(c.id) ?? placeWhy(c, i === 0, queryLang),
     pros: placePros(c, intent, queryLang),
     tags: tagsMap.get(c.id),
   }));
 
-  return {
+  const response: PlaceRecommendationResponse = {
     kind: "places",
     query: input.query,
     intent,
@@ -1378,4 +1427,9 @@ export async function recommendPlaces(
       relaxedGovernorate,
     },
   };
+
+  // ── Cache store ─────────────────────────────────────────────────────────────
+  if (cacheKey) setCachedPlaceResponse(cacheKey, response);
+
+  return response;
 }

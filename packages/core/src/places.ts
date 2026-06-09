@@ -396,7 +396,9 @@ const PLACE_HINTS: Record<string, string[]> = {
   "حفل زفاف":       ["Wedding Hall"],
 
   // ── Camping / Outdoor Activities ─────────────────────────────────────────
-  camping:           ["Campsite", "Outdoor Area", "Nature Reserve", "Park"],
+  // NOTE: bare "camping" intentionally omitted — it is too ambiguous.
+  // "camping equipment", "camping gear", "camping table" are product queries.
+  // Only compound forms that signal a *location* intent are included below.
   campsite:          ["Campsite", "Outdoor Area"],
   "camping site":    ["Campsite", "Outdoor Area"],
   "camping spot":    ["Campsite", "Outdoor Area", "Nature Reserve"],

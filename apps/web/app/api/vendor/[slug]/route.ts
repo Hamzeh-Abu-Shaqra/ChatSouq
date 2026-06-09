@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDb } from "@chatsouq/db";
+import { db } from "@chatsouq/db";
 import { sql } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
@@ -22,7 +22,6 @@ export async function GET(
 ) {
   try {
     const { slug } = await params;
-    const db = getDb();
 
     // Parse "type-id" format, e.g. "place-42" or just "42"
     let source: "place" | "restaurant" | "person" | null = null;

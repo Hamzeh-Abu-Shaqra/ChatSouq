@@ -451,10 +451,17 @@ def text_search_professionals(query, subcategory):
 
 # ── OpenStreetMap / Overpass API ──────────────────────────────────────────────
 
+OVERPASS_MIRRORS = [
+    "https://overpass-api.de/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
+    "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+]
+
 def fetch_overpass(amenity_type, subcategory, healthcare_specialty=None):
     """
     Fetch places from OpenStreetMap via Overpass API.
     Used for pharmacies, clinics, dental — OSM coverage in Amman is excellent.
+    Tries multiple mirrors with retry delay to handle rate-limiting.
     """
     lat_min, lng_min = AMMAN_LAT_MIN, AMMAN_LNG_MIN
     lat_max, lng_max = AMMAN_LAT_MAX, AMMAN_LNG_MAX
@@ -462,7 +469,7 @@ def fetch_overpass(amenity_type, subcategory, healthcare_specialty=None):
 
     if healthcare_specialty:
         query = f"""
-[out:json][timeout:30];
+[out:json][timeout:40];
 (
   node["amenity"="{amenity_type}"]["healthcare:specialty"="{healthcare_specialty}"]({bbox});
   way["amenity"="{amenity_type}"]["healthcare:specialty"="{healthcare_specialty}"]({bbox});
@@ -472,22 +479,30 @@ out body;
 """
     else:
         query = f"""
-[out:json][timeout:30];
+[out:json][timeout:40];
 (
   node["amenity"="{amenity_type}"]({bbox});
   way["amenity"="{amenity_type}"]({bbox});
 );
 out body;
 """
-    try:
-        res = requests.post(
-            "https://overpass-api.de/api/interpreter",
-            data={"data": query},
-            timeout=40,
-        ).json()
-        elements = res.get("elements", [])
-    except Exception as e:
-        print(f"    Overpass error: {e}")
+
+    elements = []
+    for mirror in OVERPASS_MIRRORS:
+        try:
+            resp = requests.post(mirror, data={"data": query}, timeout=50)
+            if resp.status_code != 200:
+                print(f"    Overpass mirror {mirror} returned {resp.status_code}, trying next...")
+                time.sleep(3)
+                continue
+            res = resp.json()
+            elements = res.get("elements", [])
+            break  # success
+        except Exception as e:
+            print(f"    Overpass error on {mirror}: {e}, trying next...")
+            time.sleep(3)
+    else:
+        print("    All Overpass mirrors failed")
         return []
 
     found = []

@@ -1055,110 +1055,8 @@ interface ScoredPlace extends PlaceCandidate {
   keywordHits: number;
 }
 
-// vec reduced further — semantic similarity alone should not win over completeness
-// completeness tripled (0.04 → 0.13) — an OSM stub with no contact info must not rank #1
-// rating increased (0.06 → 0.11) — Google Maps / Talabat stars are a strong quality proxy
-// total = 1.00
-const PLACE_WEIGHTS = {
-  vec:          0.25,
-  txt:          0.05,
-  keyword:      0.22,
-  category:     0.13,
-  geo:          0.11,
-  rating:       0.11,  // Google Maps / Talabat 0-5 score
-  completeness: 0.13,  // phone + address + hours + coords + website
-};
-
 function rescaleVec(cos: number): number {
   return Math.max(0, Math.min(1, (cos - 0.15) / 0.5));
-}
-
-/**
- * Data completeness score [0..1] — rewards places that have the information
- * a user actually needs: a number to call, an address to navigate to, opening
- * hours so they know when to go, coordinates for the map, and a website.
- *
- * Points (max 8):
- *   phone present        +2  (most actionable — can call right away)
- *   address present      +2  (can navigate there)
- *   website present      +1  (can research / book online)
- *   openingHours present +1  (know when it's open)
- *   lat + lng present    +1  (mappable)
- *   sourceUrl present    +1  (verified external source)
- */
-function placeCompletenessScore(c: PlaceCandidate): number {
-  let pts = 0;
-  if (c.phone)                           pts += 2;
-  if (c.address)                         pts += 2;
-  if (c.website)                         pts += 1;
-  if (c.openingHours)                    pts += 1;
-  if (c.lat !== null && c.lng !== null)  pts += 1;
-  if (c.sourceUrl)                       pts += 1;
-  return pts / 8;
-}
-
-/**
- * Normalize a 0-5 star rating to [0..1].
- * Returns 0 when no rating is available (not a penalty — just neutral).
- */
-function placeRatingScore(c: PlaceCandidate): number {
-  if (c.rating === null || c.rating === undefined) return 0;
-  return Math.max(0, Math.min(1, c.rating / 5));
-}
-
-function rankPlaces(candidates: PlaceCandidate[], intent: PlaceIntent): ScoredPlace[] {
-  const wantedCats = new Set(intent.categories.map((c) => c.toLowerCase()));
-  const scored = candidates.map((c) => {
-    const hay = (c.searchText || c.name).toLowerCase();
-    let hits = 0;
-    for (const k of intent.keywords) if (hay.includes(k)) hits++;
-    const keyword = intent.keywords.length ? hits / intent.keywords.length : 0;
-    const category = wantedCats.size > 0 && wantedCats.has(c.category.toLowerCase()) ? 1 : 0;
-    const geo =
-      intent.governorate && c.governorate && c.governorate === intent.governorate ? 1 : 0;
-    const score =
-      PLACE_WEIGHTS.vec          * rescaleVec(c.vecSim) +
-      PLACE_WEIGHTS.txt          * Math.max(0, Math.min(1, c.txtSim)) +
-      PLACE_WEIGHTS.keyword      * keyword +
-      PLACE_WEIGHTS.category     * category +
-      PLACE_WEIGHTS.geo          * geo +
-      PLACE_WEIGHTS.rating       * placeRatingScore(c) +
-      PLACE_WEIGHTS.completeness * placeCompletenessScore(c);
-    return { ...c, score, keywordHits: hits };
-  });
-  scored.sort((a, b) => b.score - a.score || b.vecSim - a.vecSim);
-
-  // Hard guard 1: when the user asked for a specific category (e.g. "Hotel"),
-  // the #1 pick MUST match that category — a post office or pharmacy should
-  // never beat a hotel just because it has better completeness/rating scores.
-  if (intent.categories.length > 0 && scored.length > 1) {
-    const topCat = scored[0]!.category.toLowerCase();
-    if (!wantedCats.has(topCat)) {
-      const firstCatMatch = scored.findIndex((c) => wantedCats.has(c.category.toLowerCase()));
-      if (firstCatMatch > 0) {
-        const [catMatch] = scored.splice(firstCatMatch, 1);
-        scored.unshift(catMatch!);
-      }
-    }
-  }
-
-  // Hard guard 2: the #1 pick must have at least one piece of actionable data.
-  // An OSM stub with only coordinates but no phone / address / website should
-  // never win when alternatives with real contact info exist.
-  if (scored.length > 1 && !hasActionableData(scored[0]!)) {
-    const firstWithData = scored.findIndex(hasActionableData);
-    if (firstWithData > 0) {
-      const [stub] = scored.splice(firstWithData, 1);
-      scored.unshift(stub!);
-    }
-  }
-
-  return scored;
-}
-
-/** At least one piece of contact/navigation info the user can actually act on. */
-function hasActionableData(c: PlaceCandidate): boolean {
-  return !!(c.phone || c.address || c.website || c.sourceUrl);
 }
 
 function toResultPlace(c: PlaceCandidate): ResultPlace {
@@ -1367,7 +1265,7 @@ export async function recommendPlaces(
   // Previously this was limit*2 (8–16 total) — too small to surface the best result.
   const scraped = await fetchScrapedCandidates(intent, queryVec, input.query, Math.min(Math.max(limit * 15, 60), 120));
   // Name matches go FIRST — their txtSim=1.0 / vecSim=0.95 will naturally win
-  // in rankPlaces, ensuring the specifically-named place beats generic category results.
+  // in rankPlacesRich, ensuring the specifically-named place beats generic category results.
   const merged  = deduplicateCandidates([...nameMatches, ...candidates, ...scraped]);
 
   const ranked = rankPlacesRich(merged, richIntent).slice(0, limit);
@@ -1383,13 +1281,13 @@ export async function recommendPlaces(
     // ── Web search (best-effort — Claude runs even if this fails) ─────────────
     let webContext = "";
     const hasTrendSignal = /trending|this week|new\b|open(ed|ing)|pop.?up|latest|recent|what.?s/i.test(input.query);
-    const webSearchQuery = hasTrendSignal
-      ? `${input.query} Amman Jordan`
-      : [
-          ...(intent.categories.length > 0 ? [intent.categories[0]!] : []),
-          ...(intent.district ? [intent.district] : []),
-          intent.governorate ?? "Amman",
-        ].join(" ") || input.query;
+    // Always anchor the web search on the original query — reconstructing from
+    // intent tokens (category + district + governorate) loses nuance like occasion,
+    // requirements, and the user's own phrasing which drives better results.
+    const locationSuffix = richIntent.location.neighborhood
+      ? ` ${richIntent.location.neighborhood} Amman Jordan`
+      : ` ${intent.governorate ?? "Amman"} Jordan`;
+    const webSearchQuery = `${input.query}${hasTrendSignal ? "" : locationSuffix}`;
     try {
       const webResults = await webSearch(webSearchQuery, { maxResults: 3, searchDepth: "basic" });
       webContext = formatWebResults(webResults, "LIVE WEB INFO");

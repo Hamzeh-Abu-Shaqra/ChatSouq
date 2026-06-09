@@ -17,6 +17,7 @@ import {
   getCachedPlaceResponse,
   setCachedPlaceResponse,
 } from "./responseCache";
+import { generateFollowUps } from "./followUpGenerator";
 
 // Jordan's 12 governorates + common aliases + Arabic names.
 // Detecting one scopes a place query to a region.
@@ -1415,7 +1416,9 @@ export async function recommendPlaces(
     summary: llmSummary ?? buildPlaceCodeSummary(ranked, intent, queryLang),
     connectorText: llmConnector ?? undefined,
     insightText: llmInsight ?? undefined,
-    followUpPrompts: llmFollowUps.length ? llmFollowUps : undefined,
+    followUpPrompts: llmFollowUps.length
+      ? llmFollowUps
+      : generateFollowUps(richIntent, ranked[0]?.name),
     best: items[0] ?? null,
     alternatives: items.slice(1),
     meta: {

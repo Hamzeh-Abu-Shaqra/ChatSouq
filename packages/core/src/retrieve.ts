@@ -45,7 +45,9 @@ export async function retrieve(
   queryText: string,
   opts: RetrieveOpts
 ): Promise<Candidate[]> {
-  const poolSize = opts.poolSize ?? 150;
+  // 250-item pool gives enough recall for large categories (Watches: 16k, Beauty: 8k)
+  // without blowing query time. rank.ts then does the expensive per-item scoring.
+  const poolSize = opts.poolSize ?? 250;
   const vecLit = toVectorLiteral(queryVec);
 
   const conditions = [sql`l.embedding IS NOT NULL`];
@@ -83,6 +85,11 @@ export async function retrieve(
 
   const whereClause = sql.join(conditions, sql` AND `);
 
+  // Trigram target: name + search_text gives the best lexical signal.
+  // Order by: vec dominates (×3) + trigram tiebreaker (×1).
+  // Previously txtSim had a ×2 coefficient which drowned out semantic meaning —
+  // this was the primary cause of off-topic results bubbling up into the pool.
+  const trigramTarget = sql`(l.name || ' ' || coalesce(l.search_text, ''))`;
   const rows = (await db.execute(sql`
     SELECT
       l.id, l.vendor_id AS "vendorId", l.name, l.description, l.category,
@@ -90,11 +97,14 @@ export async function retrieve(
       l.search_text AS "searchText",
       v.business_name AS "vendorName", v.location AS "vendorLocation", v.website_url AS "vendorWebsite",
       (1 - (l.embedding <=> ${vecLit}::vector)) AS "vecSim",
-      similarity(coalesce(l.search_text, ''), ${queryText}) AS "txtSim"
+      similarity(${trigramTarget}, ${queryText}) AS "txtSim"
     FROM listings l
     JOIN vendors v ON v.id = l.vendor_id
     WHERE ${whereClause}
-    ORDER BY (1 - (l.embedding <=> ${vecLit}::vector)) + 2.0 * similarity(coalesce(l.search_text, ''), ${queryText}) DESC
+    ORDER BY
+      (1 - (l.embedding <=> ${vecLit}::vector)) * 3.0
+      + similarity(${trigramTarget}, ${queryText})
+    DESC
     LIMIT ${poolSize}
   `)) as unknown as Record<string, unknown>[];
 

@@ -1264,9 +1264,13 @@ export async function recommendPlaces(
 
   const ranked = rankPlaces(merged, intent).slice(0, limit);
 
-  // Build code-based why/pros/cons as fallback, then enrich with Claude + web search if available.
-  const whyMap = new Map<number, string>(ranked.map((c, i) => [c.id, placeWhy(c, i === 0, queryLang)]));
-  let llmSummary: string | null = null;
+  // Build code-based why/pros as fallback, then enrich with Claude + web search if available.
+  const whyMap  = new Map<number, string>(ranked.map((c, i) => [c.id, placeWhy(c, i === 0, queryLang)]));
+  const tagsMap = new Map<number, string[]>();
+  let llmSummary:   string | null   = null;
+  let llmConnector: string | null   = null;
+  let llmInsight:   string | null   = null;
+  let llmFollowUps: string[]        = [];
   if (!provider.isMock && ranked.length > 0) {
     try {
       // Fire web search in parallel with building the place list — no added latency
@@ -1305,33 +1309,40 @@ export async function recommendPlaces(
       const placeRes = await provider.complete({
         system:
           "You are ChatSouq, Amman's local guide. " +
-          "Write a direct, conversational 2–3 sentence reply that actually answers the user's request. " +
-          "Mention the top pick and key alternatives by **bolding** their names. " +
-          "Be specific: mention rating, what makes it stand out, or neighbourhood. " +
-          "If the user asked for a specific named place, confirm or clarify that. " +
-          "Then write a 1-sentence 'why' per place (max 20 words). " +
-          `Use ONLY the provided facts — no invented details. ${langInstruction}` +
+          "Write an editorial-quality response in three distinct text blocks plus per-item data. " +
+          "intro: a rich 2–4 sentence editorial paragraph about the search context (drop-cap worthy, no bullet points). " +
+          "connector: a single italic sentence (max 30 words) connecting the top pick to the alternatives below. " +
+          "insight: a 1–2 sentence practical tip (booking, timing, payment, parking). " +
+          "followUps: 4 short follow-up queries the user might want next (max 8 words each). " +
+          "For each place: a 1-sentence 'why' (max 20 words) and up to 5 short tags (e.g. Rooftop, Walk-in, Private rooms). " +
+          `Use ONLY provided facts — no invented details. ${langInstruction}` +
           memCtx +
           (webContext ? `\n${webContext}` : "") +
-          '\nReturn JSON exactly: {"summary": "...", "items": [{"id": number, "why": "..."}]}',
+          '\nReturn JSON exactly: {"intro":"...","connector":"...","insight":"...","followUps":["...","...","...","..."],"items":[{"id":number,"why":"...","tags":["..."]}]}',
         messages: [{
           role: "user",
           content: `User asked for: "${input.query}"\nPlaces: ${JSON.stringify(placeItems)}`,
         }],
         json: true,
         temperature: 0.4,
-        maxTokens: 900,
+        maxTokens: 1100,
       });
-      // Robust parsing: LLM may return old array format [{id,why}] or new {summary,items}
       const raw: unknown = JSON.parse(placeRes.text);
-      const parsed: { summary?: string; items?: { id: number; why: string }[] } =
-        Array.isArray(raw) ? { items: raw as { id: number; why: string }[] } : (raw as typeof parsed);
-      if (typeof parsed.summary === "string" && parsed.summary.trim()) {
-        llmSummary = parsed.summary.trim();
-      }
+      const parsed: {
+        intro?: string; connector?: string; insight?: string; followUps?: string[];
+        summary?: string; items?: { id: number; why: string; tags?: string[] }[];
+      } = Array.isArray(raw) ? { items: raw as { id: number; why: string }[] } : (raw as typeof parsed);
+
+      if (typeof parsed.intro === "string" && parsed.intro.trim()) llmSummary = parsed.intro.trim();
+      else if (typeof parsed.summary === "string" && parsed.summary.trim()) llmSummary = parsed.summary.trim();
+      if (typeof parsed.connector === "string" && parsed.connector.trim()) llmConnector = parsed.connector.trim();
+      if (typeof parsed.insight === "string" && parsed.insight.trim()) llmInsight = parsed.insight.trim();
+      if (Array.isArray(parsed.followUps)) llmFollowUps = parsed.followUps.filter((s): s is string => typeof s === "string").slice(0, 4);
+
       if (Array.isArray(parsed.items)) {
         for (const p of parsed.items) {
           if (typeof p.why === "string" && p.why.trim()) whyMap.set(p.id, p.why.trim());
+          if (Array.isArray(p.tags) && p.tags.length) tagsMap.set(p.id, p.tags.slice(0, 5));
         }
       }
     } catch {
@@ -1345,6 +1356,7 @@ export async function recommendPlaces(
     isBest: i === 0,
     why: whyMap.get(c.id) ?? placeWhy(c, i === 0, queryLang),
     pros: placePros(c, intent, queryLang),
+    tags: tagsMap.get(c.id),
   }));
 
   return {
@@ -1352,6 +1364,9 @@ export async function recommendPlaces(
     query: input.query,
     intent,
     summary: llmSummary ?? buildPlaceCodeSummary(ranked, intent, queryLang),
+    connectorText: llmConnector ?? undefined,
+    insightText: llmInsight ?? undefined,
+    followUpPrompts: llmFollowUps.length ? llmFollowUps : undefined,
     best: items[0] ?? null,
     alternatives: items.slice(1),
     meta: {

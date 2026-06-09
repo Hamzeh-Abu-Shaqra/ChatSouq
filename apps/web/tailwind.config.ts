@@ -5,6 +5,17 @@ export default {
   theme: {
     extend: {
       colors: {
+        gold: {
+          DEFAULT: "#C9A84C",
+          light:   "#FBF4E3",
+          dark:    "#7A5C10",
+          border:  "#E8D5A0",
+          50:      "#FBF4E3",
+          100:     "#F5E4B8",
+          200:     "#E8D5A0",
+          500:     "#C9A84C",
+          700:     "#7A5C10",
+        },
         paper: "#f8f6f2",
         ink: {
           900: "#0d1117",
@@ -110,15 +121,8 @@ export default {
         yellow: { 50: "#fefce8" },
       },
       fontFamily: {
-        sans: [
-          "var(--font-inter)",
-          "ui-sans-serif",
-          "system-ui",
-          "-apple-system",
-          "Segoe UI",
-          "Roboto",
-          "sans-serif",
-        ],
+        sans: ["var(--font-inter)", "ui-sans-serif", "system-ui", "-apple-system", "sans-serif"],
+        serif: ["var(--font-playfair)", "Georgia", "Times New Roman", "serif"],
       },
       fontSize: {
         "2xs": ["0.65rem", { lineHeight: "1rem" }],

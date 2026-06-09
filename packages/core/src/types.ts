@@ -46,6 +46,8 @@ export interface ResultItem {
   isBest: boolean;
   why: string;
   pros: string[];
+  /** Short display tags (max 5), e.g. ["Wireless", "Noise cancelling"]. */
+  tags?: string[];
 }
 
 export interface RecommendationResponse {
@@ -53,6 +55,12 @@ export interface RecommendationResponse {
   query: string;
   constraints: Constraints;
   summary: string;
+  /** Italic connector text between featured card and alternatives grid. */
+  connectorText?: string;
+  /** Practical tips / insight callout. */
+  insightText?: string;
+  /** Suggested follow-up query prompts. */
+  followUpPrompts?: string[];
   best: ResultItem | null;
   alternatives: ResultItem[];
   meta: {
@@ -92,6 +100,8 @@ export interface PlaceResultItem {
   isBest: boolean;
   why: string;
   pros: string[];
+  /** Short display tags (max 5), e.g. ["Rooftop", "Romantic", "Reservations open"]. */
+  tags?: string[];
 }
 
 export interface PlaceIntent {
@@ -110,6 +120,12 @@ export interface PlaceRecommendationResponse {
   query: string;
   intent: PlaceIntent;
   summary: string;
+  /** Italic connector text between featured card and alternatives grid. */
+  connectorText?: string;
+  /** Practical tips / insight callout. */
+  insightText?: string;
+  /** Suggested follow-up query prompts. */
+  followUpPrompts?: string[];
   best: PlaceResultItem | null;
   alternatives: PlaceResultItem[];
   meta: {

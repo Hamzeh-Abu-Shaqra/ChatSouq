@@ -3,12 +3,12 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import type { AssistResponse, NeighborhoodCard, InfoCard, ConvMessage } from "@chatsouq/core";
 import {
-  AltCard, BestCard,
-  PlaceAltCard, PlaceBestCard,
   NeighborhoodBestCard, NeighborhoodAltCard,
   GeneralInfoCard, NewsInfoCard, CompanyInfoCard,
   NewspaperFront, SkeletonCard,
 } from "../components/cards";
+import { ResponseContainer } from "../components/response/ResponseContainer";
+import { adaptResponse } from "../types/vendor";
 
 const SESSION_KEY = "chatsouq_session_id";
 
@@ -197,6 +197,17 @@ export default function Page() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [turns]);
+
+  /* Follow-up prompt events from ResponseContainer -------------------------  */
+  useEffect(() => {
+    function handleFollowUp(e: Event) {
+      const detail = (e as CustomEvent<{ prompt: string }>).detail;
+      if (detail?.prompt) ask(detail.prompt);
+    }
+    window.addEventListener("chatsouq:followup", handleFollowUp);
+    return () => window.removeEventListener("chatsouq:followup", handleFollowUp);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [busy]);
 
   /* Feedback --------------------------------------------------------------- */
   const sendFeedback = useCallback((query: string, res: AssistResponse, rating: 1 | -1, clickedId?: number) => {
@@ -697,47 +708,34 @@ function ResponseView({ res }: { res: AssistResponse }) {
     );
   }
 
-  /* No result */
-  if (!res.best) {
-    return (
-      <div className="space-y-2">
-        <ChatText text={res.summary} rtl={isRtl} />
-        <SourceLine res={res} />
-      </div>
-    );
-  }
-
-  /* Places — chat text → best card → alternatives */
-  if (res.kind === "places") {
-    return (
-      <div className="space-y-4">
-        <ChatText text={res.summary} rtl={isRtl} />
-        <PlaceBestCard item={res.best} />
-        {res.alternatives.length > 0 && (
-          <div className="grid sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[#e8e3da]">
-            {res.alternatives.map((a, i) => (
-              <PlaceAltCard key={a.place.id} item={a} rank={i + 2} />
-            ))}
-          </div>
-        )}
-        <SourceLine res={res} />
-      </div>
-    );
-  }
-
-  /* Products — chat text → best card → alternatives */
-  return (
-    <div className="space-y-4">
-      <ChatText text={res.summary} rtl={isRtl} />
-      <BestCard item={res.best} />
-      {res.alternatives.length > 0 && (
-        <div className="grid sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-[#e8e3da]">
-          {res.alternatives.map((a, i) => (
-            <AltCard key={a.listing.id} item={a} rank={i + 2} />
-          ))}
+  /* Places & Products — new editorial layout */
+  if (res.kind === "places" || res.kind === "products") {
+    const tookMs = res.meta?.tookMs ?? 0;
+    const chatResponse = adaptResponse(res, tookMs);
+    if (!chatResponse) {
+      return (
+        <div className="space-y-2">
+          <ChatText text={res.summary} rtl={isRtl} />
+          <SourceLine res={res} />
         </div>
-      )}
-      <SourceLine res={res} />
+      );
+    }
+    return (
+      <div style={{ margin: "0 -16px" }}>
+        <ResponseContainer response={chatResponse} />
+        <div style={{ padding: "0 16px" }}>
+          <SourceLine res={res} />
+        </div>
+      </div>
+    );
+  }
+
+  /* No result fallback (unreachable in practice, satisfies TS exhaustiveness) */
+  const anyRes = res as AssistResponse;
+  return (
+    <div className="space-y-2">
+      <ChatText text={anyRes.summary} rtl={isRtl} />
+      <SourceLine res={anyRes} />
     </div>
   );
 }

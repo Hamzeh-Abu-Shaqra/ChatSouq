@@ -12,11 +12,24 @@ export function formatJOD(n: number): string {
 export interface Explanation {
   why: string;
   pros: string[];
+  tags?: string[];
+}
+
+export interface ExplainExtra {
+  connectorText?: string;
+  insightText?: string;
+  followUpPrompts?: string[];
 }
 
 export interface ExplainResult {
-  /** Conversational 2–4 sentence chat reply mentioning results by **bold** name. */
+  /** Editorial intro paragraph (drop-cap worthy). */
   summary: string;
+  /** Italic connector between top pick and alternatives. */
+  connectorText?: string;
+  /** Practical tips callout. */
+  insightText?: string;
+  /** Suggested follow-up queries. */
+  followUpPrompts?: string[];
   explanations: Map<number, Explanation>;
 }
 
@@ -144,27 +157,38 @@ export async function explainItems(
     const res = await provider.complete({
       system:
         "You are ChatSouq, Amman's AI shopping assistant. " +
-        "Write a direct, conversational 2–3 sentence reply that actually answers the user's request. " +
-        "Mention the top pick and key alternatives by **bolding** their names. " +
-        "Be specific — say what makes the top pick the right choice (type, quality, availability). " +
-        "Then write a 1-sentence 'why' per item (max 20 words) focusing on fit, not price. " +
-        "Use ONLY the provided facts. Do NOT invent features, specs, or availability details not in the data. " +
+        "Write an editorial-quality response with four parts: " +
+        "intro: a rich 2–4 sentence editorial paragraph about the search context (no bullets). " +
+        "connector: a single italic sentence (max 30 words) connecting the top pick to alternatives. " +
+        "insight: a 1–2 sentence practical shopping tip (delivery time, warranty, best deal timing). " +
+        "followUps: 4 short follow-up query suggestions (max 8 words each). " +
+        "For each item: a 1-sentence 'why' (max 20 words) and up to 4 short feature tags (e.g. Wireless, ANC, 40hr battery). " +
+        "Use ONLY provided facts — no invented specs. " +
         `${langInstruction}${memCtx} ` +
-        'Return JSON exactly: {"summary": "string", "items": [{"id": number, "why": "string"}]}',
+        'Return JSON exactly: {"intro":"...","connector":"...","insight":"...","followUps":["..."],"items":[{"id":number,"why":"...","tags":["..."]}]}',
       messages: [{ role: "user", content: `${contextLine}\nItems: ${JSON.stringify(items)}` }],
       json: true,
       temperature: 0.4,
-      maxTokens: 900,
+      maxTokens: 1100,
     });
 
-    // Robust parsing: handle both {summary, items} and legacy [{id, why}] formats
     const raw: unknown = JSON.parse(res.text);
-    const parsed: { summary?: string; items?: { id: number; why: string }[] } =
-      Array.isArray(raw) ? { items: raw as { id: number; why: string }[] } : (raw as typeof parsed);
+    const parsed: {
+      intro?: string; connector?: string; insight?: string; followUps?: string[];
+      summary?: string; items?: { id: number; why: string; tags?: string[] }[];
+    } = Array.isArray(raw) ? { items: raw as { id: number; why: string }[] } : (raw as typeof parsed);
 
-    const summary = typeof parsed.summary === "string" && parsed.summary.trim()
+    const summary = (typeof parsed.intro === "string" && parsed.intro.trim())
+      ? parsed.intro.trim()
+      : (typeof parsed.summary === "string" && parsed.summary.trim())
       ? parsed.summary.trim()
       : buildCodeSummary(ranked, constraints, lang);
+
+    const connectorText  = typeof parsed.connector === "string" ? parsed.connector.trim() : undefined;
+    const insightText    = typeof parsed.insight === "string" ? parsed.insight.trim() : undefined;
+    const followUpPrompts = Array.isArray(parsed.followUps)
+      ? (parsed.followUps as string[]).filter((s) => typeof s === "string").slice(0, 4)
+      : undefined;
 
     if (Array.isArray(parsed.items)) {
       for (const p of parsed.items) {
@@ -172,10 +196,13 @@ export async function explainItems(
         if (existing && typeof p.why === "string" && p.why.trim()) {
           existing.why = p.why.trim();
         }
+        if (existing && Array.isArray(p.tags) && p.tags.length) {
+          existing.tags = p.tags.slice(0, 5);
+        }
       }
     }
 
-    return { summary, explanations };
+    return { summary, connectorText, insightText, followUpPrompts, explanations };
   } catch {
     return { summary: buildCodeSummary(ranked, constraints, lang), explanations };
   }

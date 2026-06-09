@@ -166,9 +166,10 @@ export async function recommend(
     })
     .slice(0, limit);
 
-  const { summary: chatSummary, explanations } = await explainItems(
+  const explainResult = await explainItems(
     provider, input.query, ranked, constraints, input.memoryBlock
   );
+  const { summary: chatSummary, explanations } = explainResult;
 
   const items = ranked.map((c, i) => {
     const item = toResultItem(c, i === 0);
@@ -176,6 +177,7 @@ export async function recommend(
     if (ex) {
       item.why = ex.why;
       item.pros = ex.pros;
+      if (ex.tags?.length) item.tags = ex.tags;
     }
     return item;
   });
@@ -186,6 +188,9 @@ export async function recommend(
 
   return {
     kind: "products",
+    connectorText: explainResult.connectorText,
+    insightText: explainResult.insightText,
+    followUpPrompts: explainResult.followUpPrompts,
     query: input.query,
     constraints,
     summary: finalSummary,

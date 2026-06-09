@@ -15,6 +15,8 @@
     "@chatsouq/core": "workspace:*",
     "@chatsouq/db": "workspace:*",
     "@neondatabase/serverless": "^1.1.0",
+    "framer-motion": "^12.40.0",
+    "lucide-react": "^1.17.0",
     "next": "^15.1.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

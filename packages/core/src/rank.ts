@@ -16,17 +16,18 @@ export interface ScoredCandidate extends Candidate {
   };
 }
 
-// Keyword + vector dominate (0.70). Category adds structure (0.10).
+// Keyword + vector dominate (0.76). Category adds structure (0.10).
 // typeMatch guards against product-type confusion (wireless vs wired etc.).
-// dataQuality rewards complete listings (price + image + link + brand + description).
+// dataQuality weight reduced (0.07→0.02): 85%+ of listings now have all fields
+// so it barely discriminates anything — redistributed to vec and keyword.
 // Value/brand are micro tiebreakers only.
 const WEIGHTS = {
-  vec:         0.30,  // semantic meaning
+  vec:         0.33,  // semantic meaning — bumped since data quality is uniformly high
   txt:         0.06,  // trigram text match (noisy for short queries, kept low)
-  keyword:     0.35,  // exact term match — PRIMARY intent signal
+  keyword:     0.37,  // exact term match — PRIMARY intent signal
   category:    0.10,  // right department
   typeMatch:   0.08,  // product-type discrimination (wireless, ANC, perfume vs mist, etc.)
-  dataQuality: 0.07,  // listing completeness — price, image, link, brand, description
+  dataQuality: 0.02,  // listing completeness — still penalises truly empty stubs
   budgetFit:   0.02,  // within budget
   value:       0.01,  // cheapest in pool — gentle tiebreaker only
   brand:       0.01,  // preferred brand — gentle tiebreaker only
@@ -67,11 +68,15 @@ const TYPE_ATTRIBUTES: { required: RegExp; absent?: RegExp; marker: string }[] =
 ];
 
 /**
- * MiniLM cosine for a strong match sits around 0.4–0.6 and unrelated near 0.
+ * MiniLM cosine for a strong match sits around 0.4–0.7 and unrelated near 0.
  * Rescale that band into [0,1] so semantic differences actually discriminate.
+ *
+ * Old band [0.15, 0.65] was too narrow — all good matches collapsed to 1.0,
+ * losing the ability to distinguish "good" from "excellent" within the top pool.
+ * New band [0.10, 0.70] gives more room at both ends.
  */
 function rescaleVec(cos: number): number {
-  return Math.max(0, Math.min(1, (cos - 0.15) / 0.5));
+  return Math.max(0, Math.min(1, (cos - 0.10) / 0.60));
 }
 
 /**

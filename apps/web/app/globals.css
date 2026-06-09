@@ -7,7 +7,11 @@
   --color-paper: #f5f3ee;
   --color-ink: #0d1117;
   --color-souq: #059669;
-  --font-serif: Georgia, "Times New Roman", serif;
+  --color-gold: #C9A84C;
+  --color-gold-light: #FBF4E3;
+  --color-gold-dark: #7A5C10;
+  --color-gold-border: #E8D5A0;
+  --font-serif: var(--font-playfair), "Playfair Display", Georgia, "Times New Roman", serif;
 }
 
 html, body { padding: 0; margin: 0; }
@@ -86,3 +90,31 @@ body {
   100% { opacity: 1; transform: scale(1); }
 }
 .animate-scale-in { animation: scale-in 0.22s ease-out both; }
+
+/* ── Editorial drop-cap ──────────────────────── */
+.drop-cap::first-letter {
+  font-family: var(--font-playfair), "Playfair Display", Georgia, serif;
+  font-size: 3.2rem;
+  font-weight: 500;
+  color: var(--color-gold);
+  float: left;
+  line-height: 0.82;
+  margin-right: 0.09em;
+  margin-top: 0.1em;
+}
+
+/* ── Response container ──────────────────────── */
+.response-container { max-width: 100%; }
+
+/* ── Blink cursor ────────────────────────────── */
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+.cursor-blink::after {
+  content: '|';
+  animation: blink 1s step-end infinite;
+  color: var(--color-gold);
+  margin-left: 1px;
+}
+
+/* ── Hide scrollbar on filter chips ─────────────*/
+.chips-scroll { scrollbar-width: none; -ms-overflow-style: none; }
+.chips-scroll::-webkit-scrollbar { display: none; }

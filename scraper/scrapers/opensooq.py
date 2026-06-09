@@ -1,46 +1,59 @@
 """
-OpenSooq Jordan Scraper
-Uses network response interception — captures the JSON API calls
-OpenSooq makes as pages load, rather than trying to read JS-rendered HTML.
+OpenSooq Jordan Scraper — Direct __NEXT_DATA__ approach (no Playwright)
+
+OpenSooq is a Next.js SSR app. Every listing page embeds its full data
+in <script id="__NEXT_DATA__">. We fetch that HTML with requests, parse
+serpApiResponse.listings.items, and paginate with ?page=N.
+
+Correct URL format (discovered Jun 2026):
+    https://jo.opensooq.com/en/amman/{category-slug}?page={n}
+
+Old format /en/real-estate/rent/amman returns HTTP 410.
 """
 import os
 import re
 import time
+import json
 import psycopg2
-from playwright.sync_api import sync_playwright
+import requests as http
 from dotenv import load_dotenv
 
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
 
-# All Amman/Jordan categories with their OpenSooq URLs
+HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Accept-Encoding": "gzip, deflate, br",
+}
+
+BASE = "https://jo.opensooq.com"
+
+# Category slug → display name. All scoped to Amman.
 CATEGORIES = [
-    # Real Estate
-    ("real_estate_rent",     "https://jo.opensooq.com/en/real-estate/rent/amman"),
-    ("real_estate_sale",     "https://jo.opensooq.com/en/real-estate/sale/amman"),
-    ("real_estate_land",     "https://jo.opensooq.com/en/real-estate/land/amman"),
-    # Cars & Vehicles
-    ("cars",                 "https://jo.opensooq.com/en/cars/amman"),
-    ("motorcycles",          "https://jo.opensooq.com/en/motorcycles/amman"),
-    # Electronics
-    ("mobiles",              "https://jo.opensooq.com/en/mobiles-tablets/amman"),
-    ("computers",            "https://jo.opensooq.com/en/computers-networking/amman"),
-    ("electronics",          "https://jo.opensooq.com/en/electronics-home-appliances/amman"),
-    # Jobs
-    ("jobs",                 "https://jo.opensooq.com/en/jobs/amman"),
-    # Furniture & Home
-    ("furniture",            "https://jo.opensooq.com/en/furniture-decor/amman"),
-    # Clothing & Fashion
-    ("fashion",              "https://jo.opensooq.com/en/clothing-accessories/amman"),
-    # Animals & Pets
-    ("animals",              "https://jo.opensooq.com/en/animals-pets/amman"),
-    # Services
-    ("services",             "https://jo.opensooq.com/en/services/amman"),
-    # Kids & Baby
-    ("kids",                 "https://jo.opensooq.com/en/baby-kids/amman"),
-    # Sports
-    ("sports",               "https://jo.opensooq.com/en/sports-outdoors/amman"),
+    ("property/apartments-for-sale",    "real_estate_sale"),
+    ("property/apartments-for-rent",    "real_estate_rent"),
+    ("property/land-and-farms-for-sale","real_estate_land"),
+    ("cars",                            "cars"),
+    ("jobs",                            "jobs"),
+    ("mobiles-tablets",                 "mobiles"),
+    ("computers-networking",            "computers"),
+    ("electronics-home-appliances",     "electronics"),
+    ("furniture-decor",                 "furniture"),
+    ("clothing-accessories",            "fashion"),
+    ("animals-pets",                    "animals"),
+    ("services",                        "services"),
+    ("baby-kids",                       "kids"),
+    ("sports-outdoors",                 "sports"),
 ]
 
+MAX_PAGES = 5   # 30 listings/page × 5 pages = 150 per category
+
+
+# ── Database ──────────────────────────────────────────────────────────────────
 
 def get_db():
     return psycopg2.connect(os.getenv("DATABASE_URL"))
@@ -65,175 +78,94 @@ def setup_table():
     for stmt in [
         "ALTER TABLE jordan_listings ADD COLUMN IF NOT EXISTS description TEXT",
         "ALTER TABLE jordan_listings ADD COLUMN IF NOT EXISTS search_text TEXT",
-        "ALTER TABLE jordan_listings ADD COLUMN IF NOT EXISTS embedding vector(384)",
     ]:
         try:
             cur.execute(stmt)
+            conn.commit()
         except Exception:
-            pass
-    try:
-        cur.execute("""
-            CREATE INDEX IF NOT EXISTS jordan_listings_trgm_idx
-            ON jordan_listings USING gin (search_text gin_trgm_ops)
-        """)
-    except Exception:
-        pass
+            conn.rollback()
     conn.commit()
     cur.close()
     conn.close()
 
 
-def extract_listings_from_json(obj, category, found, seen_urls, depth=0):
-    """
-    Recursively walk any JSON structure to find listing-like objects.
-    A listing must have at minimum a title and a URL.
-    """
-    if depth > 8:
-        return
-    if isinstance(obj, list):
-        for item in obj:
-            extract_listings_from_json(item, category, found, seen_urls, depth + 1)
-    elif isinstance(obj, dict):
-        # Detect if this object looks like a listing
-        title = (
-            obj.get("title") or obj.get("subject") or obj.get("name") or
-            obj.get("ad_title") or obj.get("post_title") or
-            obj.get("titleEn") or obj.get("title_en") or ""
-        )
-        url = (
-            obj.get("url") or obj.get("link") or obj.get("permalink") or
-            obj.get("ad_url") or obj.get("post_url") or
-            obj.get("seoUrl") or obj.get("seo_url") or ""
-        )
-        price = (
-            obj.get("price") or obj.get("price_text") or obj.get("priceText") or
-            obj.get("price_label") or obj.get("formatted_price") or ""
-        )
-        location = (
-            obj.get("location") or obj.get("city") or obj.get("area") or
-            obj.get("neighborhood") or obj.get("region") or ""
-        )
-        description = (
-            obj.get("description") or obj.get("body") or
-            obj.get("short_description") or ""
-        )
+# ── Fetching & parsing ────────────────────────────────────────────────────────
 
-        title = str(title).strip() if title else ""
-        url   = str(url).strip()   if url   else ""
-
-        # Normalize URL
-        if url and not url.startswith("http"):
-            url = "https://jo.opensooq.com" + url
-
-        if (
-            len(title) > 5
-            and url.startswith("http")
-            and "opensooq" in url
-            and url not in seen_urls
-        ):
-            seen_urls.add(url)
-            found.append({
-                "title":       title,
-                "price":       str(price).strip() if price else None,
-                "location":    str(location).strip() if location else None,
-                "category":    category,
-                "description": str(description).strip()[:300] if description else None,
-                "url":         url,
-            })
-        else:
-            # Keep digging
-            for v in obj.values():
-                extract_listings_from_json(v, category, found, seen_urls, depth + 1)
-
-
-def scrape_opensooq_category(browser_context, url, category):
-    """
-    Open OpenSooq category page and intercept ALL JSON responses.
-    Extract listing data from any JSON that comes back.
-    """
-    listings = []
-    seen_urls = set()
-    api_responses = []
-
-    page = browser_context.new_page()
-
-    def capture(response):
-        try:
-            if response.status != 200:
-                return
-            ct = response.headers.get("content-type", "")
-            if "json" not in ct:
-                return
-            body = response.json()
-            api_responses.append(body)
-        except Exception:
-            pass
-
-    page.on("response", capture)
-
+def fetch_page(slug: str, page: int) -> list:
+    """Fetch one page of listings. Returns list of raw item dicts."""
+    url = f"{BASE}/en/amman/{slug}?page={page}"
     try:
-        page.goto(url, timeout=45000, wait_until="domcontentloaded")
-        page.wait_for_load_state("networkidle", timeout=20000)
-        page.wait_for_timeout(3000)
-
-        # Scroll to trigger lazy loads
-        for _ in range(6):
-            page.evaluate("window.scrollBy(0, 1400)")
-            page.wait_for_timeout(700)
-
-        page.wait_for_timeout(2000)
-    except Exception as e:
-        print(f"    [{category}] nav warning: {e}")
-
-    page.remove_listener("response", capture)
-
-    # Parse all captured JSON responses
-    for body in api_responses:
-        extract_listings_from_json(body, category, listings, seen_urls)
-
-    # If API interception got nothing, fall back to HTML link extraction
-    if not listings:
-        try:
-            links = page.query_selector_all("a[href*='/post/'], a[href*='/ad/'], a[href*='opensooq.com/']")
-            for el in links[:80]:
-                try:
-                    href = el.get_attribute("href") or ""
-                    title_text = el.inner_text().strip()
-                    if not href.startswith("http"):
-                        href = "https://jo.opensooq.com" + href
-                    if (
-                        len(title_text) > 5
-                        and "opensooq.com" in href
-                        and href not in seen_urls
-                        and any(k in href for k in ["/post/", "/ad/", "-for-sale", "-for-rent"])
-                    ):
-                        seen_urls.add(href)
-                        listings.append({
-                            "title":    title_text,
-                            "price":    None,
-                            "location": "Amman",
-                            "category": category,
-                            "description": None,
-                            "url":      href,
-                        })
-                except Exception:
-                    pass
-        except Exception:
-            pass
-
-    page.close()
-    print(f"    [{category}] {len(api_responses)} API responses → {len(listings)} listings")
-    return listings
+        r = http.get(url, headers=HEADERS, timeout=20)
+        if r.status_code not in (200, 201):
+            return []
+        match = re.search(
+            r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>',
+            r.text, re.DOTALL
+        )
+        if not match:
+            return []
+        data = json.loads(match.group(1))
+        items = (
+            data.get("props", {})
+                .get("pageProps", {})
+                .get("serpApiResponse", {})
+                .get("listings", {})
+                .get("items", [])
+        )
+        return items
+    except Exception:
+        return []
 
 
-def save_listings(listings):
+def parse_listing(item: dict, category: str) -> dict | None:
+    title = (item.get("title") or "").strip()
+    if not title or len(title) < 5:
+        return None
+
+    post_url = item.get("post_url") or ""
+    listing_id = item.get("id") or ""
+    url = f"{BASE}/search/{listing_id}" if listing_id else (
+        f"{BASE}{post_url}" if post_url.startswith("/") else post_url
+    )
+    if not url or "opensooq" not in url:
+        return None
+
+    price = (
+        item.get("price_amount") or
+        item.get("price") or ""
+    )
+    if price:
+        currency = item.get("price_currency_iso") or ""
+        price = f"{str(price).strip()} {currency}".strip()
+
+    nhood = item.get("nhood_label") or ""
+    city  = item.get("city_label") or "Amman"
+    location = f"{nhood}, {city}".strip(", ") if nhood else city
+
+    description = (item.get("highlights") or item.get("masked_description") or "")
+    if isinstance(description, str):
+        description = description.strip()[:300] or None
+
+    return {
+        "title":       title,
+        "price":       str(price).strip() or None,
+        "location":    location,
+        "category":    category,
+        "description": description,
+        "url":         url,
+    }
+
+
+# ── Database save ─────────────────────────────────────────────────────────────
+
+def save_listings(listings: list) -> int:
     if not listings:
         return 0
 
     for l in listings:
         l["search_text"] = " ".join(filter(None, [
             l.get("title"), l.get("category"),
-            l.get("location"), l.get("price"), "jordan amman"
+            l.get("location"), l.get("price"), "jordan amman opensooq"
         ])).strip()
 
     conn = get_db()
@@ -246,59 +178,70 @@ def save_listings(listings):
                     (title, price, location, category, description, url, search_text)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
                 ON CONFLICT (url) DO UPDATE SET
-                    price       = COALESCE(EXCLUDED.price,    jordan_listings.price),
-                    location    = COALESCE(EXCLUDED.location, jordan_listings.location),
+                    price       = COALESCE(EXCLUDED.price,       jordan_listings.price),
+                    location    = COALESCE(EXCLUDED.location,    jordan_listings.location),
                     description = COALESCE(EXCLUDED.description, jordan_listings.description),
-                    search_text = EXCLUDED.search_text
+                    search_text = EXCLUDED.search_text,
+                    scraped_at  = NOW()
             """, (
-                l.get("title"), l.get("price"), l.get("location"),
-                l.get("category"), l.get("description"), l.get("url"),
+                l["title"], l.get("price"), l.get("location"),
+                l["category"], l.get("description"), l["url"],
                 l.get("search_text"),
             ))
+            conn.commit()
             saved += 1
-        except Exception as e:
-            pass
-    conn.commit()
+        except Exception:
+            conn.rollback()
+
     cur.close()
     conn.close()
     return saved
 
 
+# ── Entry point ───────────────────────────────────────────────────────────────
+
+def scrape_category(slug: str, category: str, global_seen: set) -> list:
+    results = []
+    for page in range(1, MAX_PAGES + 1):
+        items = fetch_page(slug, page)
+        if not items:
+            break
+
+        new_this_page = 0
+        for item in items:
+            url = f"{BASE}/search/{item.get('id')}" if item.get("id") else ""
+            if not url or url in global_seen:
+                continue
+            global_seen.add(url)
+            parsed = parse_listing(item, category)
+            if parsed:
+                results.append(parsed)
+                new_this_page += 1
+
+        if new_this_page == 0:
+            break   # all duplicates — no point continuing
+
+        time.sleep(0.3)
+
+    return results
+
+
 def run():
-    print("Setting up jordan_listings table...")
+    print("Setting up jordan_listings table...", flush=True)
     setup_table()
-    total = 0
 
-    with sync_playwright() as p:
-        browser = p.chromium.launch(
-            headless=True,
-            args=["--no-sandbox", "--disable-dev-shm-usage"],
-        )
-        context = browser.new_context(
-            user_agent=(
-                "Mozilla/5.0 (Linux; Android 13; Pixel 7) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/116.0.0.0 Mobile Safari/537.36"
-            ),
-            locale="en-US",
-            viewport={"width": 412, "height": 915},
-            extra_http_headers={
-                "Accept-Language": "en-US,en;q=0.9,ar;q=0.8",
-                "Accept": "application/json, text/html, */*",
-            },
-        )
+    global_seen: set = set()
+    total_saved = 0
 
-        for category, url in CATEGORIES:
-            print(f"  Scraping OpenSooq: {category}...")
-            listings = scrape_opensooq_category(context, url, category)
-            saved = save_listings(listings)
-            print(f"    → Saved {saved} {category} listings")
-            total += saved
-            time.sleep(2)
+    for slug, category in CATEGORIES:
+        print(f"  Scraping OpenSooq: {category}...", flush=True)
+        listings = scrape_category(slug, category, global_seen)
+        saved = save_listings(listings)
+        total_saved += saved
+        print(f"    [{category}] {len(listings)} found → {saved} saved  (total: {total_saved})", flush=True)
+        time.sleep(0.5)
 
-        browser.close()
-
-    print(f"OpenSooq done. Total saved: {total}")
+    print(f"\nOpenSooq done. Total saved: {total_saved}", flush=True)
 
 
 if __name__ == "__main__":

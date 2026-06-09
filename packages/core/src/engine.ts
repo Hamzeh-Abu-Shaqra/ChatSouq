@@ -124,18 +124,28 @@ export async function recommend(
   const relaxedCategory = requestedCat && !chosen.c;
   const relaxedBudget = requestedBudget && !chosen.b;
 
-  // ── CTR boost: results previously clicked for similar queries get +bonus ──
+  // ── Rank first, then apply CTR boost as a post-ranking score adjustment ─────
+  // Previously, CTR was added to vecSim BEFORE ranking — this caused the boost
+  // to be compressed by rescaleVec(), losing most of its signal. Applying it
+  // AFTER ranking (as a direct score delta) preserves the full boost magnitude.
   const ctrBoosts = await getCtrBoosts(
     input.query,
     candidates.map((c) => c.id),
     "products"
   );
-  const boostedCandidates = candidates.map((c) => {
-    const boost = ctrBoosts.get(c.id) ?? 0;
-    return boost > 0 ? { ...c, vecSim: Math.min(1, c.vecSim + boost) } : c;
-  });
 
-  const allRanked = rankCandidates(boostedCandidates, constraints).slice(0, limit * 2);
+  // Expand candidate window to limit×3: gives quality filter more to work with
+  // and ensures we don't run out of good alts after CTR re-sort.
+  const rawRanked = rankCandidates(candidates, constraints).slice(0, limit * 3);
+
+  // Apply CTR boost to final score and re-sort
+  const allRanked = rawRanked
+    .map((c) => {
+      const boost = ctrBoosts.get(c.id) ?? 0;
+      return boost > 0 ? { ...c, score: Math.min(1, c.score + boost) } : c;
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit * 2);
 
   // ── Keyword-hit guardian: top pick must match at least one keyword ──────
   // Prevents off-category items (e.g. vinyl record for headphones) from winning.

@@ -152,16 +152,15 @@ function ChatPageInner() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [historyLoaded, initialQ]);
 
-  // Only scroll when a new turn is added OR the last turn finishes loading
-  // (NOT on feedback updates which also call setTurns)
+  // Scroll only when a new turn is added (user submits a query).
+  // Do NOT scroll when status changes loading→done — that causes the jarring
+  // double-scroll: once when query is sent, again when results expand in.
   const turnCount = turns.length;
-  const lastStatus = turns[turns.length - 1]?.status;
   useEffect(() => {
     if (turnCount > 0) {
       bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [turnCount, lastStatus]);
+  }, [turnCount]);
 
   /* Follow-up events from ResponseContainer --------------------------------- */
   useEffect(() => {

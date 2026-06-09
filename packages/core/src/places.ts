@@ -10,7 +10,7 @@ import type {
   RecommendInput,
   ResultPlace,
 } from "./types";
-import { extractRichIntent } from "./placeIntent";
+import { extractRichIntent, NEIGHBORHOOD_CANONICAL } from "./placeIntent";
 import { rankPlacesRich } from "./placeRanker";
 import {
   buildCacheKey,
@@ -727,6 +727,21 @@ async function searchPlaces(
 const PEOPLE_RE =
   /\b(doctor|doctors|physician|physicians|dentist|dentists|lawyer|lawyers|attorney|legal|accountant|accountants|architect|architects|engineer|engineers|pharmacist|pharmacists|specialist|specialists|consultant|consultants|professional|professionals)\b/i;
 
+/**
+ * Try to detect a canonical Amman neighbourhood from an address or search_text
+ * string. jordan_places has city='Amman' hardcoded — this extracts the real
+ * neighbourhood so location scoring works correctly.
+ * Returns the canonical neighbourhood name, or "Amman" as fallback.
+ */
+function detectCityFromText(address: string | null, searchText: string | null): string {
+  const hay = [address, searchText].filter(Boolean).join(" ").toLowerCase();
+  if (!hay) return "Amman";
+  for (const [alias, canonical] of Object.entries(NEIGHBORHOOD_CANONICAL)) {
+    if (hay.includes(alias)) return canonical;
+  }
+  return "Amman";
+}
+
 async function fetchScrapedCandidates(
   intent: PlaceIntent,
   queryVec: number[],
@@ -772,6 +787,8 @@ async function fetchScrapedCandidates(
       `)) as unknown as Record<string, unknown>[];
 
       for (const r of rows) {
+        const addr = (r.address as string) ?? null;
+        const sText = (r.searchText as string) ?? null;
         all.push({
           id: Number(r.id),
           name: String(r.name),
@@ -779,15 +796,17 @@ async function fetchScrapedCandidates(
           category: String(r.category ?? "Place"),
           subcategory: null,
           governorate: "Amman",
-          city: "Amman",
-          address: (r.address as string) ?? null,
+          // Extract real neighbourhood from address/searchText — jordan_places
+          // hardcodes city='Amman' but Google Maps addresses contain district names.
+          city: detectCityFromText(addr, sText),
+          address: addr,
           phone: (r.phone as string) ?? null,
           website: (r.website as string) ?? null,
           openingHours: null,
           lat: null,
           lng: null,
           sourceUrl: null,
-          searchText: (r.searchText as string) ?? null,
+          searchText: sText,
           rating: r.rating !== null && r.rating !== undefined ? Number(r.rating) : null,
           vecSim: Number(r.vecSim ?? 0),
           txtSim: Number(r.txtSim ?? 0),
@@ -820,6 +839,7 @@ async function fetchScrapedCandidates(
 
       for (const r of rows) {
         const delivery = r.deliveryTime ? `Delivery: ${r.deliveryTime}` : null;
+        const sText = (r.searchText as string) ?? null;
         all.push({
           id: Number(r.id),
           name: String(r.name),
@@ -827,7 +847,7 @@ async function fetchScrapedCandidates(
           category: String(r.cuisine ?? "Restaurant"),
           subcategory: "Restaurant",
           governorate: "Amman",
-          city: "Amman",
+          city: detectCityFromText(null, sText),
           address: null,
           phone: null,
           website: (r.url as string) ?? null,
@@ -835,7 +855,7 @@ async function fetchScrapedCandidates(
           lat: null,
           lng: null,
           sourceUrl: (r.url as string) ?? null,
-          searchText: (r.searchText as string) ?? null,
+          searchText: sText,
           rating: r.rating !== null && r.rating !== undefined ? Number(r.rating) : null,
           vecSim: Number(r.vecSim ?? 0),
           txtSim: Number(r.txtSim ?? 0),

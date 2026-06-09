@@ -95,6 +95,22 @@ function canonicalize(name: string | null): string | null {
   return NEIGHBORHOOD_CANONICAL[lower] ?? name;
 }
 
+// Generic city values that carry no neighbourhood signal
+const GENERIC_CITIES = new Set(["amman", "jordan", "الأردن", "عمّان", "عمان"]);
+
+/**
+ * Scan address + searchText for a canonical neighbourhood name.
+ * Used as a fallback when c.city is a generic value like "Amman".
+ */
+function neighborhoodFromText(c: PlaceCandidate): string | null {
+  const hay = [c.address, c.searchText].filter(Boolean).join(" ").toLowerCase();
+  if (!hay) return null;
+  for (const [alias, canonical] of Object.entries(NEIGHBORHOOD_CANONICAL)) {
+    if (hay.includes(alias)) return canonical;
+  }
+  return null;
+}
+
 /** location_fit: 0–20 */
 function scoreLocation(c: PlaceCandidate, intent: RichPlaceIntent): number {
   const wantedNeighborhood = intent.location.neighborhood;
@@ -108,11 +124,16 @@ function scoreLocation(c: PlaceCandidate, intent: RichPlaceIntent): number {
     return 4;
   }
 
-  // We have a wanted neighbourhood
-  const placeCanonical = canonicalize(c.city);
+  // We have a wanted neighbourhood — resolve the place's neighbourhood.
+  // Prefer c.city, but fall back to address/searchText mining when city is generic.
+  let placeCanonical = canonicalize(c.city);
+  if (!placeCanonical || GENERIC_CITIES.has(placeCanonical.toLowerCase())) {
+    const fromText = neighborhoodFromText(c);
+    if (fromText) placeCanonical = fromText;
+  }
 
-  if (!placeCanonical) {
-    // No neighbourhood data → governorate fallback
+  if (!placeCanonical || GENERIC_CITIES.has(placeCanonical.toLowerCase())) {
+    // No neighbourhood signal at all → governorate fallback
     if (intent.governorate && c.governorate === intent.governorate) return 6;
     return 2;
   }

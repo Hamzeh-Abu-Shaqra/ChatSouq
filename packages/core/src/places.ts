@@ -1139,6 +1139,13 @@ async function searchPlaces(
       p.governorate, p.city, p.address, p.phone, p.website,
       p.opening_hours AS "openingHours", p.lat, p.lng, p.source_url AS "sourceUrl",
       p.search_text AS "searchText",
+      p.rating,
+      p.reviews_count         AS "reviewsCount",
+      p.business_status       AS "businessStatus",
+      p.website_alive         AS "websiteAlive",
+      p.scraped_at            AS "scrapedAt",
+      p.latest_review_at      AS "latestReviewAt",
+      p.consecutive_failures  AS "consecutiveFailures",
       (1 - (p.embedding <=> ${vecLit}::vector)) AS "vecSim",
       similarity((p.name || ' ' || coalesce(p.search_text, '')), ${queryText}) AS "txtSim"
     FROM places p
@@ -1164,7 +1171,13 @@ async function searchPlaces(
     lng: r.lng === null || r.lng === undefined ? null : Number(r.lng),
     sourceUrl: (r.sourceUrl as string) ?? null,
     searchText: (r.searchText as string) ?? null,
-    rating: null, // OSM places table does not have a rating column
+    rating: r.rating !== null && r.rating !== undefined ? Number(r.rating) : null,
+    reviewsCount: r.reviewsCount !== null && r.reviewsCount !== undefined ? Number(r.reviewsCount) : null,
+    businessStatus: (r.businessStatus as string) ?? null,
+    websiteAlive: r.websiteAlive !== null && r.websiteAlive !== undefined ? Boolean(r.websiteAlive) : null,
+    scrapedAt: r.scrapedAt ? new Date(r.scrapedAt as string) : null,
+    latestReviewAt: r.latestReviewAt ? new Date(r.latestReviewAt as string) : null,
+    consecutiveFailures: r.consecutiveFailures !== null && r.consecutiveFailures !== undefined ? Number(r.consecutiveFailures) : 0,
     vecSim: Number(r.vecSim ?? 0),
     txtSim: Number(r.txtSim ?? 0),
   }));
@@ -1234,7 +1247,9 @@ async function fetchScrapedCandidates(
           p.phone,
           p.website,
           p.rating,
-          p.search_text    AS "searchText",
+          p.reviews_count       AS "reviewsCount",
+          p.scraped_at          AS "scrapedAt",
+          p.search_text         AS "searchText",
           (1 - (p.embedding <=> ${vecLit}::vector))                          AS "vecSim",
           similarity((p.name || ' ' || coalesce(p.search_text, '')), ${queryText}) AS "txtSim"
         FROM jordan_places p
@@ -1266,6 +1281,12 @@ async function fetchScrapedCandidates(
           sourceUrl: null,
           searchText: sText,
           rating: r.rating !== null && r.rating !== undefined ? Number(r.rating) : null,
+          reviewsCount: r.reviewsCount !== null && r.reviewsCount !== undefined ? Number(r.reviewsCount) : null,
+          businessStatus: null,   // not yet verified via Places API
+          websiteAlive: null,
+          scrapedAt: r.scrapedAt ? new Date(r.scrapedAt as string) : null,
+          latestReviewAt: null,
+          consecutiveFailures: 0,
           vecSim: Number(r.vecSim ?? 0),
           txtSim: Number(r.txtSim ?? 0),
         });
@@ -1316,6 +1337,12 @@ async function fetchScrapedCandidates(
           sourceUrl: (r.url as string) ?? null,
           searchText: sText,
           rating: r.rating !== null && r.rating !== undefined ? Number(r.rating) : null,
+          reviewsCount: null,
+          businessStatus: null,
+          websiteAlive: null,
+          scrapedAt: null,
+          latestReviewAt: null,
+          consecutiveFailures: 0,
           vecSim: Number(r.vecSim ?? 0),
           txtSim: Number(r.txtSim ?? 0),
         });
@@ -1372,6 +1399,12 @@ async function fetchScrapedCandidates(
           sourceUrl: null,
           searchText: (r.searchText as string) ?? null,
           rating: null,
+          reviewsCount: null,
+          businessStatus: null,
+          websiteAlive: null,
+          scrapedAt: null,
+          latestReviewAt: null,
+          consecutiveFailures: 0,
           vecSim: Number(r.vecSim ?? 0),
           txtSim: Number(r.txtSim ?? 0),
         });
@@ -1402,7 +1435,14 @@ async function directNameSearch(query: string, limit: number): Promise<PlaceCand
       SELECT p.id, p.name, p.name_ar AS "nameAr", p.category, p.subcategory,
              p.governorate, p.city, p.address, p.phone, p.website,
              p.opening_hours AS "openingHours", p.lat, p.lng,
-             p.source_url AS "sourceUrl", p.search_text AS "searchText"
+             p.source_url AS "sourceUrl", p.search_text AS "searchText",
+             p.rating,
+             p.reviews_count       AS "reviewsCount",
+             p.business_status     AS "businessStatus",
+             p.website_alive       AS "websiteAlive",
+             p.scraped_at          AS "scrapedAt",
+             p.latest_review_at    AS "latestReviewAt",
+             p.consecutive_failures AS "consecutiveFailures"
       FROM places p
       WHERE lower(p.name) LIKE ${pattern}
          OR lower(coalesce(p.name_ar, '')) LIKE ${pattern}
@@ -1425,7 +1465,13 @@ async function directNameSearch(query: string, limit: number): Promise<PlaceCand
         lng: r.lng != null ? Number(r.lng) : null,
         sourceUrl: (r.sourceUrl as string) ?? null,
         searchText: (r.searchText as string) ?? null,
-        rating: null,
+        rating: r.rating != null ? Number(r.rating) : null,
+        reviewsCount: r.reviewsCount != null ? Number(r.reviewsCount) : null,
+        businessStatus: (r.businessStatus as string) ?? null,
+        websiteAlive: r.websiteAlive != null ? Boolean(r.websiteAlive) : null,
+        scrapedAt: r.scrapedAt ? new Date(r.scrapedAt as string) : null,
+        latestReviewAt: r.latestReviewAt ? new Date(r.latestReviewAt as string) : null,
+        consecutiveFailures: r.consecutiveFailures != null ? Number(r.consecutiveFailures) : 0,
         vecSim: 0.95,
         txtSim: 1.0,
       });
@@ -1436,7 +1482,10 @@ async function directNameSearch(query: string, limit: number): Promise<PlaceCand
   try {
     const rows = (await db.execute(sql`
       SELECT p.id + 2000000 AS id, p.name, p.category, p.address,
-             p.phone, p.website, p.rating, p.search_text AS "searchText"
+             p.phone, p.website, p.rating,
+             p.reviews_count AS "reviewsCount",
+             p.scraped_at    AS "scrapedAt",
+             p.search_text   AS "searchText"
       FROM jordan_places p
       WHERE lower(p.name) LIKE ${pattern}
       LIMIT ${limit}
@@ -1457,6 +1506,12 @@ async function directNameSearch(query: string, limit: number): Promise<PlaceCand
         lat: null, lng: null, sourceUrl: null,
         searchText: (r.searchText as string) ?? null,
         rating: r.rating != null ? Number(r.rating) : null,
+        reviewsCount: r.reviewsCount != null ? Number(r.reviewsCount) : null,
+        businessStatus: null,
+        websiteAlive: null,
+        scrapedAt: r.scrapedAt ? new Date(r.scrapedAt as string) : null,
+        latestReviewAt: null,
+        consecutiveFailures: 0,
         vecSim: 0.95,
         txtSim: 1.0,
       });

@@ -220,10 +220,27 @@ export interface PlaceCandidate {
   lng: number | null;
   sourceUrl: string | null;
   searchText: string | null;
-  /** Google Maps / Talabat rating 0-5; null for OSM or when not available. */
+  /** Google Maps / Talabat rating 0–5; null when not available. */
   rating: number | null;
+  /** Total Google Maps reviews; null when not available. */
+  reviewsCount: number | null;
   vecSim: number;
   txtSim: number;
+
+  // ── Freshness signals (populated by verify_places scraper) ────────────────
+  /**
+   * 'OPERATIONAL' | 'CLOSED_TEMPORARILY' | 'CLOSED_PERMANENTLY' | null
+   * Null means unverified (treat as neutral, not closed).
+   */
+  businessStatus: string | null;
+  /** Whether the place's website returned a success response on last check. */
+  websiteAlive: boolean | null;
+  /** When this row was last refreshed from its data source. */
+  scrapedAt: Date | null;
+  /** When the most recent Google Maps review was posted. */
+  latestReviewAt: Date | null;
+  /** Consecutive verification failures — high values indicate stale/gone data. */
+  consecutiveFailures: number;
 }
 
 /** A single turn in the conversation history (user message or assistant reply). */

@@ -123,6 +123,36 @@ export const places = pgTable(
     searchText: text("search_text"),
     embedding: vector("embedding", { dimensions: EMBEDDING_DIM }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+
+    // ── Freshness & quality signals (populated by verify_places scraper) ──────
+    /** Google Maps star rating 0–5; null until verified. */
+    rating: doublePrecision("rating"),
+    /** Number of Google Maps reviews (confidence proxy). */
+    reviewsCount: integer("reviews_count"),
+    /**
+     * Google Places business_status:
+     *   'OPERATIONAL' | 'CLOSED_TEMPORARILY' | 'CLOSED_PERMANENTLY'
+     * null = not yet verified.
+     */
+    businessStatus: text("business_status"),
+    /** When business_status was last confirmed via Google Places API. */
+    statusCheckedAt: timestamp("status_checked_at", { withTimezone: true }),
+    /** Whether a HEAD request to the website URL returned 2xx/3xx. */
+    websiteAlive: boolean("website_alive"),
+    /** When website liveness was last checked. */
+    websiteCheckedAt: timestamp("website_checked_at", { withTimezone: true }),
+    /** Latest review date from Google Maps; null until verified. */
+    latestReviewAt: timestamp("latest_review_at", { withTimezone: true }),
+    /**
+     * When this place's data (name, address, phone, hours) was last
+     * refreshed from the source. Used for category-specific decay.
+     */
+    scrapedAt: timestamp("scraped_at", { withTimezone: true }),
+    /**
+     * How many consecutive verification cycles this place failed
+     * (no Google result + dead website). After 3+, score is heavily penalised.
+     */
+    consecutiveFailures: integer("consecutive_failures").default(0),
   },
   (t) => ({
     categoryIdx: index("places_category_idx").on(t.category),

@@ -1,17 +1,19 @@
 /**
  * Multi-dimensional place ranker for ChatSouq.
  *
- * Scores each PlaceCandidate on 5 dimensions that total 100 points:
+ * Scores each PlaceCandidate on 7 dimensions that total 100 points:
  *   relevance       0–30  (semantic + keyword + category match)
  *   location_fit    0–20  (exact neighbourhood → adjacent → city zone → anywhere)
- *   rating_quality  0–15  (Google Maps / Talabat stars + review count proxy)
+ *   rating_quality  0–10  (Google Maps / Talabat stars + review count proxy)
+ *   freshness       0–10  (business_status, website liveness, data age decay, review recency)
  *   occasion_fit    0–10  (search_text signals vs. detected occasion)
- *   completeness    0–15  (actionable data: phone, address, website, hours)
+ *   completeness    0–10  (actionable data: phone, address, website, hours)
  *   budget_fit      0–10  (quality-tier alignment with stated budget)
  *
- * The scoring replaces the old flat-weight formula in places.ts and gives the
- * ranking engine far more discrimination power, especially for neighbourhood-
- * and occasion-specific queries.
+ * The freshness dimension surfaces places with verified-open status, live websites
+ * and recent reviews above stale OSM data; permanently-closed places are buried.
+ * Category-specific half-lives prevent decaying mosque/hospital data at the same
+ * rate as restaurants (restaurants: 90-day half-life vs mosques: 3650-day).
  */
 
 import type { PlaceCandidate } from "./types";
@@ -23,9 +25,10 @@ import { NEIGHBORHOOD_CANONICAL, NEIGHBORHOOD_ADJACENCY } from "./placeIntent";
 export interface PlaceScore {
   relevance:      number;  // 0–30
   location_fit:   number;  // 0–20
-  rating_quality: number;  // 0–15
+  rating_quality: number;  // 0–10
+  freshness:      number;  // 0–10
   occasion_fit:   number;  // 0–10
-  completeness:   number;  // 0–15
+  completeness:   number;  // 0–10
   budget_fit:     number;  // 0–10
   total:          number;  // 0–100
 }
@@ -166,14 +169,134 @@ function scoreLocation(c: PlaceCandidate, intent: RichPlaceIntent): number {
   return 2;
 }
 
-/** rating_quality: 0–15 */
+/** rating_quality: 0–10 */
 function scoreRating(c: PlaceCandidate): number {
-  if (c.rating === null || c.rating === undefined) return 4; // neutral
-  if (c.rating >= 4.5) return 15;
-  if (c.rating >= 4.0) return 11;
-  if (c.rating >= 3.5) return 7;
-  if (c.rating >= 3.0) return 4;
-  return 1; // low rating is a mild penalty
+  if (c.rating === null || c.rating === undefined) return 3; // neutral-low (unverified)
+  // Review-count confidence multiplier: <10 reviews → temper score slightly
+  const confidence = c.reviewsCount ? Math.min(1, c.reviewsCount / 50) : 0.7;
+  let raw: number;
+  if (c.rating >= 4.5) raw = 10;
+  else if (c.rating >= 4.0) raw = 8;
+  else if (c.rating >= 3.5) raw = 6;
+  else if (c.rating >= 3.0) raw = 4;
+  else raw = 1;
+  // Blend: full weight when confidence=1, half weight when confidence=0
+  return Math.round(raw * (0.5 + 0.5 * confidence));
+}
+
+// ── Freshness scoring ─────────────────────────────────────────────────────────
+
+/**
+ * Category-specific data half-life in days.
+ * How long before data is considered half-stale for decay scoring.
+ * Restaurants change rapidly (owners close, prices change, kitchens change).
+ * Mosques and hospitals are stable for years.
+ */
+const CATEGORY_HALF_LIFE: Record<string, number> = {
+  // Food & drink — change most frequently (new chef, closure, quality drop)
+  restaurant:  90,
+  food:        90,
+  cafe:        90,
+  coffee:      90,
+  fast_food:   90,
+  bakery:      90,
+  juice_bar:   90,
+  dessert:     90,
+  // Nightlife & entertainment
+  bar:          60,
+  nightclub:    60,
+  cinema:       90,
+  entertainment: 90,
+  // Health & fitness — fairly stable but move occasionally
+  gym:          180,
+  fitness:      180,
+  spa:          180,
+  salon:        180,
+  barbershop:   180,
+  beauty:       180,
+  clinic:       365,
+  pharmacy:     180,
+  hospital:     730,
+  dentist:      365,
+  physiotherapy: 365,
+  // Shopping & services
+  supermarket:  180,
+  shopping:     180,
+  services:     180,
+  mall:         365,
+  hotel:        365,
+  hospitality:  365,
+  // Education
+  school:       730,
+  university:   730,
+  education:    730,
+  // Permanent / civic institutions
+  mosque:      3650,
+  church:      3650,
+  religion:    3650,
+  bank:         730,
+  government:   730,
+  atm:          365,
+};
+
+const DEFAULT_HALF_LIFE = 180; // days — for unknown categories
+
+/** freshness: 0–10  */
+function scoreFreshness(c: PlaceCandidate): number {
+  let score = 5; // neutral baseline — no freshness signals at all
+
+  // ── 1. Google Places business_status (most authoritative signal) ───────────
+  if (c.businessStatus === "OPERATIONAL") {
+    score += 2;
+  } else if (c.businessStatus === "CLOSED_TEMPORARILY") {
+    score -= 2;
+  } else if (c.businessStatus === "CLOSED_PERMANENTLY") {
+    // Strong penalty: bury permanently-closed places near the bottom
+    score -= 6;
+  }
+  // null businessStatus = not yet verified = treat as neutral (no change)
+
+  // ── 2. Website liveness ────────────────────────────────────────────────────
+  if (c.websiteAlive === true) {
+    score += 1;
+  } else if (c.websiteAlive === false) {
+    // Dead website is a moderate warning — could be the place moved / closed
+    score -= 1;
+  }
+
+  // ── 3. Consecutive verification failures ──────────────────────────────────
+  if (c.consecutiveFailures >= 3) {
+    // 3+ consecutive failures = something is wrong (moved, closed, renamed)
+    score -= 2;
+  } else if (c.consecutiveFailures >= 1) {
+    score -= 1;
+  }
+
+  // ── 4. Data age decay (category-specific half-life) ────────────────────────
+  if (c.scrapedAt) {
+    const catKey = c.category.toLowerCase().replace(/\s+/g, "_");
+    const halfLifeDays = CATEGORY_HALF_LIFE[catKey] ?? DEFAULT_HALF_LIFE;
+    const ageDays = (Date.now() - c.scrapedAt.getTime()) / 86_400_000;
+    // Exponential decay: f = 2^(-age/halfLife)
+    // f=1 → just scraped; f=0.5 → one half-life old; f≈0 → very stale
+    const decay = Math.pow(2, -(ageDays / halfLifeDays));
+    // Map decay [0, 1] to a bonus in [-2, +2]
+    //   decay=1 (fresh)  → +2
+    //   decay=0.5 (1 HL) → 0
+    //   decay=0 (stale)  → -2
+    const decayBonus = (decay - 0.5) * 4;
+    score += Math.max(-2, Math.min(2, decayBonus));
+  }
+
+  // ── 5. Review recency bonus ────────────────────────────────────────────────
+  if (c.latestReviewAt) {
+    const reviewAgeDays = (Date.now() - c.latestReviewAt.getTime()) / 86_400_000;
+    if (reviewAgeDays < 30)       score += 1;    // reviewed in last month → very active
+    else if (reviewAgeDays < 90)  score += 0.5;  // reviewed in last quarter → healthy
+    else if (reviewAgeDays > 365) score -= 0.5;  // no review in a year → quiet signal
+  }
+
+  return Math.max(0, Math.min(10, Math.round(score * 2) / 2)); // 0.5-step resolution
 }
 
 // Occasion → keywords that should appear in search_text to signal a fit
@@ -243,16 +366,15 @@ function scoreOccasion(c: PlaceCandidate, intent: RichPlaceIntent): number {
   return score;
 }
 
-/** completeness: 0–15 */
+/** completeness: 0–10 */
 function scoreCompleteness(c: PlaceCandidate): number {
   let pts = 0;
-  if (c.phone)                          pts += 4;
-  if (c.address)                        pts += 4;
-  if (c.website)                        pts += 3;
-  if (c.openingHours)                   pts += 2;
+  if (c.phone)                          pts += 3;
+  if (c.address)                        pts += 3;
+  if (c.website)                        pts += 2;
+  if (c.openingHours)                   pts += 1;
   if (c.lat !== null && c.lng !== null) pts += 1;
-  if (c.sourceUrl)                      pts += 1;
-  return Math.min(15, pts);
+  return Math.min(10, pts);
 }
 
 // Budget tier keywords in search_text
@@ -303,17 +425,18 @@ export function rankPlacesRich(
     const relevance      = scoreRelevance(c, intent, kwRatio);
     const location_fit   = scoreLocation(c, intent);
     const rating_quality = scoreRating(c);
+    const freshness      = scoreFreshness(c);
     const occasion_fit   = scoreOccasion(c, intent);
     const completeness   = scoreCompleteness(c);
     const budget_fit     = scoreBudget(c, intent);
 
-    const total = relevance + location_fit + rating_quality + occasion_fit + completeness + budget_fit;
+    const total = relevance + location_fit + rating_quality + freshness + occasion_fit + completeness + budget_fit;
 
     return {
       ...c,
       score: total,
       keywordHits,
-      components: { relevance, location_fit, rating_quality, occasion_fit, completeness, budget_fit, total },
+      components: { relevance, location_fit, rating_quality, freshness, occasion_fit, completeness, budget_fit, total },
     };
   });
 
@@ -367,12 +490,17 @@ function hasActionableData(c: PlaceCandidate): boolean {
  */
 export function debugScore(s: ScoredPlace): string {
   const c = s.components;
+  const bStatus = s.businessStatus ?? "unverified";
+  const freshLabel = s.scrapedAt
+    ? `${Math.round((Date.now() - s.scrapedAt.getTime()) / 86_400_000)}d old`
+    : "no date";
   return [
     `"${s.name}" score=${s.score.toFixed(1)}/100`,
     `  relevance=${c.relevance.toFixed(1)}/30`,
     `  location=${c.location_fit.toFixed(1)}/20`,
-    `  rating=${c.rating_quality.toFixed(1)}/15`,
-    `  completeness=${c.completeness.toFixed(1)}/15`,
+    `  rating=${c.rating_quality.toFixed(1)}/10  (⭐${s.rating ?? "—"}, ${s.reviewsCount ?? 0} reviews)`,
+    `  freshness=${c.freshness.toFixed(1)}/10  (${bStatus}, ${freshLabel})`,
+    `  completeness=${c.completeness.toFixed(1)}/10`,
     `  occasion=${c.occasion_fit.toFixed(1)}/10`,
     `  budget=${c.budget_fit.toFixed(1)}/10`,
   ].join("\n");

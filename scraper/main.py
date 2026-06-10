@@ -39,30 +39,36 @@ def try_import(name, import_fn):
         traceback.print_exc()
         return None
 
-run_news     = try_import("jordan_news",  lambda: __import__("scrapers.jordan_news",  fromlist=["run"]).run)
-run_maps     = try_import("google_maps",  lambda: __import__("scrapers.google_maps",  fromlist=["run"]).run)
-run_talabat  = try_import("talabat",      lambda: __import__("scrapers.talabat",       fromlist=["run"]).run)
-run_opensooq = try_import("opensooq",     lambda: __import__("scrapers.opensooq",      fromlist=["run"]).run)
-run_people   = try_import("people",       lambda: __import__("scrapers.people",        fromlist=["run"]).run)
+run_news     = try_import("jordan_news",     lambda: __import__("scrapers.jordan_news",     fromlist=["run"]).run)
+run_maps     = try_import("google_maps",     lambda: __import__("scrapers.google_maps",     fromlist=["run"]).run)
+run_talabat  = try_import("talabat",         lambda: __import__("scrapers.talabat",         fromlist=["run"]).run)
+run_opensooq = try_import("opensooq",        lambda: __import__("scrapers.opensooq",        fromlist=["run"]).run)
+run_people   = try_import("people",          lambda: __import__("scrapers.people",          fromlist=["run"]).run)
+run_verify   = try_import("verify_places",   lambda: __import__("scrapers.verify_places",   fromlist=["run"]).run)
 
 # ── Interval config (seconds) ────────────────────────────────────────────────
 # Quality-first: each scraper runs only as often as its data meaningfully changes.
 # Running too often wastes API credits and fills the DB with duplicate noise.
 INTERVALS = {
-    "News":        30 * 60,        # 30 min  — RSS feeds update ~hourly; 30min is plenty
-    "Talabat":      8 * 3600,      # 8 hours — restaurant menus don't change daily
-    "OpenSooq":    24 * 3600,      # 24 hours — listings cycle daily, not hourly
-    "Google Maps": 48 * 3600,      # 48 hours — place data is stable; API costs money
-    "People":       7 * 86400,     # 7 days  — professional directory changes slowly
-    "LinkedIn":    30 * 86400,     # 30 days — skipped anyway; placeholder
+    "News":             30 * 60,    # 30 min  — RSS feeds update ~hourly; 30min is plenty
+    "Talabat":           8 * 3600,  # 8 hours — restaurant menus don't change daily
+    "OpenSooq":         24 * 3600,  # 24 hours — listings cycle daily, not hourly
+    "Google Maps":      48 * 3600,  # 48 hours — place data is stable; API costs money
+    "People":            7 * 86400, # 7 days  — professional directory changes slowly
+    "LinkedIn":         30 * 86400, # 30 days — skipped anyway; placeholder
+    # Freshness verifier: runs every 6 hours, verifies BATCH_SIZE=50 places/run.
+    # This means 200 verifications/day — enough to cycle through ~6 000 places/month.
+    # Uses GOOGLE_MAPS_API_KEY (same key as google_maps scraper).
+    "Verify Places":     6 * 3600,  # 6 hours — freshness verification
 }
 
 SCRAPERS = [
-    ("News",        run_news),
-    ("Google Maps", run_maps),
-    ("Talabat",     run_talabat),
-    ("OpenSooq",    run_opensooq),
-    ("People",      run_people),
+    ("News",            run_news),
+    ("Google Maps",     run_maps),
+    ("Talabat",         run_talabat),
+    ("OpenSooq",        run_opensooq),
+    ("People",          run_people),
+    ("Verify Places",   run_verify),
 ]
 SCRAPERS = [(name, fn) for name, fn in SCRAPERS if fn is not None]
 

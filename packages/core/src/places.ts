@@ -889,6 +889,17 @@ const PLACE_HINTS: Record<string, string[]> = {
   "مشاهدة مباراة":   ["Sports Center", "Stadium"],
   "فرجة على مباراة": ["Sports Center", "Stadium"],
   "مباراة حية":      ["Sports Center", "Stadium"],
+
+  // ── Cinema / Movies (watch a movie / watch a film / go to the cinema already exist above)
+  "catch a movie":   ["Cinema"],
+  "go to cinema":    ["Cinema"],
+  "movie tonight":   ["Cinema"],
+  "cinema tonight":  ["Cinema"],
+  // Arabic cinema hints
+  "مشاهدة فيلم":     ["Cinema"],
+  "روح سينما":       ["Cinema"],
+  "بدي أشوف فيلم":   ["Cinema"],
+  "أريد أشوف فيلم":  ["Cinema"],
 };
 
 let categoryCache: { at: number; values: string[] } | null = null;

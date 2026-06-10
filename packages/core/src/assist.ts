@@ -189,11 +189,39 @@ export async function assist(input: RecommendInput, deps: Deps = {}): Promise<As
   // of prodSig noise. Arabic queries like "إيش في عمان اليوم؟ فعاليات" have 2+
   // keywords → prodSig=1, which would normally block the general route. These are
   // never product searches, so we check first before any product routing.
+  //
+  // EXCEPTION: Entertainment-venue queries like "watch a movie tonight" or
+  // "go bowling tonight" describe wanting to visit a place, not a news/digest query.
+  // These must NOT be swallowed by the today/events bypass — they belong in places.
+  const isEntertainmentVenueQuery =
+    /\b(watch\s+a?\s*(movie|film|show|match|game|live\s+match)|go\s+(bowling|karting|kart\s+racing|paintball|laser\s*tag|skating|ice\s+skating|to\s+an?\s+escape\s+room)|catch\s+a\s+movie|play\s+(bowling|billiards|pool|snooker))\b/i.test(effectiveInput.query) ||
+    /مشاهدة\s+فيلم|روح\s+سينما|مشاهدة\s+مباراة/.test(effectiveInput.query);
+
   const isEventOrTodayQuery =
     /اليوم|فعاليات|ماذا يحدث|ايش في|ايش صاير|وجهة|أين أذهب/i.test(effectiveInput.query) ||
     /\b(today|tonight|this\s+week|events?|activities|what.?s\s+(in|happening|going\s+on)|things\s+to\s+do)\b/i.test(effectiveInput.query);
-  if (isEventOrTodayQuery && isGeneralQuery(effectiveInput.query)) {
+
+  if (isEventOrTodayQuery && !isEntertainmentVenueQuery && isGeneralQuery(effectiveInput.query)) {
     return generalAnswer(effectiveInput, { provider: deps.provider });
+  }
+
+  // Rental / housing / neighbourhood queries beat the place signal.
+  // "average rent in Jabal Amman 3 bedroom" scores pSig=3 because "Jabal Amman"
+  // is a recognised district, but the user wants a rental answer not a place listing.
+  // These fire before the pSig check so general wins regardless of location keywords.
+  const isRentalOrHousingQuery =
+    /\b(rent|rental|renting|apartment|flat|housing|bedroom|1\s*br|2\s*br|3\s*br|average\s+rent|monthly\s+rent|find\s+an?\s+apartment|looking\s+to\s+rent|move\s+to|relocat|afford|neighborhood|neighbourhood)\b/i.test(effectiveInput.query) ||
+    /إيجار|شقة|سكن|للإيجار|أين\s+أسكن|أفضل\s+مناطق|إيجار\s+شهري/.test(effectiveInput.query);
+  if (isRentalOrHousingQuery && prodSig < 3) {
+    return generalAnswer(effectiveInput, { provider: deps.provider });
+  }
+
+  // Entertainment-venue queries (watch a movie, go bowling, escape room) always
+  // route to places even when "tonight" has fired isGeneralQuery via TODAY_EN.
+  // The PLACE_HINTS additions for cinema/movie push pSig≥2 for most of these,
+  // but this guard is a belt-and-suspenders for any that slip through.
+  if (isEntertainmentVenueQuery && prodSig < 3) {
+    return recommendPlaces(effectiveInput, deps);
   }
 
   // Strong product signal → go product, BUT only when product signal is strictly
